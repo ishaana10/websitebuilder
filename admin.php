@@ -2,7 +2,8 @@
 /**
  * WebCraft Commercial Grade Admin Control Panel
  * Implements high fidelity layouts, analytics charts, dynamic database-backed site listings,
- * pre-packaged templates library, user management status control, and server performance diagnostics.
+ * pre-packaged templates library, user management status control, customer contact form entries,
+ * simulated SMTP dispatch logs, and server performance diagnostics.
  */
 require_once __DIR__ . '/config.php';
 require_login();
@@ -100,6 +101,39 @@ try {
     error_log($e->getMessage());
 }
 
+// Fetch form submissions on user's projects
+$form_submissions = [];
+try {
+    $stmt_sub = $db->prepare("
+        SELECT contact_submissions.*, projects.name AS project_name
+        FROM contact_submissions
+        JOIN projects ON contact_submissions.project_id = projects.id
+        WHERE projects.user_id = ?
+        ORDER BY contact_submissions.created_at DESC
+    ");
+    $stmt_sub->execute([$user_id]);
+    $form_submissions = $stmt_sub->fetchAll();
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
+// Fetch simulated email notification logs associated with the form submissions
+$email_logs = [];
+try {
+    $stmt_log = $db->prepare("
+        SELECT email_logs.*, contact_submissions.name AS sender_name
+        FROM email_logs
+        JOIN contact_submissions ON email_logs.submission_id = contact_submissions.id
+        JOIN projects ON contact_submissions.project_id = projects.id
+        WHERE projects.user_id = ?
+        ORDER BY email_logs.created_at DESC
+    ");
+    $stmt_log->execute([$user_id]);
+    $email_logs = $stmt_log->fetchAll();
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
 // Fetch all users for Admin User Management Tab
 $all_users = [];
 if (is_admin()) {
@@ -169,6 +203,9 @@ $csrf_token = generate_csrf_token();
                 </button>
                 <button onclick="switchTab('tab-templates', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
                     <i class="fas fa-layer-group text-sm"></i> Templates Library
+                </button>
+                <button onclick="switchTab('tab-submissions', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-envelope-open-text text-sm"></i> Form Submissions
                 </button>
 
                 <?php if (is_admin()): ?>
@@ -343,7 +380,88 @@ $csrf_token = generate_csrf_token();
                     </div>
                 </div>
 
-                <!-- TAB 4: ADMIN USER MANAGEMENT (ADMIN ONLY) -->
+                <!-- TAB 4: CONTACT FORM SUBMISSIONS & EMAIL ALERTS -->
+                <div id="tab-submissions" class="tab-content space-y-8">
+                    <!-- Form entries -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-800 bg-slate-950/20">
+                            <h3 class="font-bold text-white text-xs uppercase tracking-widest text-teal-400">Incoming Customer Contacts</h3>
+                        </div>
+                        <?php if (empty($form_submissions)): ?>
+                        <div class="p-8 text-center text-xs text-slate-500">
+                            <i class="fas fa-envelope-open text-xl mb-2"></i>
+                            <p>No customer form submissions received yet.</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                                    <tr>
+                                        <th class="px-6 py-4">Project</th>
+                                        <th class="px-6 py-4">Sender</th>
+                                        <th class="px-6 py-4">Email</th>
+                                        <th class="px-6 py-4">Message</th>
+                                        <th class="px-6 py-4">Submitted At</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/60">
+                                    <?php foreach ($form_submissions as $sub): ?>
+                                    <tr class="hover:bg-slate-800/20 transition">
+                                        <td class="px-6 py-4 font-bold text-teal-400"><?php echo sanitize_output($sub['project_name']); ?></td>
+                                        <td class="px-6 py-4 text-white font-semibold"><?php echo sanitize_output($sub['name']); ?></td>
+                                        <td class="px-6 py-4 font-mono"><?php echo sanitize_output($sub['email']); ?></td>
+                                        <td class="px-6 py-4 max-w-xs truncate" title="<?php echo sanitize_output($sub['message']); ?>"><?php echo sanitize_output($sub['message']); ?></td>
+                                        <td class="px-6 py-4 text-slate-500"><?php echo date('M d, Y H:i', strtotime($sub['created_at'])); ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- SMTP dispatch simulation logs -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-800 bg-slate-950/20">
+                            <h3 class="font-bold text-white text-xs uppercase tracking-widest text-teal-400">SMTP Server Mail-Alert Logs</h3>
+                        </div>
+                        <?php if (empty($email_logs)): ?>
+                        <div class="p-8 text-center text-xs text-slate-500">
+                            <i class="fas fa-paper-plane text-xl mb-2"></i>
+                            <p>No simulated outbound notification emails have been dispatched yet.</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                                    <tr>
+                                        <th class="px-6 py-4">Sender Event</th>
+                                        <th class="px-6 py-4">Recipient</th>
+                                        <th class="px-6 py-4">Subject</th>
+                                        <th class="px-6 py-4">SMTP Status</th>
+                                        <th class="px-6 py-4">Dispatched At</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                                    <?php foreach ($email_logs as $log): ?>
+                                    <tr class="hover:bg-slate-800/20 transition">
+                                        <td class="px-6 py-4 text-slate-400"><?php echo sanitize_output($log['sender_name']); ?></td>
+                                        <td class="px-6 py-4 text-white"><?php echo sanitize_output($log['recipient']); ?></td>
+                                        <td class="px-6 py-4 max-w-xs truncate text-teal-400" title="<?php echo sanitize_output($log['subject']); ?>"><?php echo sanitize_output($log['subject']); ?></td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SMTP_SUCCESS</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-500"><?php echo date('Y-m-d H:i:s', strtotime($log['created_at'])); ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- TAB 5: ADMIN USER MANAGEMENT (ADMIN ONLY) -->
                 <?php if (is_admin()): ?>
                 <div id="tab-users" class="tab-content space-y-6">
                     <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -407,7 +525,7 @@ $csrf_token = generate_csrf_token();
                     </div>
                 </div>
 
-                <!-- TAB 5: SYSTEM HEALTH DIAGNOSTICS (ADMIN ONLY) -->
+                <!-- TAB 6: SYSTEM HEALTH DIAGNOSTICS (ADMIN ONLY) -->
                 <div id="tab-system" class="tab-content space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Server Specs -->
@@ -491,6 +609,7 @@ $csrf_token = generate_csrf_token();
             if (tabId === 'tab-dashboard') vTitle.innerText = 'Dashboard';
             if (tabId === 'tab-sites') vTitle.innerText = 'My Websites';
             if (tabId === 'tab-templates') vTitle.innerText = 'Templates Library';
+            if (tabId === 'tab-submissions') vTitle.innerText = 'Contact Form Submissions';
             if (tabId === 'tab-users') vTitle.innerText = 'User Access Controls';
             if (tabId === 'tab-system') vTitle.innerText = 'System Diagnostics';
         }
@@ -548,6 +667,7 @@ $csrf_token = generate_csrf_token();
                     { componentId: 'features', headingText: 'Built-in Superpowers', paragraphText: 'Engineered for scalability, enterprise controls, and robust databases.', classes: [], raw_html: '' },
                     { componentId: 'pricing', headingText: 'Standard Subscription Plans', paragraphText: '', classes: [], raw_html: '' },
                     { componentId: 'contact', headingText: 'Let Us Talk Enterprise Solutions', paragraphText: '', classes: [], raw_html: '' },
+                    { componentId: 'chatbot', headingText: '', paragraphText: '', classes: [], raw_html: '' },
                     { componentId: 'footer', headingText: '', paragraphText: '', classes: [], raw_html: '' }
                 ]);
             } else if (templateName === 'Corporate Consulting Showcase') {
@@ -555,6 +675,7 @@ $csrf_token = generate_csrf_token();
                     { componentId: 'navbar', headingText: 'CONSULTING GROUP', paragraphText: '', classes: [], raw_html: '' },
                     { componentId: 'hero', headingText: 'Expert Financial & Technical Advisors', paragraphText: 'Empower commercial workflows, build corporate resilience, and increase annual margin structures.', classes: [], raw_html: '' },
                     { componentId: 'features', headingText: 'Core Advisory Units', paragraphText: '', classes: [], raw_html: '' },
+                    { componentId: 'chatbot', headingText: '', paragraphText: '', classes: [], raw_html: '' },
                     { componentId: 'footer', headingText: '', paragraphText: '', classes: [], raw_html: '' }
                 ]);
             }

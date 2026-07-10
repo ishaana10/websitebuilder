@@ -132,14 +132,56 @@ const UI_COMPONENTS = [
     <div class="max-w-md mx-auto text-center">
         <h2 class="text-3xl font-extrabold text-teal-400">Get In Touch</h2>
         <p class="text-slate-400 mt-2">Have questions? Drop us a line and we'll reply shortly.</p>
-        <form class="mt-8 space-y-4" onsubmit="event.preventDefault(); alert('WebCraft Low Code Form Simulation Triggered!');">
-            <input type="text" placeholder="Full Name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
-            <input type="email" placeholder="Email Address" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
-            <textarea placeholder="Write message..." rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm"></textarea>
-            <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold w-full py-3 rounded-lg transition-all text-sm tracking-wide">Send Message</button>
+
+        <!-- Live AJAX Interactive Form -->
+        <form class="mt-8 space-y-4" onsubmit="event.preventDefault(); window.submitWebCraftForm(this);">
+            <div class="webcraft-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
+            <input type="text" name="name" placeholder="Full Name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
+            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
+            <textarea name="message" placeholder="Write message..." rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm"></textarea>
+            <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold w-full py-3 rounded-lg transition-all text-sm tracking-wide flex items-center justify-center gap-2">
+                <span>Send Message</span>
+            </button>
         </form>
     </div>
 </section>`
+    },
+    {
+        id: 'chatbot',
+        name: 'Interactive AI Chatbot',
+        category: 'Forms',
+        icon: 'fas fa-comments',
+        html: `
+<div class="fixed bottom-6 right-6 z-50 font-sans" data-component="chatbot">
+    <!-- Floating Bubble Button -->
+    <button onclick="window.toggleWebCraftChat()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 focus:outline-none">
+        <i class="fas fa-comments text-xl"></i>
+    </button>
+
+    <!-- Chat Dialog Window (Hidden by default) -->
+    <div id="webcraft-chat-window" class="hidden absolute bottom-16 right-0 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-bold text-xs text-white uppercase tracking-wider">AI Support Bot</span>
+            </div>
+            <button onclick="window.toggleWebCraftChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Conversation logs -->
+        <div id="webcraft-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
+            <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed">
+                Hello there! Welcome to our website. How can I assist your operations today?
+            </div>
+        </div>
+
+        <!-- Chat form input -->
+        <form onsubmit="event.preventDefault(); window.sendWebCraftChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+            <input type="text" name="chat_msg" placeholder="Ask something..." required class="flex-1 bg-slate-850 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500">
+            <button type="submit" class="bg-teal-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-teal-400 transition"><i class="fas fa-paper-plane"></i></button>
+        </form>
+    </div>
+</div>`
     },
     {
         id: 'html_raw',
@@ -173,3 +215,87 @@ const UI_COMPONENTS = [
 </footer>`
     }
 ];
+
+// Global runtime scripts injection for live compiled renderings (Contact and Chatbot mechanics)
+if (typeof window !== 'undefined') {
+    window.submitWebCraftForm = function(formElement) {
+        const btn = formElement.querySelector("button[type='submit']");
+        const statusDiv = formElement.querySelector(".webcraft-form-status");
+
+        if (btn) btn.disabled = true;
+        if (statusDiv) {
+            statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
+            statusDiv.innerText = "Submitting secure entry...";
+            statusDiv.classList.remove("hidden");
+        }
+
+        const formData = new FormData(formElement);
+        // Find associated active project metadata context on compile
+        formData.append('project_id', typeof PROJECT_ID !== 'undefined' ? PROJECT_ID : '1');
+
+        fetch('submit_form.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20";
+                statusDiv.innerText = data.message;
+                formElement.reset();
+            } else {
+                statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+                statusDiv.innerText = data.error || "Submission rejected.";
+            }
+        })
+        .catch(err => {
+            statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+            statusDiv.innerText = "Connection Failed. Please try again.";
+        })
+        .finally(() => {
+            if (btn) btn.disabled = false;
+        });
+    };
+
+    window.toggleWebCraftChat = function() {
+        const win = document.getElementById('webcraft-chat-window');
+        if (win) {
+            win.classList.toggle('hidden');
+        }
+    };
+
+    window.sendWebCraftChatMessage = function(formElement) {
+        const input = formElement.querySelector("input[name='chat_msg']");
+        const logs = document.getElementById('webcraft-chat-logs');
+
+        if (!input || !logs) return;
+
+        const userMsg = input.value.trim();
+        input.value = '';
+
+        // Append User Message bubble
+        const userDiv = document.createElement('div');
+        userDiv.className = "bg-teal-500 text-slate-950 p-2 rounded-lg self-end max-w-[85%] leading-relaxed font-bold";
+        userDiv.innerText = userMsg;
+        logs.appendChild(userDiv);
+        logs.scrollTop = logs.scrollHeight;
+
+        // Simulate AI Bot typing
+        setTimeout(() => {
+            const aiDiv = document.createElement('div');
+            aiDiv.className = "bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed";
+
+            // Standard AI Knowledge template responses
+            let responseText = "That's an interesting query! Our technical team can certainly assist you. Let us know your contact information via the contact form above.";
+            if (userMsg.toLowerCase().includes('price') || userMsg.toLowerCase().includes('pricing') || userMsg.toLowerCase().includes('cost')) {
+                responseText = "Our software licensing models start at just $0/mo for side developer projects, and $29/mo for complete Enterprise scopes including custom raw HTML features.";
+            } else if (userMsg.toLowerCase().includes('feature') || userMsg.toLowerCase().includes('capabilities')) {
+                responseText = "WebCraft specializes in real-time compilations, 100ms static optimization, robust parameterized data architectures, and dynamic visual layouts.";
+            }
+
+            aiDiv.innerText = responseText;
+            logs.appendChild(aiDiv);
+            logs.scrollTop = logs.scrollHeight;
+        }, 800);
+    };
+}

@@ -82,5 +82,11 @@ if (!$is_published || empty($body_content)) {
         <span>Built with WebCraft</span>
     </div>
 
+    <!-- Inject runtime parameters and interactivity logic -->
+    <script>
+        const PROJECT_ID = <?php echo (int)$project['id']; ?>;
+    </script>
+    <script src="assets/js/components.js"></script>
+
 </body>
 </html>

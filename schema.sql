@@ -45,3 +45,28 @@ CREATE TABLE IF NOT EXISTS `templates` (
     `content_json` LONGTEXT NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+-- Contact Submissions Table (Records forms submitted by public users on published websites)
+CREATE TABLE IF NOT EXISTS `contact_submissions` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `project_id` INT NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `email` VARCHAR(100) NOT NULL,
+    `message` TEXT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+    INDEX `idx_project_id` (`project_id`)
+) ENGINE=InnoDB;
+
+-- Email Dispatch / Notification logs (Simulates commercial server notification logs)
+CREATE TABLE IF NOT EXISTS `email_logs` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `submission_id` INT NOT NULL,
+    `recipient` VARCHAR(100) NOT NULL,
+    `subject` VARCHAR(150) NOT NULL,
+    `body` TEXT NOT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'sent', -- 'sent', 'failed'
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`submission_id`) REFERENCES `contact_submissions`(`id`) ON DELETE CASCADE,
+    INDEX `idx_submission_id` (`submission_id`)
+) ENGINE=InnoDB;
