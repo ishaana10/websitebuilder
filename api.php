@@ -243,6 +243,97 @@ switch ($action) {
         ]);
         break;
 
+    case 'export':
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+
+        $project_id = $_GET['project_id'] ?? null;
+        if (!$project_id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing project ID.']);
+            exit;
+        }
+
+        $project = check_project_ownership($db, $project_id, $user_id);
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Project not found or unauthorized.']);
+            exit;
+        }
+
+        // Generate compiled index.html
+        $html_content = $project['published_html'] ?? '';
+        if (empty($html_content)) {
+            // Fallback: If not published, decode draft JSON
+            $content_arr = json_decode($project['content_json'] ?? '', true);
+            $html_content = $content_arr['html'] ?? '<div class="py-20 text-center">Empty project structure</div>';
+        }
+
+        // Include wrapper headers/assets similar to render.php
+        $full_html = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . sanitize_output($project['name']) . '</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: "Inter", sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    ' . $html_content . '
+
+    <!-- Environment parameters for widgets -->
+    <script>
+        const PROJECT_ID = ' . intval($project['id']) . ';
+    </script>
+    <!-- Components JS (dynamic chat & forms integration) -->
+    <script src="assets/js/components.js"></script>
+</body>
+</html>';
+
+        // Load content of assets/js/components.js to bundle inside zip
+        $components_js_path = __DIR__ . '/assets/js/components.js';
+        $components_js = file_exists($components_js_path) ? file_get_contents($components_js_path) : '';
+
+        // Create Zip Archive
+        $zip = new ZipArchive();
+        $zip_filename = tempnam(sys_get_temp_dir(), 'webcraft_export_') . '.zip';
+
+        if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Could not generate zip archive on server.']);
+            exit;
+        }
+
+        // Add index.html, components.js
+        $zip->addFromString('index.html', $full_html);
+        if (!empty($components_js)) {
+            $zip->addFromString('assets/js/components.js', $components_js);
+        }
+
+        $zip->close();
+
+        // Clear output buffer and override headers to send zip file down
+        header_remove();
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
+        header('Content-Length: ' . filesize($zip_filename));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        readfile($zip_filename);
+
+        // Delete temporary file
+        unlink($zip_filename);
+        exit;
+
     default:
         http_response_code(400);
         echo json_encode(['error' => 'Invalid or unspecified API endpoint action.']);

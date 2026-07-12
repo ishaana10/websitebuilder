@@ -23,12 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['auth_action'])) {
             $password = $_POST['password'] ?? '';
             $confirm_password = $_POST['confirm_password'] ?? '';
 
+            // Server-side strict input validation
             if (empty($username) || empty($email) || empty($password)) {
                 $auth_error = "All fields are required.";
-            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $auth_error = "Invalid email format.";
-            } elseif (strlen($password) < 6) {
-                $auth_error = "Password must be at least 6 characters long.";
+            } elseif (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username)) {
+                $auth_error = "Username must be 3-20 characters and contain only letters, numbers, or underscores.";
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 100) {
+                $auth_error = "Invalid email format (max 100 characters).";
+            } elseif (strlen($password) < 8) {
+                $auth_error = "Password must be at least 8 characters long.";
+            } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+                $auth_error = "Password must contain at least one letter and one number.";
             } elseif ($password !== $confirm_password) {
                 $auth_error = "Passwords do not match.";
             } else {
@@ -61,32 +66,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['auth_action'])) {
             $username_or_email = trim($_POST['username_or_email'] ?? '');
             $password = $_POST['password'] ?? '';
 
-            if (empty($username_or_email) || empty($password)) {
-                $auth_error = "Please fill in all credentials.";
+            // Initialize brute-force rate-limiting tracker in session
+            if (empty($_SESSION['login_attempts'])) {
+                $_SESSION['login_attempts'] = 0;
+                $_SESSION['login_attempts_time'] = time();
+            }
+
+            // If 5 consecutive failed login attempts occur within 1 minute, block login attempt
+            if ($_SESSION['login_attempts'] >= 5 && (time() - $_SESSION['login_attempts_time']) < 60) {
+                $wait = 60 - (time() - $_SESSION['login_attempts_time']);
+                $auth_error = "Too many login attempts. Please wait {$wait} seconds.";
             } else {
-                // Fetch user by either username or email securely
-                $stmt = $db->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
-                $stmt->execute([$username_or_email, $username_or_email]);
-                $user = $stmt->fetch();
+                // Reset limit block window if 60 seconds have elapsed
+                if ((time() - $_SESSION['login_attempts_time']) >= 60) {
+                    $_SESSION['login_attempts'] = 0;
+                    $_SESSION['login_attempts_time'] = time();
+                }
 
-                if ($user && password_verify($password, $user['password_hash'])) {
-                    if ($user['status'] !== 'active') {
-                        $auth_error = "Your account has been suspended.";
-                    } else {
-                        // Setup authenticated session variables
-                        $_SESSION['user_id'] = $user['id'];
-                        $_SESSION['username'] = $user['username'];
-                        $_SESSION['user_email'] = $user['email'];
-                        $_SESSION['user_role'] = $user['role'];
-
-                        // Regenerate session id to prevent Session Fixation
-                        session_regenerate_id(true);
-
-                        header("Location: admin.php");
-                        exit;
-                    }
+                if (empty($username_or_email) || empty($password)) {
+                    $auth_error = "Please fill in all credentials.";
                 } else {
-                    $auth_error = "Invalid username/email or password.";
+                    // Fetch user by either username or email securely
+                    $stmt = $db->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+                    $stmt->execute([$username_or_email, $username_or_email]);
+                    $user = $stmt->fetch();
+
+                    if ($user && password_verify($password, $user['password_hash'])) {
+                        if ($user['status'] !== 'active') {
+                            $auth_error = "Your account has been suspended.";
+                        } else {
+                            // Reset login rate limiting on successful login
+                            unset($_SESSION['login_attempts']);
+                            unset($_SESSION['login_attempts_time']);
+
+                            // Setup authenticated session variables
+                            $_SESSION['user_id'] = $user['id'];
+                            $_SESSION['username'] = $user['username'];
+                            $_SESSION['user_email'] = $user['email'];
+                            $_SESSION['user_role'] = $user['role'];
+
+                            // Regenerate session id to prevent Session Fixation
+                            session_regenerate_id(true);
+
+                            header("Location: admin.php");
+                            exit;
+                        }
+                    } else {
+                        $_SESSION['login_attempts']++;
+                        $_SESSION['login_attempts_time'] = time();
+                        $auth_error = "Invalid username/email or password.";
+                    }
                 }
             }
         }

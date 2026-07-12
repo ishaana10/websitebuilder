@@ -4,12 +4,38 @@
  * High Security, Modular Architecture compatible with PHP 7.4+ and MySQL/MariaDB
  */
 
-// Basic Settings
-define('DB_HOST', 'localhost');
-define('DB_PORT', '3306');
-define('DB_NAME', 'site_builder');
-define('DB_USER', 'builder_user');
-define('DB_PASS', 'builder_pass');
+// Load Environment Variables if .env exists
+function load_env_variables($file_path) {
+    if (!file_exists($file_path)) {
+        return;
+    }
+    $lines = file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $key = trim($parts[0]);
+            $val = trim($parts[1]);
+            if (!array_key_exists($key, $_SERVER) && !array_key_exists($key, $_ENV)) {
+                putenv("{$key}={$val}");
+                $_ENV[$key] = $val;
+                $_SERVER[$key] = $val;
+            }
+        }
+    }
+}
+
+// Load configurations from .env
+load_env_variables(__DIR__ . '/.env');
+
+// Basic Settings with fallbacks
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_NAME', getenv('DB_NAME') ?: 'site_builder');
+define('DB_USER', getenv('DB_USER') ?: 'builder_user');
+define('DB_PASS', getenv('DB_PASS') ?: 'builder_pass');
 
 // Start PHP Session safely if not already started
 if (session_status() === PHP_SESSION_NONE) {
