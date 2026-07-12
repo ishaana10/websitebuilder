@@ -1,0 +1,23 @@
+# Configuration files
+.env
+
+# PHP temporary files and session data
+*.tmp
+*.log
+
+# WebCraft local test exports
+*.zip
+export_test.zip
+
+# Node / vendor directories (if any)
+node_modules/
+vendor/
+
+# Testing artifacts
+/home/jules/verification/screenshots/
+/home/jules/verification/videos/
+verification/screenshots/
+verification/videos/
+error_state.png
+*.png
+*.webm

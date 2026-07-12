@@ -51,6 +51,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
                     $error_msg = "Error creating project: " . $e->getMessage();
                 }
             }
+        } elseif ($action === 'change_password') {
+            $current_password = $_POST['current_password'] ?? '';
+            $new_password = $_POST['new_password'] ?? '';
+            $confirm_new_password = $_POST['confirm_new_password'] ?? '';
+
+            if (empty($current_password) || empty($new_password) || empty($confirm_new_password)) {
+                $error_msg = "Please fill in all password fields.";
+            } elseif ($new_password !== $confirm_new_password) {
+                $error_msg = "New passwords do not match.";
+            } elseif (strlen($new_password) < 8) {
+                $error_msg = "New password must be at least 8 characters long.";
+            } elseif (!preg_match('/[A-Za-z]/', $new_password) || !preg_match('/[0-9]/', $new_password)) {
+                $error_msg = "New password must contain at least one letter and one number.";
+            } else {
+                // Verify current password
+                $stmt = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
+                $stmt->execute([$user_id]);
+                $user_data = $stmt->fetch();
+
+                if ($user_data && password_verify($current_password, $user_data['password_hash'])) {
+                    $new_hash = password_hash($new_password, PASSWORD_BCRYPT);
+                    $stmt_update = $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                    try {
+                        $stmt_update->execute([$new_hash, $user_id]);
+                        $success_msg = "Password changed successfully! Keep it secure.";
+                    } catch (PDOException $e) {
+                        $error_msg = "Error updating password: " . $e->getMessage();
+                    }
+                } else {
+                    $error_msg = "Current password is incorrect.";
+                }
+            }
         } elseif ($action === 'update_user_role' && is_admin()) {
             // Admin only user privilege promotion
             $target_user_id = (int)($_POST['target_user_id'] ?? 0);
@@ -145,6 +177,19 @@ if (is_admin()) {
     }
 }
 
+// Check if user is using default password "admin123"
+$is_using_default_password = false;
+try {
+    $stmt_pass = $db->prepare("SELECT password_hash FROM users WHERE id = ?");
+    $stmt_pass->execute([$user_id]);
+    $u_pass = $stmt_pass->fetch();
+    if ($u_pass && password_verify('admin123', $u_pass['password_hash'])) {
+        $is_using_default_password = true;
+    }
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
 $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>
@@ -207,6 +252,9 @@ $csrf_token = generate_csrf_token();
                 <button onclick="switchTab('tab-submissions', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
                     <i class="fas fa-envelope-open-text text-sm"></i> Form Submissions
                 </button>
+                <button id="btn-security" onclick="switchTab('tab-security', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-user-shield text-sm"></i> Account Security
+                </button>
 
                 <?php if (is_admin()): ?>
                 <div class="pt-4 pb-2 px-4">
@@ -244,6 +292,18 @@ $csrf_token = generate_csrf_token();
             </header>
 
             <!-- GENERAL NOTIFICATIONS -->
+            <?php if ($is_using_default_password): ?>
+            <div class="mx-8 mt-6 bg-amber-950/40 border border-amber-500/40 text-amber-300 rounded-lg p-4 flex items-center justify-between gap-3 animate-pulse">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-shield-halved text-amber-400 text-lg"></i>
+                    <div class="text-xs">
+                        <strong class="text-white">Security Alert:</strong> You are currently using the default system password (<code>admin123</code>). Please modify your password immediately to secure your platform database!
+                    </div>
+                </div>
+                <button onclick="switchTab('tab-security', document.getElementById('btn-security'))" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded font-black text-[10px] uppercase tracking-wider transition">Secure Account</button>
+            </div>
+            <?php endif; ?>
+
             <?php if (!empty($error_msg)): ?>
             <div class="mx-8 mt-6 bg-red-950/40 border border-red-500/30 text-red-300 rounded-lg p-4 flex items-center gap-3">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -375,6 +435,17 @@ $csrf_token = generate_csrf_token();
                             </div>
                             <div class="p-4 bg-slate-950/40 border-t border-slate-800">
                                 <button onclick="createNewSiteFromTemplate('Corporate Consulting Showcase')" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition">Use Template Theme</button>
+                            </div>
+                        </div>
+                        <!-- E-Commerce Gadget Landing Page -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-teal-500/50 transition duration-300 flex flex-col justify-between">
+                            <div class="p-6">
+                                <div class="w-12 h-12 bg-teal-500/10 text-teal-400 rounded-xl flex items-center justify-center text-lg mb-4"><i class="fas fa-shopping-bag"></i></div>
+                                <h3 class="font-bold text-white text-sm">E-Commerce Gadget Landing Page</h3>
+                                <p class="text-slate-400 text-xs mt-2 leading-relaxed">Specially optimized product layout with dynamic navbar, gadget feature grids, customizable pricing boxes, chatbot customer care, and checkout forms.</p>
+                            </div>
+                            <div class="p-4 bg-slate-950/40 border-t border-slate-800">
+                                <button onclick="createNewSiteFromTemplate('E-Commerce Gadget Landing Page')" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition">Use Template Theme</button>
                             </div>
                         </div>
                     </div>
@@ -552,6 +623,33 @@ $csrf_token = generate_csrf_token();
                 </div>
                 <?php endif; ?>
 
+                <!-- TAB 7: ACCOUNT SECURITY -->
+                <div id="tab-security" class="tab-content space-y-6">
+                    <div class="max-w-md bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-6 shadow-md">
+                        <h3 class="font-extrabold text-white text-xs uppercase tracking-widest text-teal-400 mb-4 flex items-center gap-2">
+                            <i class="fas fa-lock text-sm"></i> Change Password
+                        </h3>
+                        <form action="admin.php?action=change_password" method="POST" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Current Password</label>
+                                <input type="password" name="current_password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">New Password</label>
+                                <input type="password" name="new_password" required placeholder="Min 8 chars, 1 letter, 1 number" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Confirm New Password</label>
+                                <input type="password" name="confirm_new_password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                            </div>
+                            <button type="submit" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3 rounded-lg text-xs transition">
+                                Update Security Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -610,6 +708,7 @@ $csrf_token = generate_csrf_token();
             if (tabId === 'tab-sites') vTitle.innerText = 'My Websites';
             if (tabId === 'tab-templates') vTitle.innerText = 'Templates Library';
             if (tabId === 'tab-submissions') vTitle.innerText = 'Contact Form Submissions';
+            if (tabId === 'tab-security') vTitle.innerText = 'Account Security';
             if (tabId === 'tab-users') vTitle.innerText = 'User Access Controls';
             if (tabId === 'tab-system') vTitle.innerText = 'System Diagnostics';
         }
@@ -678,6 +777,20 @@ $csrf_token = generate_csrf_token();
                     { componentId: 'chatbot', headingText: '', paragraphText: '', classes: [], raw_html: '' },
                     { componentId: 'footer', headingText: '', paragraphText: '', classes: [], raw_html: '' }
                 ]);
+            } else if (templateName === 'E-Commerce Gadget Landing Page') {
+                layoutJson = JSON.stringify({
+                    blocks: [
+                        { componentId: 'navbar', headingText: 'GADGET LAB', paragraphText: '', classes: [], raw_html: '' },
+                        { componentId: 'hero', headingText: 'Next Gen Immersive Headphones', paragraphText: 'Engineered with sound precision and dynamic feedback cancellation parameters.', classes: [], raw_html: '' },
+                        { componentId: 'features', headingText: 'Unmatched Capabilities', paragraphText: '', classes: [], raw_html: '' },
+                        { componentId: 'pricing', headingText: 'Explore Available Gadgets', paragraphText: 'Select your gadget package below', classes: [], raw_html: '' },
+                        { componentId: 'contact', headingText: 'Inquire About Custom Bulk Orders', paragraphText: '', classes: [], raw_html: '' },
+                        { componentId: 'chatbot', headingText: '', paragraphText: '', classes: [], raw_html: '' },
+                        { componentId: 'footer', headingText: '', paragraphText: '', classes: [], raw_html: '' }
+                    ],
+                    custom_css: 'body { background-color: #030712 !important; }',
+                    custom_js: 'console.log("E-Commerce template script initialized");'
+                });
             }
 
             // Fire standard secure save to generate the project

@@ -156,6 +156,34 @@ Screenshots and videos of the flow will be captured in the `/home/jules/verifica
 
 ---
 
+## 🛠️ Troubleshooting & Production Setup
+
+### Troubleshooting
+
+- **Database Connection Failures (`PDOException`):**
+  - Verify that the MariaDB/MySQL service is running: `sudo systemctl status mariadb`.
+  - Double check database port mapping (default is `3306`).
+  - Ensure `.env` database parameters match the credentials granted in step 2.
+  - Check user privileges: ensure `builder_user` has `ALL PRIVILEGES` on database `site_builder`.
+- **PHP Version Issues:**
+  - WebCraft is compatible with PHP 7.4 up to PHP 8.3+. Running older PHP versions (< 7.4) will result in syntax errors like array destructuring or short open tags. Check version with `php -v`.
+- **Zip Generation Failures ("Could not generate zip archive on server"):**
+  - Verify that the PHP Zip extension is enabled on your server: `php -m | grep zip`. On Debian/Ubuntu servers, install it using `sudo apt install php-zip`.
+
+### Secure Production Setup Guidelines
+
+1. **Enforce HTTPS:**
+   - Configure your production web server (Nginx or Apache) with TLS/SSL certificates (e.g., via Let's Encrypt).
+   - In `config.php`, when HTTPS is active, the session cookies automatically default to the secure flag (`session.cookie_secure = 1`), preventing session interception.
+2. **Web Server Directory Permissions:**
+   - Keep `.env` configuration file non-publicly accessible. Ensure that only `index.php`, `admin.php`, `builder.php`, `render.php`, and directories under `assets/` are processed and exposed.
+   - Restrict write access to directory structure. Keep directory owners as the service user (like `www-data` on Apache/Nginx).
+3. **Database Security:**
+   - Change the default administrator password immediately after installation (`admin` -> `admin123`).
+   - Use a strong, long, random password for the production database user. Never use `root` or empty password database logins in production.
+
+---
+
 ## 🔒 Security Architecture
 
 1. **CSRF Prevention:** All state-modifying POST endpoints require verification of standard cryptographic tokens generated per-session using `random_bytes()`.

@@ -285,7 +285,7 @@ function setCanvasView(size) {
  */
 function serializeCanvasContent() {
     const wrappers = document.querySelectorAll('#canvas-content [data-component-instance]');
-    const data = [];
+    const blocks = [];
 
     wrappers.forEach(wrap => {
         const componentId = wrap.getAttribute('data-component-instance');
@@ -301,7 +301,7 @@ function serializeCanvasContent() {
         const customHtmlContainer = wrap.querySelector('.custom-html-container');
         const raw_html = customHtmlContainer ? customHtmlContainer.innerHTML : '';
 
-        data.push({
+        blocks.push({
             componentId: componentId,
             headingText: hEl ? hEl.innerText.trim() : '',
             paragraphText: pEl ? pEl.innerText.trim() : '',
@@ -310,7 +310,16 @@ function serializeCanvasContent() {
         });
     });
 
-    return JSON.stringify(data);
+    const cssArea = document.getElementById('project-custom-css');
+    const jsArea = document.getElementById('project-custom-js');
+    const customCss = cssArea ? cssArea.value : '';
+    const customJs = jsArea ? jsArea.value : '';
+
+    return JSON.stringify({
+        blocks: blocks,
+        custom_css: customCss,
+        custom_js: customJs
+    });
 }
 
 /**
@@ -419,7 +428,25 @@ function publishProject() {
  */
 function loadProjectState() {
     try {
-        const blocks = JSON.parse(LOADED_CONTENT_STATE);
+        let blocks = [];
+        let customCss = '';
+        let customJs = '';
+
+        const parsed = JSON.parse(LOADED_CONTENT_STATE);
+        if (Array.isArray(parsed)) {
+            blocks = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+            blocks = parsed.blocks || [];
+            customCss = parsed.custom_css || '';
+            customJs = parsed.custom_js || '';
+        }
+
+        // Fill custom CSS/JS textareas
+        const cssArea = document.getElementById('project-custom-css');
+        if (cssArea) cssArea.value = customCss;
+        const jsArea = document.getElementById('project-custom-js');
+        if (jsArea) jsArea.value = customJs;
+
         if (!blocks || blocks.length === 0) return;
 
         const emptyState = document.getElementById('canvas-empty-state');
@@ -511,4 +538,34 @@ function showToast(title, description, customClass = 'bg-slate-900 border-teal-5
         toast.classList.remove('translate-y-0', 'opacity-100');
         toast.classList.add('translate-y-24', 'opacity-0');
     }, 4500);
+}
+
+/**
+ * Switch Control Panel tabs (Properties vs Project CSS/JS)
+ */
+function switchControlPanelTab(tab) {
+    const pPanel = document.getElementById('property-panel');
+    const sPanel = document.getElementById('settings-panel');
+    const btnProp = document.getElementById('control-tab-btn-properties');
+    const btnSet = document.getElementById('control-tab-btn-settings');
+
+    if (tab === 'properties') {
+        pPanel.classList.remove('hidden');
+        sPanel.classList.add('hidden');
+        btnProp.className = 'flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-teal-500 text-teal-400';
+        btnSet.className = 'flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white';
+    } else {
+        pPanel.classList.add('hidden');
+        sPanel.classList.remove('hidden');
+        btnProp.className = 'flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white';
+        btnSet.className = 'flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-teal-500 text-teal-400';
+    }
+}
+
+/**
+ * Export compiled visual layout and scripts as standalone ZIP download
+ */
+function exportProjectZip() {
+    showToast('Exporting...', 'Packaging standalone static HTML and interactive assets into a ZIP file.');
+    window.location.href = `api.php?action=export&project_id=${PROJECT_ID}`;
 }

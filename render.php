@@ -29,6 +29,17 @@ if (!$project) {
     die("<h1>Website Not Found</h1><p>The requested website does not exist, is set to private, or has been unpublished.</p>");
 }
 
+// Extract custom CSS/JS from content_json if present
+$custom_css = '';
+$custom_js = '';
+if (!empty($project['content_json'])) {
+    $parsed_json = json_decode($project['content_json'], true);
+    if ($parsed_json && is_array($parsed_json) && !isset($parsed_json[0])) {
+        $custom_css = $parsed_json['custom_css'] ?? '';
+        $custom_js = $parsed_json['custom_js'] ?? '';
+    }
+}
+
 // Compile cached published HTML or prompt draft message
 $body_content = $project['published_html'];
 $is_published = ($project['status'] === 'published');
@@ -68,6 +79,11 @@ if (!$is_published || empty($body_content)) {
             background-color: #020617; /* Default fallback dark background */
         }
     </style>
+    <?php if (!empty($custom_css)): ?>
+    <style>
+        <?php echo $custom_css; ?>
+    </style>
+    <?php endif; ?>
 </head>
 <body class="min-h-screen">
 
@@ -87,6 +103,11 @@ if (!$is_published || empty($body_content)) {
         const PROJECT_ID = <?php echo (int)$project['id']; ?>;
     </script>
     <script src="assets/js/components.js"></script>
+    <?php if (!empty($custom_js)): ?>
+    <script>
+        <?php echo $custom_js; ?>
+    </script>
+    <?php endif; ?>
 
 </body>
 </html>

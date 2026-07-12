@@ -96,6 +96,9 @@ $csrf_token = generate_csrf_token();
             <button onclick="saveProject(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition">
                 <i class="fas fa-save"></i> Save Draft
             </button>
+            <button onclick="exportProjectZip()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition" title="Export as standalone ZIP archive">
+                <i class="fas fa-file-archive text-teal-400"></i> Download ZIP
+            </button>
             <button onclick="publishProject()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2 rounded text-xs flex items-center gap-1.5 transition shadow-md shadow-teal-500/10">
                 <i class="fas fa-globe"></i> Publish Site
             </button>
@@ -136,8 +139,18 @@ $csrf_token = generate_csrf_token();
         <!-- CONTROL PANEL (RIGHT) -->
         <aside class="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden shrink-0">
             <div class="p-4 border-b border-slate-800">
-                <h2 class="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Property Customizer</h2>
-                <p class="text-[11px] text-slate-400 mt-1">Adjust selected element aesthetics & text content.</p>
+                <h2 class="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Control Center</h2>
+                <p class="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
+            </div>
+
+            <!-- TAB SWITCHER -->
+            <div class="flex border-b border-slate-800 bg-slate-950/40 shrink-0">
+                <button id="control-tab-btn-properties" onclick="switchControlPanelTab('properties')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-teal-500 text-teal-400">
+                    Properties
+                </button>
+                <button id="control-tab-btn-settings" onclick="switchControlPanelTab('settings')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white">
+                    Project CSS/JS
+                </button>
             </div>
 
             <!-- DYNAMIC EDITING CONTROLS -->
@@ -228,6 +241,31 @@ $csrf_token = generate_csrf_token();
                     </div>
                 </div>
             </div>
+
+            <!-- PROJECT SETTINGS PANEL -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-5 hidden" id="settings-panel">
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fas fa-sliders-h"></i> Project Custom Injection
+                    </h4>
+                    <p class="text-[10px] text-slate-400 leading-relaxed">Inject customized stylesheet styling parameters and client-side behavioral callbacks directly into compiled pages.</p>
+
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">Custom CSS Injection</label>
+                        <textarea id="project-custom-css" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none focus:border-teal-500" placeholder="body { background-color: #0b0f19; }"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-1">Custom JS Injection</label>
+                        <textarea id="project-custom-js" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" placeholder="console.log('WebCraft Custom script active');"></textarea>
+                    </div>
+
+                    <button onclick="saveProject(false)" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 rounded text-xs transition">
+                        Apply & Save Settings
+                    </button>
+                </div>
+            </div>
+
         </aside>
     </div>
 

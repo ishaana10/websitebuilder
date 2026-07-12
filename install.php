@@ -178,6 +178,23 @@ try {
             'Award-winning layout configured for creative studios and graphic design professionals.',
             json_encode(['html' => $html_content_2])
         ]);
+        $insert_tpl->execute([
+            'E-Commerce Gadget Landing Page',
+            'Optimized commercial product-led layouts featuring dynamic grids, chatbots, and bulk custom checkout form flows.',
+            json_encode([
+                'blocks' => [
+                    ['componentId' => 'navbar', 'headingText' => 'GADGET LAB', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'hero', 'headingText' => 'Next Gen Immersive Headphones', 'paragraphText' => 'Engineered with sound precision and dynamic feedback cancellation parameters.', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'features', 'headingText' => 'Unmatched Capabilities', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'pricing', 'headingText' => 'Explore Available Gadgets', 'paragraphText' => 'Select your gadget package below', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'contact', 'headingText' => 'Inquire About Custom Bulk Orders', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'chatbot', 'headingText' => '', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'footer', 'headingText' => '', 'paragraphText' => '', 'classes' => [], 'raw_html' => '']
+                ],
+                'custom_css' => 'body { background-color: #030712 !important; }',
+                'custom_js' => 'console.log("E-Commerce template script initialized");'
+            ])
+        ]);
         echo "✔ Templates library loaded successfully!\n";
     } else {
         echo "ℹ Template themes already loaded. Skipping seeding.\n";

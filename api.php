@@ -266,10 +266,35 @@ switch ($action) {
 
         // Generate compiled index.html
         $html_content = $project['published_html'] ?? '';
+
+        $custom_css = '';
+        $custom_js = '';
+        if (!empty($project['content_json'])) {
+            $parsed_json = json_decode($project['content_json'], true);
+            if ($parsed_json && is_array($parsed_json) && !isset($parsed_json[0])) {
+                $custom_css = $parsed_json['custom_css'] ?? '';
+                $custom_js = $parsed_json['custom_js'] ?? '';
+            }
+        }
+
         if (empty($html_content)) {
             // Fallback: If not published, decode draft JSON
             $content_arr = json_decode($project['content_json'] ?? '', true);
-            $html_content = $content_arr['html'] ?? '<div class="py-20 text-center">Empty project structure</div>';
+            if ($content_arr && is_array($content_arr) && isset($content_arr['blocks'])) {
+                // If it is our structured format, compile HTML blocks
+                $html_content = '';
+                foreach ($content_arr['blocks'] as $block) {
+                    // For raw HTML block, grab layout content
+                    if ($block['componentId'] === 'html_raw') {
+                        $html_content .= $block['raw_html'] ?? '';
+                    } else {
+                        // For predefined components, grab standard structure or default placeholder
+                        $html_content .= '<!-- block: ' . sanitize_output($block['componentId']) . ' -->';
+                    }
+                }
+            } else {
+                $html_content = $content_arr['html'] ?? '<div class="py-20 text-center">Empty project structure</div>';
+            }
         }
 
         // Include wrapper headers/assets similar to render.php
@@ -285,6 +310,7 @@ switch ($action) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: "Inter", sans-serif; }
+        ' . $custom_css . '
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -296,6 +322,7 @@ switch ($action) {
     </script>
     <!-- Components JS (dynamic chat & forms integration) -->
     <script src="assets/js/components.js"></script>
+    ' . (!empty($custom_js) ? '<script>' . $custom_js . '</script>' : '') . '
 </body>
 </html>';
 
