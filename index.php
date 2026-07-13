@@ -47,7 +47,7 @@ $csrf_token = generate_csrf_token();
             <span class="bg-teal-500/10 text-teal-400 font-semibold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest border border-teal-500/15">Commercial Grade Low-Code</span>
             <h1 class="text-3xl md:text-5xl font-black text-white mt-6 tracking-tight leading-none">Craft Enterprise Websites Effortlessly</h1>
             <p class="text-slate-300 mt-4 text-sm md:text-md leading-relaxed">
-                The ultimate visual drag-and-drop workspace powered by PHP 7.4+ & MariaDB/MySQL.
+                The ultimate visual drag-and-drop workspace powered by PHP 7.4, PHP 8.1+ & MariaDB/MySQL.
                 Compile blazing-fast clean Tailwind layouts, inject custom low-code widgets, and scale without constraints.
             </p>
 

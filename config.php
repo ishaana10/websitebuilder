@@ -1,7 +1,7 @@
 <?php
 /**
  * WebCraft Open-Source Site Builder Configuration
- * High Security, Modular Architecture compatible with PHP 7.4+ and MySQL/MariaDB
+ * High Security, Modular Architecture compatible with PHP 7.4, PHP 8.1+ and MySQL/MariaDB
  */
 
 // Load Environment Variables if .env exists
