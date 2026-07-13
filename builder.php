@@ -175,6 +175,60 @@ $csrf_token = generate_csrf_token();
 
                     <hr class="border-slate-800">
 
+                    <!-- NAVBAR CUSTOMIZATION EXTENSION -->
+                    <div id="navbar-custom-section" class="hidden space-y-4">
+                        <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-bars"></i> Navbar Customizer
+                        </h4>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Brand Name / Logo Text</label>
+                            <input type="text" id="navbar-brand-text" oninput="updateNavbarLogoText(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Brand Logo Image URL (Optional)</label>
+                            <input type="text" id="navbar-logo-img" oninput="updateNavbarLogoImage(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" placeholder="https://example.com/logo.png">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] text-slate-400 block font-bold">Manage Navigation Links / Tabs</label>
+                            <div id="navbar-links-list" class="space-y-2">
+                                <!-- Dynamic Links Rows -->
+                            </div>
+                            <button onclick="addNavbarLinkRow()" class="w-full bg-slate-850 hover:bg-slate-800 text-teal-400 font-bold py-1.5 rounded text-[11px] border border-teal-500/10 transition">
+                                <i class="fas fa-plus"></i> Add Nav Link / Tab
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER CUSTOMIZATION EXTENSION -->
+                    <div id="footer-custom-section" class="hidden space-y-4">
+                        <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-shoe-prints"></i> Footer Customizer
+                        </h4>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Footer Brand Text</label>
+                            <input type="text" id="footer-brand-text" oninput="updateFooterBrandText(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Footer Logo Image URL (Optional)</label>
+                            <input type="text" id="footer-logo-img" oninput="updateFooterLogoImage(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" placeholder="https://example.com/footer-logo.png">
+                        </div>
+                        <div>
+                            <label class="text-[11px] text-slate-400 block mb-1">Copyright Note</label>
+                            <input type="text" id="footer-copyright" oninput="updateFooterCopyright(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] text-slate-400 block font-bold">Manage Footer Links</label>
+                            <div id="footer-links-list" class="space-y-2">
+                                <!-- Dynamic Links Rows -->
+                            </div>
+                            <button onclick="addFooterLinkRow()" class="w-full bg-slate-850 hover:bg-slate-800 text-teal-400 font-bold py-1.5 rounded text-[11px] border border-teal-500/10 transition">
+                                <i class="fas fa-plus"></i> Add Footer Link
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-800">
+
                     <!-- TEXT / HEADING CUSTOMIZATION -->
                     <div id="prop-group-text" class="space-y-3">
                         <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Content Editor</h4>

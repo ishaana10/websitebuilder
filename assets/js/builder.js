@@ -152,6 +152,27 @@ function selectComponentInstance(wrapper) {
     const pEl = wrapper.querySelector('p');
     document.getElementById('prop-paragraph-text').value = pEl ? pEl.innerText.trim() : '';
 
+    // Show/Hide custom sections based on component type
+    const navbarSection = document.getElementById('navbar-custom-section');
+    const footerSection = document.getElementById('footer-custom-section');
+    const textSection = document.getElementById('prop-group-text');
+
+    if (compId === 'navbar') {
+        navbarSection.classList.remove('hidden');
+        footerSection.classList.add('hidden');
+        textSection.classList.add('hidden');
+        loadNavbarCustomizerFields(wrapper);
+    } else if (compId === 'footer') {
+        navbarSection.classList.add('hidden');
+        footerSection.classList.remove('hidden');
+        textSection.classList.add('hidden');
+        loadFooterCustomizerFields(wrapper);
+    } else {
+        navbarSection.classList.add('hidden');
+        footerSection.classList.add('hidden');
+        textSection.classList.remove('hidden');
+    }
+
     // Advanced raw HTML panel trigger
     const rawHtmlSection = document.getElementById('low-code-html-section');
     if (compId === 'html_raw') {
@@ -301,12 +322,52 @@ function serializeCanvasContent() {
         const customHtmlContainer = wrap.querySelector('.custom-html-container');
         const raw_html = customHtmlContainer ? customHtmlContainer.innerHTML : '';
 
+        let brandText = '';
+        let logoImg = '';
+        let copyright = '';
+        let links = [];
+
+        if (componentId === 'navbar') {
+            const brandEl = wrap.querySelector('[data-component="navbar"] div:first-of-type span, [data-component="navbar"] div:first-of-type img');
+            brandText = brandEl ? (brandEl.tagName === 'IMG' ? '' : brandEl.innerText.trim()) : '';
+            const imgEl = wrap.querySelector('[data-component="navbar"] div:first-of-type img');
+            logoImg = imgEl ? imgEl.getAttribute('src') : '';
+
+            const linkEls = wrap.querySelectorAll('[data-component="navbar"] .hidden.md\\:flex a');
+            linkEls.forEach(el => {
+                links.push({
+                    text: el.innerText.trim(),
+                    url: el.getAttribute('href')
+                });
+            });
+        } else if (componentId === 'footer') {
+            const brandEl = wrap.querySelector('footer div:first-of-type div:first-of-type, footer div:first-of-type img');
+            brandText = brandEl ? (brandEl.tagName === 'IMG' ? '' : brandEl.innerText.trim()) : '';
+            const imgEl = wrap.querySelector('footer div:first-of-type img');
+            logoImg = imgEl ? imgEl.getAttribute('src') : '';
+
+            const copyEl = wrap.querySelector('footer .text-xs');
+            copyright = copyEl ? copyEl.innerHTML : '';
+
+            const linkEls = wrap.querySelectorAll('footer .flex.space-x-6 a');
+            linkEls.forEach(el => {
+                links.push({
+                    text: el.innerText.trim(),
+                    url: el.getAttribute('href')
+                });
+            });
+        }
+
         blocks.push({
             componentId: componentId,
             headingText: hEl ? hEl.innerText.trim() : '',
             paragraphText: pEl ? pEl.innerText.trim() : '',
             classes: layoutClasses,
-            raw_html: raw_html
+            raw_html: raw_html,
+            brandText: brandText,
+            logoImg: logoImg,
+            copyright: copyright,
+            links: links
         });
     });
 
@@ -460,6 +521,15 @@ function loadProjectState() {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = compDef.html;
 
+            // Re-apply custom navbar details
+            if (block.componentId === 'navbar') {
+                reconstructNavbarComponent(tempDiv, block);
+            }
+            // Re-apply custom footer details
+            if (block.componentId === 'footer') {
+                reconstructFooterComponent(tempDiv, block);
+            }
+
             // Re-apply properties
             const hEl = tempDiv.querySelector('h1, h2, h3');
             if (hEl && block.headingText) hEl.innerText = block.headingText;
@@ -568,4 +638,357 @@ function switchControlPanelTab(tab) {
 function exportProjectZip() {
     showToast('Exporting...', 'Packaging standalone static HTML and interactive assets into a ZIP file.');
     window.location.href = `api.php?action=export&project_id=${PROJECT_ID}`;
+}
+
+/**
+ * Reconstruct Navbar layout from block state
+ */
+function reconstructNavbarComponent(tempDiv, block) {
+    const nav = tempDiv.querySelector('[data-component="navbar"]');
+    if (!nav) return;
+
+    // Brand / Logo Customization
+    const logoContainer = nav.querySelector('div:first-of-type');
+    if (logoContainer) {
+        if (block.logoImg) {
+            logoContainer.innerHTML = `<img src="${block.logoImg}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
+        } else {
+            const bText = block.brandText || 'WEBCRAFT';
+            logoContainer.innerHTML = `<span class="text-xl font-extrabold tracking-wider text-teal-400">${bText}</span>`;
+        }
+    }
+
+    // Links / Tabs Customization
+    const linksContainer = nav.querySelector('.hidden.md\\:flex');
+    if (linksContainer) {
+        linksContainer.innerHTML = '';
+        const navLinks = block.links || [
+            { text: 'Home', url: '#home' },
+            { text: 'Features', url: '#features' },
+            { text: 'Pricing', url: '#pricing' },
+            { text: 'Contact', url: '#contact' }
+        ];
+        navLinks.forEach(lnk => {
+            const a = document.createElement('a');
+            a.className = 'hover:text-teal-300 transition duration-300';
+            a.setAttribute('href', lnk.url);
+            a.innerText = lnk.text;
+            linksContainer.appendChild(a);
+        });
+    }
+}
+
+/**
+ * Load saved navbar fields inside customizer
+ */
+function loadNavbarCustomizerFields(wrapper) {
+    const nav = wrapper.querySelector('[data-component="navbar"]');
+    if (!nav) return;
+
+    const brandSpan = nav.querySelector('div:first-of-type span');
+    document.getElementById('navbar-brand-text').value = brandSpan ? brandSpan.innerText.trim() : '';
+
+    const brandImg = nav.querySelector('div:first-of-type img');
+    document.getElementById('navbar-logo-img').value = brandImg ? brandImg.getAttribute('src') : '';
+
+    const linksContainer = nav.querySelector('.hidden.md\\:flex');
+    const linksList = document.getElementById('navbar-links-list');
+    linksList.innerHTML = '';
+
+    if (linksContainer) {
+        const links = linksContainer.querySelectorAll('a');
+        links.forEach((lnk, idx) => {
+            appendNavbarLinkRowElement(lnk.innerText.trim(), lnk.getAttribute('href'), idx);
+        });
+    }
+}
+
+/**
+ * Append nav link row element inside sidebar lists
+ */
+function appendNavbarLinkRowElement(text, url, idx) {
+    const list = document.getElementById('navbar-links-list');
+    const div = document.createElement('div');
+    div.className = 'flex gap-1 items-center navbar-link-row bg-slate-950 p-2 rounded border border-slate-850';
+    div.innerHTML = `
+        <input type="text" placeholder="Tab Text" value="${text}" oninput="updateNavbarFromFields()" class="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500">
+        <select onchange="updateNavbarFromFields()" class="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500">
+            <option value="#home" ${url === '#home' ? 'selected' : ''}>Home Section</option>
+            <option value="#features" ${url === '#features' ? 'selected' : ''}>Features Section</option>
+            <option value="#pricing" ${url === '#pricing' ? 'selected' : ''}>Pricing Section</option>
+            <option value="#contact" ${url === '#contact' ? 'selected' : ''}>Contact Section</option>
+            <option value="index.php" ${url === 'index.php' ? 'selected' : ''}>Index Page</option>
+            <option value="admin.php" ${url === 'admin.php' ? 'selected' : ''}>Admin Page</option>
+            <option value="${!url.startsWith('#') && url !== 'index.php' && url !== 'admin.php' ? url : ''}" ${!url.startsWith('#') && url !== 'index.php' && url !== 'admin.php' ? 'selected' : ''} class="custom-url-option">Custom URL...</option>
+        </select>
+        <button onclick="this.parentNode.remove(); updateNavbarFromFields();" class="text-red-400 hover:text-red-300 p-1" title="Delete Tab">
+            <i class="fas fa-trash-alt text-[10px]"></i>
+        </button>
+    `;
+
+    const select = div.querySelector('select');
+    select.addEventListener('change', (e) => {
+        if (e.target.value === '') {
+            const customUrl = prompt('Enter custom target link URL (e.g. https://google.com):');
+            if (customUrl) {
+                let opt = select.querySelector('.custom-url-option');
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.className = 'custom-url-option';
+                    select.appendChild(opt);
+                }
+                opt.value = customUrl;
+                opt.innerText = customUrl;
+                opt.selected = true;
+                updateNavbarFromFields();
+            } else {
+                select.selectedIndex = 0;
+            }
+        }
+    });
+
+    list.appendChild(div);
+}
+
+function addNavbarLinkRow() {
+    appendNavbarLinkRowElement('New Tab', '#home', Date.now());
+    updateNavbarFromFields();
+}
+
+/**
+ * Handle live preview and DB state syncing for Navbar Customizer
+ */
+function updateNavbarFromFields() {
+    if (!activeSelectedElement) return;
+    const nav = activeSelectedElement.querySelector('[data-component="navbar"]');
+    if (!nav) return;
+
+    const bText = document.getElementById('navbar-brand-text').value.trim();
+    const logoImgUrl = document.getElementById('navbar-logo-img').value.trim();
+    const logoContainer = nav.querySelector('div:first-of-type');
+
+    if (logoContainer) {
+        if (logoImgUrl) {
+            logoContainer.innerHTML = `<img src="${logoImgUrl}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
+        } else {
+            logoContainer.innerHTML = `<span class="text-xl font-extrabold tracking-wider text-teal-400">${bText || 'WEBCRAFT'}</span>`;
+        }
+    }
+
+    const linksList = document.getElementById('navbar-links-list');
+    const rows = linksList.querySelectorAll('.navbar-link-row');
+    const linksContainer = nav.querySelector('.hidden.md\\:flex');
+
+    if (linksContainer) {
+        linksContainer.innerHTML = '';
+        rows.forEach(row => {
+            const textInput = row.querySelector('input');
+            const selectSel = row.querySelector('select');
+
+            const linkText = textInput ? textInput.value.trim() : 'Tab';
+            const linkUrl = selectSel ? selectSel.value : '#home';
+
+            const a = document.createElement('a');
+            a.className = 'hover:text-teal-300 transition duration-300';
+            a.setAttribute('href', linkUrl);
+            a.innerText = linkText;
+            linksContainer.appendChild(a);
+        });
+    }
+
+    saveProject(true);
+}
+
+function updateNavbarLogoText(val) {
+    updateNavbarFromFields();
+}
+
+function reconstructFooterComponent(tempDiv, block) {
+    const foot = tempDiv.querySelector('footer');
+    if (!foot) return;
+
+    // Brand Logo
+    const brandContainer = foot.querySelector('div:first-of-type div:first-of-type') || foot.querySelector('div:first-of-type img');
+    if (brandContainer) {
+        if (block.logoImg) {
+            brandContainer.outerHTML = `<img src="${block.logoImg}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
+        } else {
+            const bText = block.brandText || 'WEBCRAFT BUILDER';
+            brandContainer.outerHTML = `<div class="text-lg font-black text-white">${bText}</div>`;
+        }
+    }
+
+    // Copyright Text
+    const copyEl = foot.querySelector('.text-xs');
+    if (copyEl && block.copyright) {
+        copyEl.innerText = block.copyright;
+    }
+
+    // Links list
+    const linksContainer = foot.querySelector('.flex.space-x-6');
+    if (linksContainer) {
+        linksContainer.innerHTML = '';
+        const footLinks = block.links || [
+            { text: 'Privacy Policy', url: '#' },
+            { text: 'Terms of Use', url: '#' },
+            { text: 'Support', url: '#' }
+        ];
+        footLinks.forEach(lnk => {
+            const a = document.createElement('a');
+            a.className = 'hover:text-white transition';
+            a.setAttribute('href', lnk.url);
+            a.innerText = lnk.text;
+            linksContainer.appendChild(a);
+        });
+    }
+}
+
+/**
+ * Load saved footer fields inside customizer
+ */
+function loadFooterCustomizerFields(wrapper) {
+    const foot = wrapper.querySelector('footer');
+    if (!foot) return;
+
+    const brandDiv = foot.querySelector('div:first-of-type div:first-of-type') || foot.querySelector('div:first-of-type img');
+    document.getElementById('footer-brand-text').value = (brandDiv && brandDiv.tagName !== 'IMG') ? brandDiv.innerText.trim() : 'WEBCRAFT BUILDER';
+
+    const brandImg = foot.querySelector('div:first-of-type img');
+    document.getElementById('footer-logo-img').value = brandImg ? brandImg.getAttribute('src') : '';
+
+    const copyEl = foot.querySelector('.text-xs');
+    document.getElementById('footer-copyright').value = copyEl ? copyEl.innerText.trim() : '';
+
+    const linksContainer = foot.querySelector('.flex.space-x-6');
+    const linksList = document.getElementById('footer-links-list');
+    linksList.innerHTML = '';
+
+    if (linksContainer) {
+        const links = linksContainer.querySelectorAll('a');
+        links.forEach((lnk, idx) => {
+            appendFooterLinkRowElement(lnk.innerText.trim(), lnk.getAttribute('href'), idx);
+        });
+    }
+}
+
+/**
+ * Append footer link row element inside sidebar lists
+ */
+function appendFooterLinkRowElement(text, url, idx) {
+    const list = document.getElementById('footer-links-list');
+    const div = document.createElement('div');
+    div.className = 'flex gap-1 items-center footer-link-row bg-slate-950 p-2 rounded border border-slate-850';
+    div.innerHTML = `
+        <input type="text" placeholder="Link Text" value="${text}" oninput="updateFooterFromFields()" class="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500">
+        <select onchange="updateFooterFromFields()" class="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500">
+            <option value="#home" ${url === '#home' ? 'selected' : ''}>Home Section</option>
+            <option value="#features" ${url === '#features' ? 'selected' : ''}>Features Section</option>
+            <option value="#pricing" ${url === '#pricing' ? 'selected' : ''}>Pricing Section</option>
+            <option value="#contact" ${url === '#contact' ? 'selected' : ''}>Contact Section</option>
+            <option value="index.php" ${url === 'index.php' ? 'selected' : ''}>Index Page</option>
+            <option value="admin.php" ${url === 'admin.php' ? 'selected' : ''}>Admin Page</option>
+            <option value="${!url.startsWith('#') && url !== 'index.php' && url !== 'admin.php' ? url : ''}" ${!url.startsWith('#') && url !== 'index.php' && url !== 'admin.php' ? 'selected' : ''} class="custom-footer-url-option">Custom URL...</option>
+        </select>
+        <button onclick="this.parentNode.remove(); updateFooterFromFields();" class="text-red-400 hover:text-red-300 p-1" title="Delete Link">
+            <i class="fas fa-trash-alt text-[10px]"></i>
+        </button>
+    `;
+
+    const select = div.querySelector('select');
+    select.addEventListener('change', (e) => {
+        if (e.target.value === '') {
+            const customUrl = prompt('Enter custom target link URL (e.g. https://google.com):');
+            if (customUrl) {
+                let opt = select.querySelector('.custom-footer-url-option');
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.className = 'custom-footer-url-option';
+                    select.appendChild(opt);
+                }
+                opt.value = customUrl;
+                opt.innerText = customUrl;
+                opt.selected = true;
+                updateFooterFromFields();
+            } else {
+                select.selectedIndex = 0;
+            }
+        }
+    });
+
+    list.appendChild(div);
+}
+
+function addFooterLinkRow() {
+    appendFooterLinkRowElement('New Link', '#home', Date.now());
+    updateFooterFromFields();
+}
+
+/**
+ * Handle live preview and DB state syncing for Footer Customizer
+ */
+function updateFooterFromFields() {
+    if (!activeSelectedElement) return;
+    const foot = activeSelectedElement.querySelector('footer');
+    if (!foot) return;
+
+    const bText = document.getElementById('footer-brand-text').value.trim();
+    const logoImgUrl = document.getElementById('footer-logo-img').value.trim();
+    const logoContainer = foot.querySelector('div:first-of-type div:first-of-type') || foot.querySelector('div:first-of-type img');
+
+    if (logoContainer) {
+        if (logoImgUrl) {
+            if (logoContainer.tagName === 'IMG') {
+                logoContainer.setAttribute('src', logoImgUrl);
+            } else {
+                logoContainer.outerHTML = `<img src="${logoImgUrl}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
+            }
+        } else {
+            if (logoContainer.tagName === 'IMG') {
+                logoContainer.outerHTML = `<div class="text-lg font-black text-white">${bText || 'WEBCRAFT BUILDER'}</div>`;
+            } else {
+                logoContainer.innerText = bText || 'WEBCRAFT BUILDER';
+            }
+        }
+    }
+
+    const copyText = document.getElementById('footer-copyright').value.trim();
+    const copyEl = foot.querySelector('.text-xs');
+    if (copyEl) {
+        copyEl.innerText = copyText || `© ${new Date().getFullYear()} WebCraft. All rights reserved. Open Source under MIT.`;
+    }
+
+    const linksList = document.getElementById('footer-links-list');
+    const rows = linksList.querySelectorAll('.footer-link-row');
+    const linksContainer = foot.querySelector('.flex.space-x-6');
+
+    if (linksContainer) {
+        linksContainer.innerHTML = '';
+        rows.forEach(row => {
+            const textInput = row.querySelector('input');
+            const selectSel = row.querySelector('select');
+
+            const linkText = textInput ? textInput.value.trim() : 'Link';
+            const linkUrl = selectSel ? selectSel.value : '#home';
+
+            const a = document.createElement('a');
+            a.className = 'hover:text-white transition';
+            a.setAttribute('href', linkUrl);
+            a.innerText = linkText;
+            linksContainer.appendChild(a);
+        });
+    }
+
+    saveProject(true);
+}
+
+function updateFooterBrandText(val) {
+    updateFooterFromFields();
+}
+
+function updateNavbarLogoImage(val) {
+    updateFooterFromFields();
+}
+
+function updateFooterCopyright(val) {
+    updateFooterFromFields();
 }

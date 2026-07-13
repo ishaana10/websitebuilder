@@ -284,11 +284,67 @@ switch ($action) {
                 // If it is our structured format, compile HTML blocks
                 $html_content = '';
                 foreach ($content_arr['blocks'] as $block) {
-                    // For raw HTML block, grab layout content
                     if ($block['componentId'] === 'html_raw') {
                         $html_content .= $block['raw_html'] ?? '';
+                    } elseif ($block['componentId'] === 'navbar') {
+                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'WEBCRAFT';
+                        $logoHtml = '';
+                        if (!empty($block['logoImg'])) {
+                            $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
+                        } else {
+                            $logoHtml = '<span class="text-xl font-extrabold tracking-wider text-teal-400">' . sanitize_output($bText) . '</span>';
+                        }
+
+                        $linksHtml = '';
+                        $navLinks = $block['links'] ?? [
+                            ['text' => 'Home', 'url' => '#home'],
+                            ['text' => 'Features', 'url' => '#features'],
+                            ['text' => 'Pricing', 'url' => '#pricing'],
+                            ['text' => 'Contact', 'url' => '#contact']
+                        ];
+                        foreach ($navLinks as $lnk) {
+                            $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-teal-300 transition duration-300">' . sanitize_output($lnk['text']) . '</a>';
+                        }
+
+                        $html_content .= '
+<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
+    <div class="text-xl font-extrabold tracking-wider text-teal-400">' . $logoHtml . '</div>
+    <div class="hidden md:flex space-x-6">' . $linksHtml . '</div>
+    <div>
+        <a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a>
+    </div>
+</nav>';
+                    } elseif ($block['componentId'] === 'footer') {
+                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'WEBCRAFT BUILDER';
+                        $logoHtml = '';
+                        if (!empty($block['logoImg'])) {
+                            $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
+                        } else {
+                            $logoHtml = '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
+                        }
+
+                        $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' WebCraft. All rights reserved.';
+
+                        $linksHtml = '';
+                        $footLinks = $block['links'] ?? [
+                            ['text' => 'Privacy Policy', 'url' => '#'],
+                            ['text' => 'Terms of Use', 'url' => '#'],
+                            ['text' => 'Support', 'url' => '#']
+                        ];
+                        foreach ($footLinks as $lnk) {
+                            $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-white transition">' . sanitize_output($lnk['text']) . '</a>';
+                        }
+
+                        $html_content .= '
+<footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>' . $logoHtml . '</div>
+        <div class="flex space-x-6 text-sm">' . $linksHtml . '</div>
+        <div class="text-xs text-slate-600">' . $copyText . '</div>
+    </div>
+</footer>';
                     } else {
-                        // For predefined components, grab standard structure or default placeholder
+                        // Predefined basic components fallback
                         $html_content .= '<!-- block: ' . sanitize_output($block['componentId']) . ' -->';
                     }
                 }

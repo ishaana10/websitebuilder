@@ -100,6 +100,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
             } else {
                 $error_msg = "You cannot modify your own administrative role details.";
             }
+        } elseif ($action === 'git_status' && is_admin()) {
+            header('Content-Type: application/json');
+            $output = shell_exec("git status 2>&1");
+            if (empty($output)) {
+                $output = "Git is not installed or accessible on this system environment.";
+            }
+            echo json_encode(['success' => true, 'output' => nl2br(sanitize_output($output))]);
+            exit;
+        } elseif ($action === 'git_pull' && is_admin()) {
+            header('Content-Type: application/json');
+            $output = shell_exec("git pull 2>&1");
+            if (empty($output)) {
+                $output = "Git pull could not be executed or permission denied.";
+                echo json_encode(['success' => false, 'error' => $output]);
+            } else {
+                echo json_encode(['success' => true, 'output' => nl2br(sanitize_output($output))]);
+            }
+            exit;
         }
     }
 }
@@ -619,6 +637,27 @@ $csrf_token = generate_csrf_token();
                                 <li class="flex items-center justify-between"><span class="text-slate-300">Stored Script Anti-XSS Payload Filter</span> <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">SECURE</span></li>
                             </ul>
                         </div>
+                        <!-- Repository Updater Tool -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 col-span-1 md:col-span-2">
+                            <h3 class="font-extrabold text-white text-xs uppercase tracking-wider mb-4 text-teal-400 flex items-center gap-1.5">
+                                <i class="fab fa-git-alt"></i> Continuous Repository Updates
+                            </h3>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-4">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official WebCraft git origin branch.</p>
+
+                            <div class="bg-slate-950 p-4 rounded-lg border border-slate-850 mb-4 font-mono text-[11px] text-slate-300 space-y-1">
+                                <span class="text-slate-500">// Current Branch Status Checks:</span>
+                                <div id="git-status-log">Pending diagnostic check...</div>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button onclick="checkGitStatus()" class="bg-slate-850 hover:bg-slate-800 border border-teal-500/10 text-teal-400 font-bold px-4 py-2.5 rounded text-xs transition">
+                                    <i class="fas fa-search-location"></i> Check Status
+                                </button>
+                                <button onclick="triggerGitPull()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2.5 rounded text-xs transition">
+                                    <i class="fas fa-cloud-download-alt"></i> Pull Latest Updates
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -720,6 +759,64 @@ $csrf_token = generate_csrf_token();
 
         function closeCreateModal() {
             document.getElementById('create-modal').classList.add('hidden');
+        }
+
+        /**
+         * Check Local Git repository status
+         */
+        function checkGitStatus() {
+            const statusLog = document.getElementById('git-status-log');
+            statusLog.innerText = "Querying git repository status...";
+
+            fetch('admin.php?action=git_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'csrf_token=' + encodeURIComponent('<?php echo $csrf_token; ?>')
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    statusLog.innerHTML = `<span class="text-emerald-400">✔ Repository Verified!</span><br>${data.output}`;
+                } else {
+                    statusLog.innerHTML = `<span class="text-red-400">❌ Error:</span><br>${data.error}`;
+                }
+            })
+            .catch(err => {
+                statusLog.innerText = "Network connection failed: " + err.message;
+            });
+        }
+
+        /**
+         * Trigger Git Pull origin main
+         */
+        function triggerGitPull() {
+            const statusLog = document.getElementById('git-status-log');
+            if (confirm("Are you sure you wish to pull direct code updates from git origin branch? This will sync local files.")) {
+                statusLog.innerText = "Pulling latest commits from repository...";
+
+                fetch('admin.php?action=git_pull', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'csrf_token=' + encodeURIComponent('<?php echo $csrf_token; ?>')
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        statusLog.innerHTML = `<span class="text-emerald-400">✔ Pull Completed successfully!</span><br>${data.output}`;
+                        alert("Repository update completed successfully!");
+                        window.location.reload();
+                    } else {
+                        statusLog.innerHTML = `<span class="text-red-400">❌ Pull Error:</span><br>${data.error}`;
+                    }
+                })
+                .catch(err => {
+                    statusLog.innerText = "Network connection failed: " + err.message;
+                });
+            }
         }
 
         /**
