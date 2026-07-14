@@ -239,7 +239,7 @@ $csrf_token = generate_csrf_token();
             <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/40">
                 <div class="flex items-center gap-2">
                     <div class="bg-teal-500 text-slate-950 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm">WC</div>
-                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">WebCraft v1.0</span>
+                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">WebCraft v1.1</span>
                 </div>
             </div>
 
