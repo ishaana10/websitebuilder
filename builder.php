@@ -25,6 +25,14 @@ if (!$project) {
 }
 
 $csrf_token = generate_csrf_token();
+
+// Safely decode content_json — always output a valid JS object literal, never a double-encoded string.
+$raw_content = $project['content_json'] ?? '{}';
+$decoded     = json_decode($raw_content, true);
+// If it's valid JSON already, re-encode cleanly; otherwise default to empty schema.
+$content_state_js = ($decoded !== null)
+    ? json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+    : '{"version":1,"meta":{"title":"","description":"","custom_css":"","custom_js":""},"blocks":[]}';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-slate-950">
@@ -174,7 +182,7 @@ $csrf_token = generate_csrf_token();
                     <hr class="border-slate-800">
 
                     <!-- Dynamic prop fields injected here by WCBuilder.renderPropertiesPanel() -->
-                    <!-- id="dynamic-prop-fields" is created/managed by builder.js -->
+                    <div id="dynamic-prop-fields" class="space-y-3"></div>
 
                     <hr class="border-slate-800">
 
@@ -223,9 +231,10 @@ $csrf_token = generate_csrf_token();
 
     <!-- BACKEND METADATA -->
     <script>
-        const PROJECT_ID          = <?php echo (int)$project['id']; ?>;
-        const CSRF_TOKEN          = "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES); ?>";
-        const LOADED_CONTENT_STATE = <?php echo json_encode($project['content_json'] ?? '{}'); ?>;
+        const PROJECT_ID           = <?php echo (int)$project['id']; ?>;
+        const CSRF_TOKEN           = "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES); ?>";
+        // content_state_js is a clean JSON object (never a double-encoded string)
+        const LOADED_CONTENT_STATE = <?php echo $content_state_js; ?>;
     </script>
 
     <!-- Load component registry first, then builder core -->

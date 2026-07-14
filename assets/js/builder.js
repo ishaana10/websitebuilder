@@ -1,38 +1,51 @@
 /* ============================================================
-   WEBCRAFT BUILDER CORE  v2.0  — Vanilla JS
+   WEBCRAFT BUILDER CORE  v2.1  — Vanilla JS
    State → Render → Event loop
    ============================================================ */
 
 const WCBuilder = (() => {
 
-  // ── STATE ────────────────────────────────────────────────────
+  // ── STATE ────────────────────────────────────────────────────────────────
   let state = {
     selectedId: null,
     draggingType: null,
     schema: { version: 1, meta: { title: '', description: '', custom_css: '', custom_js: '' }, blocks: [] }
   };
 
-  // ── INIT ─────────────────────────────────────────────────────
-  function init(rawJson) {
+  // ── INIT ─────────────────────────────────────────────────────────────────
+  function init(rawInput) {
+    // rawInput is always a plain JS value (object/array) from builder.php —
+    // never a JSON string, because builder.php now outputs the object directly.
+    // We still guard for the legacy case where a string slips through.
     try {
-      const parsed = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
+      let parsed = rawInput;
+      if (typeof parsed === 'string') {
+        parsed = JSON.parse(parsed);
+        // Double-encoded: the string itself was a JSON string
+        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+      }
       if (Array.isArray(parsed)) {
         state.schema.blocks = parsed;
-      } else if (parsed && parsed.blocks) {
-        state.schema = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        if (parsed.blocks) {
+          state.schema = parsed;
+        } else {
+          // Unexpected shape — keep defaults
+          console.warn('[WCBuilder] Unexpected schema shape, starting fresh.', parsed);
+        }
       }
     } catch (e) {
       console.warn('[WCBuilder] Could not parse saved schema, starting fresh.', e);
     }
     const cssEl = document.getElementById('project-custom-css');
     const jsEl  = document.getElementById('project-custom-js');
-    if (cssEl) cssEl.value = state.schema.meta.custom_css ?? '';
-    if (jsEl)  jsEl.value  = state.schema.meta.custom_js  ?? '';
+    if (cssEl) cssEl.value = state.schema.meta?.custom_css ?? '';
+    if (jsEl)  jsEl.value  = state.schema.meta?.custom_js  ?? '';
     renderCanvas();
     buildComponentShelf();
   }
 
-  // ── CANVAS RENDERING ─────────────────────────────────────────
+  // ── CANVAS RENDERING ─────────────────────────────────────────────────────
   function renderCanvas() {
     const canvas = document.getElementById('canvas-content');
     const empty  = document.getElementById('canvas-empty-state');
@@ -91,7 +104,7 @@ const WCBuilder = (() => {
     return wrapper;
   }
 
-  // ── COMPONENT SHELF ──────────────────────────────────────────
+  // ── COMPONENT SHELF ──────────────────────────────────────────────────────
   function buildComponentShelf() {
     const shelf = document.getElementById('components-shelf');
     shelf.innerHTML = '';
@@ -120,7 +133,7 @@ const WCBuilder = (() => {
     });
   }
 
-  // ── CANVAS DROP ZONE ─────────────────────────────────────────
+  // ── CANVAS DROP ZONE ─────────────────────────────────────────────────────
   function handleCanvasDrop(e) {
     e.preventDefault();
     document.getElementById('canvas-container').classList.remove('canvas-dragover');
@@ -139,7 +152,7 @@ const WCBuilder = (() => {
     dragSrcId = null;
   }
 
-  // ── BLOCK MUTATIONS ──────────────────────────────────────────
+  // ── BLOCK MUTATIONS ───────────────────────────────────────────────────────
   function uid() { return 'blk_' + Math.random().toString(36).slice(2, 9); }
 
   function addBlock(type) {
@@ -217,7 +230,7 @@ const WCBuilder = (() => {
     }, obj);
   }
 
-  // ── SELECTION & PROPERTIES PANEL ─────────────────────────────
+  // ── SELECTION & PROPERTIES PANEL ─────────────────────────────────────────
   function selectBlock(id) {
     document.querySelectorAll('.wc-block').forEach(el => el.classList.remove('component-selected'));
     const el = document.querySelector(`[data-block-id="${id}"]`);
@@ -242,17 +255,9 @@ const WCBuilder = (() => {
     document.getElementById('selection-controls').classList.remove('hidden');
     document.getElementById('selected-component-type').textContent = def.label;
 
-    let fieldsEl = document.getElementById('dynamic-prop-fields');
-    if (!fieldsEl) {
-      fieldsEl = document.createElement('div');
-      fieldsEl.id = 'dynamic-prop-fields';
-      fieldsEl.className = 'space-y-3';
-      const sc = document.getElementById('selection-controls');
-      if (!sc) return;
-      const firstHr = sc.querySelector('hr');
-      if (firstHr) sc.insertBefore(fieldsEl, firstHr);
-      else sc.prepend(fieldsEl);
-    }
+    // #dynamic-prop-fields is a static element in builder.php — just clear and refill.
+    const fieldsEl = document.getElementById('dynamic-prop-fields');
+    if (!fieldsEl) return;
     fieldsEl.innerHTML = '';
 
     def.props.forEach(propDef => {
@@ -261,7 +266,7 @@ const WCBuilder = (() => {
     });
   }
 
-  // ── PROP FIELD BUILDER ───────────────────────────────────────
+  // ── PROP FIELD BUILDER ────────────────────────────────────────────────────
   function buildPropField(propDef, blockId, currentValue) {
     const wrap  = document.createElement('div');
     const label = `<label class="text-[11px] text-slate-400 block mb-1 font-semibold">${propDef.label}</label>`;
@@ -304,8 +309,11 @@ const WCBuilder = (() => {
     return wrap;
   }
 
-  // ── ARRAY / REPEATER FIELD ───────────────────────────────────
+  // ── ARRAY / REPEATER FIELD ────────────────────────────────────────────────
   function buildArrayField(propDef, blockId, items) {
+    // Work on a local copy so mutations are explicit
+    items = JSON.parse(JSON.stringify(items));
+
     const container = document.createElement('div');
     container.className = 'space-y-2';
 
@@ -323,61 +331,75 @@ const WCBuilder = (() => {
     listEl.className = 'space-y-2';
     container.appendChild(listEl);
 
+    function save() {
+      updateBlockProp(blockId, propDef.key, JSON.parse(JSON.stringify(items)));
+    }
+
     function renderItems() {
       listEl.innerHTML = '';
       items.forEach((item, idx) => {
         const itemWrap = document.createElement('div');
         itemWrap.className = 'bg-slate-950 border border-slate-800 rounded-lg overflow-hidden';
 
+        const firstFieldKey  = propDef.fields?.[0]?.key;
+        const previewText    = firstFieldKey ? (item[firstFieldKey] ?? `${propDef.itemLabel ?? 'Item'} ${idx + 1}`) : `${propDef.itemLabel ?? 'Item'} ${idx + 1}`;
+
         const itemHeader = document.createElement('div');
-        itemHeader.className = 'flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-slate-800/50 transition';
-        const previewText = item[propDef.fields?.[0]?.key] ?? `${propDef.itemLabel ?? 'Item'} ${idx + 1}`;
+        itemHeader.className = 'flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-slate-800/50 transition select-none';
         itemHeader.innerHTML = `
-          <span class="text-[11px] text-slate-300 font-semibold truncate">${escHtml(String(previewText))}</span>
+          <span class="text-[11px] text-slate-300 font-semibold truncate item-preview">${escHtml(String(previewText))}</span>
           <div class="flex items-center gap-1 shrink-0 ml-2">
-            <button data-move="up"   title="Move Up"   class="text-slate-500 hover:text-teal-400 px-1"><i class="fas fa-arrow-up text-[10px]"></i></button>
-            <button data-move="down" title="Move Down" class="text-slate-500 hover:text-teal-400 px-1"><i class="fas fa-arrow-down text-[10px]"></i></button>
-            <button data-remove title="Remove" class="text-slate-500 hover:text-red-400 px-1"><i class="fas fa-times text-[10px]"></i></button>
-            <i class="fas fa-chevron-down text-slate-600 text-[10px] ml-1 toggle-chevron"></i>
+            <button data-move="up"   title="Move Up"   class="text-slate-500 hover:text-teal-400 px-1 py-0.5"><i class="fas fa-arrow-up text-[10px]"></i></button>
+            <button data-move="down" title="Move Down" class="text-slate-500 hover:text-teal-400 px-1 py-0.5"><i class="fas fa-arrow-down text-[10px]"></i></button>
+            <button data-remove      title="Remove"    class="text-slate-500 hover:text-red-400 px-1 py-0.5"><i class="fas fa-times text-[10px]"></i></button>
+            <i class="fas fa-chevron-down text-slate-600 text-[10px] ml-1 toggle-chevron transition-transform"></i>
           </div>
         `;
 
         const itemBody = document.createElement('div');
-        itemBody.className = 'px-3 pb-3 space-y-2 hidden';
+        itemBody.className = 'px-3 pb-3 pt-1 space-y-2 hidden';
 
         (propDef.fields ?? []).forEach(fieldDef => {
           const fWrap = buildPropField(
-            { ...fieldDef, label: fieldDef.label },
+            { ...fieldDef },
             blockId,
             item[fieldDef.key]
           );
           if (!fWrap) return;
+
+          // Re-wire the input to update our local items[] array, then push to block
           const input = fWrap.querySelector('input,textarea,select');
           if (input) {
+            // Remove the generic listener added by buildPropField (it points to blockId/key directly)
             const fresh = input.cloneNode(true);
             input.replaceWith(fresh);
-            const evtName = fresh.tagName === 'SELECT' ? 'change' : (fresh.type === 'checkbox' ? 'change' : 'input');
-            fresh.addEventListener(evtName, ev => {
+            const evtName = fresh.type === 'checkbox' ? 'change' : (fresh.tagName === 'SELECT' ? 'change' : 'input');
+            fresh.addEventListener(evtName, () => {
               items[idx][fieldDef.key] = fresh.type === 'checkbox' ? fresh.checked : fresh.value;
-              updateBlockProp(blockId, propDef.key, items);
-              const preview = itemHeader.querySelector('span');
-              if (preview) preview.textContent = escHtml(String(items[idx][propDef.fields?.[0]?.key] ?? `${propDef.itemLabel} ${idx + 1}`));
+              // Update preview label
+              if (firstFieldKey && fieldDef.key === firstFieldKey) {
+                const preview = itemHeader.querySelector('.item-preview');
+                if (preview) preview.textContent = escHtml(String(fresh.value));
+              }
+              save();
             });
           }
           itemBody.appendChild(fWrap);
         });
 
+        // Toggle expand/collapse
         itemHeader.addEventListener('click', e => {
           if (e.target.closest('[data-remove],[data-move]')) return;
           itemBody.classList.toggle('hidden');
-          itemHeader.querySelector('.toggle-chevron').classList.toggle('fa-chevron-down');
-          itemHeader.querySelector('.toggle-chevron').classList.toggle('fa-chevron-up');
+          const chevron = itemHeader.querySelector('.toggle-chevron');
+          chevron.classList.toggle('fa-chevron-down');
+          chevron.classList.toggle('fa-chevron-up');
         });
 
         itemHeader.querySelector('[data-remove]').addEventListener('click', e => {
           e.stopPropagation();
           items.splice(idx, 1);
-          updateBlockProp(blockId, propDef.key, items);
+          save();
           renderItems();
         });
 
@@ -385,7 +407,7 @@ const WCBuilder = (() => {
           e.stopPropagation();
           if (idx === 0) return;
           [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
-          updateBlockProp(blockId, propDef.key, items);
+          save();
           renderItems();
         });
 
@@ -393,7 +415,7 @@ const WCBuilder = (() => {
           e.stopPropagation();
           if (idx >= items.length - 1) return;
           [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
-          updateBlockProp(blockId, propDef.key, items);
+          save();
           renderItems();
         });
 
@@ -404,13 +426,17 @@ const WCBuilder = (() => {
     }
 
     header.querySelector('.wc-add-item').addEventListener('click', () => {
-      items.push(JSON.parse(JSON.stringify(propDef.itemDefault ?? {})));
-      updateBlockProp(blockId, propDef.key, items);
+      const newItem = JSON.parse(JSON.stringify(propDef.itemDefault ?? {}));
+      items.push(newItem);
+      save();
       renderItems();
-      const lastItem = listEl.lastElementChild;
-      if (lastItem) {
-        const body = lastItem.querySelector('div.hidden');
-        if (body) body.classList.remove('hidden');
+      // Auto-expand the new item
+      const lastWrap = listEl.lastElementChild;
+      if (lastWrap) {
+        const body    = lastWrap.querySelector('div.hidden');
+        const chevron = lastWrap.querySelector('.toggle-chevron');
+        if (body)    body.classList.remove('hidden');
+        if (chevron) { chevron.classList.remove('fa-chevron-down'); chevron.classList.add('fa-chevron-up'); }
       }
     });
 
@@ -418,7 +444,7 @@ const WCBuilder = (() => {
     return container;
   }
 
-  // ── SAVE / PUBLISH ───────────────────────────────────────────
+  // ── SAVE / PUBLISH ────────────────────────────────────────────────────────
   let autosaveTimer = null;
   function autosave() {
     clearTimeout(autosaveTimer);
@@ -441,7 +467,18 @@ const WCBuilder = (() => {
           schema:     state.schema
         })
       });
-      const data = await res.json();
+
+      // Guard against non-JSON responses (e.g. PHP errors output before headers)
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        console.error('[WCBuilder] Non-JSON response from api.php:', text.slice(0, 300));
+        showToast('Server Error', 'api.php returned non-JSON. Check PHP logs.', 'error');
+        return;
+      }
+
       if (data.success) {
         if (!silent) showToast(publish ? 'Published! 🚀' : 'Draft Saved ✓', data.message ?? 'Project updated.', 'success');
         if (publish) {
@@ -459,7 +496,7 @@ const WCBuilder = (() => {
   async function publishProject()   { await saveProject(true); }
   async function exportProjectZip() { window.location.href = `api.php?action=export_zip&project_id=${PROJECT_ID}&csrf_token=${CSRF_TOKEN}`; }
 
-  // ── CANVAS VIEW ──────────────────────────────────────────────
+  // ── CANVAS VIEW ───────────────────────────────────────────────────────────
   function setCanvasView(mode) {
     const sizes = { desktop: 'w-full', tablet: 'max-w-[768px] mx-auto', mobile: 'max-w-[390px] mx-auto' };
     const container = document.getElementById('canvas-container');
@@ -474,7 +511,7 @@ const WCBuilder = (() => {
     });
   }
 
-  // ── UI HELPERS ───────────────────────────────────────────────
+  // ── UI HELPERS ────────────────────────────────────────────────────────────
   function switchControlPanelTab(tab) {
     document.getElementById('property-panel').classList.toggle('hidden', tab !== 'properties');
     document.getElementById('settings-panel').classList.toggle('hidden', tab !== 'settings');
@@ -512,7 +549,7 @@ const WCBuilder = (() => {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
-  // ── PUBLIC API ───────────────────────────────────────────────
+  // ── PUBLIC API ────────────────────────────────────────────────────────────
   return {
     init,
     handleCanvasDrop,
