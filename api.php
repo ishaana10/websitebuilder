@@ -1,12 +1,21 @@
 <?php
 /**
- * WebCraft REST API  v2.0
+ * WebCraft REST API  v2.1
  * Actions: save_project, publish_project, delete_project, load_project, export_zip
  * Legacy aliases: save, publish, delete, load, export
+ *
+ * ob_start() at the very top captures any stray PHP warnings/notices/output
+ * that would otherwise corrupt the JSON response.
  */
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/render.php';   // re-use render_block() for export & publish
+ob_start();
 
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/render.php';
+
+// Discard anything that config.php / render.php may have printed (shouldn't happen, but safety net)
+ob_end_clean();
+
+// From this point on, only our own echo statements go to the client.
 header('Content-Type: application/json');
 
 if (!is_logged_in()) {
@@ -50,10 +59,8 @@ function require_get(): void {
 
 /**
  * Compile a v2 schema (blocks[]) to HTML using the server-side renderers in render.php.
- * Falls back gracefully for legacy flat-array content.
  */
 function compile_schema_to_html(array $schema): string {
-    // v2 format
     if (isset($schema['blocks']) && is_array($schema['blocks'])) {
         $html = '';
         foreach ($schema['blocks'] as $block) {
@@ -61,21 +68,14 @@ function compile_schema_to_html(array $schema): string {
         }
         return $html;
     }
-    // legacy: flat array of old-format blocks — return empty, let render.php handle it live
     return '';
 }
 
-/**
- * Generate a URL-safe slug from a string.
- */
 function make_slug(string $name): string {
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9]+/', '-', $name), '-'));
     return $slug ?: 'project-' . time();
 }
 
-/**
- * Ensure slug is unique for this user (optionally excluding $exclude_id).
- */
 function unique_slug($db, int $user_id, string $slug, ?int $exclude_id = null): string {
     $sql = 'SELECT id FROM projects WHERE user_id = ? AND slug = ?';
     $params = [$user_id, $slug];
@@ -92,7 +92,6 @@ function unique_slug($db, int $user_id, string $slug, ?int $exclude_id = null): 
 
 $action = $_GET['action'] ?? ($input['action'] ?? '');
 
-// Backward-compat aliases
 $aliases = ['save' => 'save_project', 'publish' => 'publish_project', 'delete' => 'delete_project', 'load' => 'load_project', 'export' => 'export_zip'];
 if (isset($aliases[$action])) $action = $aliases[$action];
 
@@ -100,22 +99,19 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // SAVE PROJECT (draft)
-    // POST  { action, project_id?, name?, schema, csrf_token }
     // ══════════════════════════════════════════════════════════════════════════
     case 'save_project':
         require_post();
         if (!csrf_check($input)) { http_response_code(403); echo json_encode(['error' => 'Invalid CSRF token.']); exit; }
 
-        $project_id  = (int)($input['project_id'] ?? 0) ?: null;
-        $schema      = $input['schema'] ?? null;        // NEW: full schema object from builder.js
-        $content_json_raw = $input['content_json'] ?? null; // legacy fallback
+        $project_id       = (int)($input['project_id'] ?? 0) ?: null;
+        $schema           = $input['schema'] ?? null;
+        $content_json_raw = $input['content_json'] ?? null;
 
-        // Determine what to store
         if ($schema !== null) {
             $to_store = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             $name     = trim($schema['meta']['title'] ?? ($input['name'] ?? ''));
         } else {
-            // Legacy: raw content_json string passed directly
             $to_store = is_string($content_json_raw) ? $content_json_raw : json_encode($content_json_raw);
             $name     = trim($input['name'] ?? '');
         }
@@ -123,7 +119,6 @@ switch ($action) {
         $description = trim($input['description'] ?? ($schema['meta']['description'] ?? ''));
 
         if (!$project_id) {
-            // Create new project — name is required
             if (empty($name)) { http_response_code(400); echo json_encode(['error' => 'Project name is required.']); exit; }
             $slug = unique_slug($db, $user_id, make_slug($name));
             $stmt = $db->prepare('INSERT INTO projects (user_id, name, slug, description, content_json, status) VALUES (?, ?, ?, ?, ?, \'draft\')');
@@ -138,7 +133,6 @@ switch ($action) {
             $project = check_project_ownership($db, $project_id, $user_id);
             if (!$project) { http_response_code(404); echo json_encode(['error' => 'Project not found or unauthorized.']); exit; }
 
-            // Update name only if explicitly provided
             $new_name = !empty($name) ? $name : $project['name'];
             $slug     = unique_slug($db, $user_id, make_slug($new_name), $project_id);
 
@@ -146,14 +140,10 @@ switch ($action) {
             try {
                 $stmt->execute([$new_name, $slug, $description ?: $project['description'], $to_store, $project_id]);
 
-                // Save version snapshot
                 try {
-                    $vstmt = $db->prepare('
-                        INSERT INTO page_versions (project_id, schema_json, status, created_by)
-                        VALUES (?, ?, \'draft\', ?)
-                    ');
+                    $vstmt = $db->prepare('INSERT INTO page_versions (project_id, schema_json, status, created_by) VALUES (?, ?, \'draft\', ?)');
                     $vstmt->execute([$project_id, $to_store, $user_id]);
-                } catch (PDOException $ve) { /* non-fatal: version table may not exist yet */ }
+                } catch (PDOException $ve) { /* non-fatal */ }
 
                 echo json_encode(['success' => true, 'message' => 'Draft saved.', 'project_id' => $project_id, 'slug' => $slug]);
             } catch (PDOException $e) {
@@ -164,8 +154,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // PUBLISH PROJECT
-    // POST  { action, project_id, schema, csrf_token }
-    // Compiles schema to HTML server-side; stores status=published.
     // ══════════════════════════════════════════════════════════════════════════
     case 'publish_project':
         require_post();
@@ -177,27 +165,21 @@ switch ($action) {
         $project = check_project_ownership($db, $project_id, $user_id);
         if (!$project) { http_response_code(404); echo json_encode(['error' => 'Project not found or unauthorized.']); exit; }
 
-        $schema  = $input['schema'] ?? null;
+        $schema = $input['schema'] ?? null;
 
         if ($schema !== null) {
             $to_store = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } else {
-            // Publish from whatever is already saved
             $to_store = $project['content_json'];
             $schema   = json_decode($to_store, true) ?? [];
         }
 
-        // Update content_json + status (render.php compiles live from JSON — no published_html needed)
         $stmt = $db->prepare('UPDATE projects SET content_json = ?, status = \'published\', updated_at = NOW() WHERE id = ?');
         try {
             $stmt->execute([$to_store, $project_id]);
 
-            // Save published version snapshot
             try {
-                $vstmt = $db->prepare('
-                    INSERT INTO page_versions (project_id, schema_json, status, created_by)
-                    VALUES (?, ?, \'published\', ?)
-                ');
+                $vstmt = $db->prepare('INSERT INTO page_versions (project_id, schema_json, status, created_by) VALUES (?, ?, \'published\', ?)');
                 $vstmt->execute([$project_id, $to_store, $user_id]);
             } catch (PDOException $ve) { /* non-fatal */ }
 
@@ -214,7 +196,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // DELETE PROJECT
-    // POST  { action, project_id, csrf_token }
     // ══════════════════════════════════════════════════════════════════════════
     case 'delete_project':
         require_post();
@@ -236,8 +217,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // LOAD PROJECT
-    // GET   ?action=load_project&project_id=X
-    // Returns full project + parsed schema
     // ══════════════════════════════════════════════════════════════════════════
     case 'load_project':
         require_get();
@@ -265,7 +244,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // LIST VERSIONS
-    // GET   ?action=list_versions&project_id=X
     // ══════════════════════════════════════════════════════════════════════════
     case 'list_versions':
         require_get();
@@ -284,7 +262,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // RESTORE VERSION
-    // POST  { action, project_id, version_id, csrf_token }
     // ══════════════════════════════════════════════════════════════════════════
     case 'restore_version':
         require_post();
@@ -314,8 +291,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // EXPORT ZIP
-    // GET   ?action=export_zip&project_id=X&csrf_token=Y
-    // Compiles schema to full HTML and bundles a self-contained ZIP.
     // ══════════════════════════════════════════════════════════════════════════
     case 'export_zip':
         require_get();
@@ -334,7 +309,6 @@ switch ($action) {
         $custom_css = $meta['custom_css'] ?? '';
         $custom_js  = $meta['custom_js']  ?? '';
 
-        // Compile blocks to HTML using server-side renderers
         $body_html = '';
         foreach ($blocks as $block) {
             if (is_array($block)) $body_html .= render_block($block);
@@ -357,10 +331,6 @@ switch ($action) {
 </body>
 </html>';
 
-        // Read bundled assets
-        $builder_js_path    = __DIR__ . '/assets/js/builder.js';
-        $components_js_path = __DIR__ . '/assets/js/components.js';
-
         $zip          = new ZipArchive();
         $zip_filename = tempnam(sys_get_temp_dir(), 'webcraft_export_') . '.zip';
 
@@ -369,11 +339,8 @@ switch ($action) {
         }
 
         $zip->addFromString('index.html', $full_html);
-        if (file_exists($components_js_path)) $zip->addFromString('assets/js/components.js', file_get_contents($components_js_path));
-        if (file_exists($builder_js_path))    $zip->addFromString('assets/js/builder.js',    file_get_contents($builder_js_path));
         $zip->close();
 
-        // Stream ZIP to browser
         header_remove();
         header('Content-Type: application/zip');
         header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
@@ -386,7 +353,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // UPLOAD ASSET
-    // POST  multipart/form-data  { project_id, csrf_token, file }
     // ══════════════════════════════════════════════════════════════════════════
     case 'upload_asset':
         require_post();
@@ -402,9 +368,9 @@ switch ($action) {
         $file      = $_FILES['file'];
         $allowed   = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
         $mime      = mime_content_type($file['tmp_name']);
-        if (!in_array($mime, $allowed)) { http_response_code(400); echo json_encode(['error' => 'Invalid file type. Allowed: JPEG, PNG, GIF, WEBP, SVG.']); exit; }
+        if (!in_array($mime, $allowed)) { http_response_code(400); echo json_encode(['error' => 'Invalid file type.']); exit; }
 
-        $max_bytes = 5 * 1024 * 1024; // 5 MB
+        $max_bytes = 5 * 1024 * 1024;
         if ($file['size'] > $max_bytes) { http_response_code(400); echo json_encode(['error' => 'File exceeds 5 MB limit.']); exit; }
 
         $ext       = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -418,7 +384,6 @@ switch ($action) {
 
         $public_url = 'uploads/' . $project_id . '/' . $safe_name;
 
-        // Log to project_assets table (non-fatal if table doesn't exist yet)
         try {
             $db->prepare('INSERT INTO project_assets (project_id, uploaded_by, filename, file_url, mime_type, file_size) VALUES (?, ?, ?, ?, ?, ?)')
                ->execute([$project_id, $user_id, $file['name'], $public_url, $mime, $file['size']]);
@@ -429,7 +394,6 @@ switch ($action) {
 
     // ══════════════════════════════════════════════════════════════════════════
     // LIST ASSETS
-    // GET   ?action=list_assets&project_id=X
     // ══════════════════════════════════════════════════════════════════════════
     case 'list_assets':
         require_get();
