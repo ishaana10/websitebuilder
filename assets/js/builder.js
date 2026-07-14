@@ -5,14 +5,14 @@
 
 const WCBuilder = (() => {
 
-  // ── STATE ──────────────────────────────────────────────────
+  // ── STATE ────────────────────────────────────────────────────
   let state = {
     selectedId: null,
     draggingType: null,
     schema: { version: 1, meta: { title: '', description: '', custom_css: '', custom_js: '' }, blocks: [] }
   };
 
-  // ── INIT ───────────────────────────────────────────────────
+  // ── INIT ─────────────────────────────────────────────────────
   function init(rawJson) {
     try {
       const parsed = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
@@ -24,7 +24,6 @@ const WCBuilder = (() => {
     } catch (e) {
       console.warn('[WCBuilder] Could not parse saved schema, starting fresh.', e);
     }
-    // Populate settings panel with saved meta
     const cssEl = document.getElementById('project-custom-css');
     const jsEl  = document.getElementById('project-custom-js');
     if (cssEl) cssEl.value = state.schema.meta.custom_css ?? '';
@@ -33,7 +32,7 @@ const WCBuilder = (() => {
     buildComponentShelf();
   }
 
-  // ── CANVAS RENDERING ──────────────────────────────────────
+  // ── CANVAS RENDERING ─────────────────────────────────────────
   function renderCanvas() {
     const canvas = document.getElementById('canvas-content');
     const empty  = document.getElementById('canvas-empty-state');
@@ -58,7 +57,6 @@ const WCBuilder = (() => {
     wrapper.className = 'wc-block relative group cursor-pointer transition rounded-lg';
     wrapper.innerHTML = def.render(block.props);
 
-    // Overlay controls
     const controls = document.createElement('div');
     controls.className = 'wc-block-controls absolute top-2 right-2 hidden group-hover:flex gap-1 z-10';
     controls.innerHTML = `
@@ -69,19 +67,16 @@ const WCBuilder = (() => {
     `;
     wrapper.appendChild(controls);
 
-    // Drag-to-reorder
     wrapper.setAttribute('draggable', true);
     wrapper.addEventListener('dragstart', e => onBlockDragStart(e, block.id));
     wrapper.addEventListener('dragover',  e => onBlockDragOver(e, block.id));
     wrapper.addEventListener('drop',      e => onBlockDrop(e, block.id));
 
-    // Select on click
     wrapper.addEventListener('click', e => {
       if (e.target.closest('[data-action]')) return;
       selectBlock(block.id);
     });
 
-    // Control actions
     controls.addEventListener('click', e => {
       const action = e.target.closest('[data-action]')?.dataset.action;
       if (!action) return;
@@ -96,7 +91,7 @@ const WCBuilder = (() => {
     return wrapper;
   }
 
-  // ── COMPONENT SHELF ────────────────────────────────────────
+  // ── COMPONENT SHELF ──────────────────────────────────────────
   function buildComponentShelf() {
     const shelf = document.getElementById('components-shelf');
     shelf.innerHTML = '';
@@ -125,7 +120,7 @@ const WCBuilder = (() => {
     });
   }
 
-  // ── CANVAS DROP ZONE ───────────────────────────────────────
+  // ── CANVAS DROP ZONE ─────────────────────────────────────────
   function handleCanvasDrop(e) {
     e.preventDefault();
     document.getElementById('canvas-container').classList.remove('canvas-dragover');
@@ -144,7 +139,7 @@ const WCBuilder = (() => {
     dragSrcId = null;
   }
 
-  // ── BLOCK MUTATIONS ────────────────────────────────────────
+  // ── BLOCK MUTATIONS ──────────────────────────────────────────
   function uid() { return 'blk_' + Math.random().toString(36).slice(2, 9); }
 
   function addBlock(type) {
@@ -200,13 +195,11 @@ const WCBuilder = (() => {
     const block = state.schema.blocks.find(b => b.id === id);
     if (!block) return;
     setNestedProp(block.props, key, value);
-    // Live re-render just this block's inner HTML
     const el  = document.querySelector(`[data-block-id="${id}"]`);
     const def = WCComponents.get(block.type);
     if (el && def) {
       const newContent = document.createElement('div');
       newContent.innerHTML = def.render(block.props);
-      // Replace inner content, preserving overlay controls
       const controls = el.querySelector('.wc-block-controls');
       el.innerHTML = '';
       while (newContent.firstChild) el.appendChild(newContent.firstChild);
@@ -224,7 +217,7 @@ const WCBuilder = (() => {
     }, obj);
   }
 
-  // ── SELECTION & PROPERTIES PANEL ──────────────────────────
+  // ── SELECTION & PROPERTIES PANEL ─────────────────────────────
   function selectBlock(id) {
     document.querySelectorAll('.wc-block').forEach(el => el.classList.remove('component-selected'));
     const el = document.querySelector(`[data-block-id="${id}"]`);
@@ -249,13 +242,13 @@ const WCBuilder = (() => {
     document.getElementById('selection-controls').classList.remove('hidden');
     document.getElementById('selected-component-type').textContent = def.label;
 
-    // Build or clear dynamic fields container
     let fieldsEl = document.getElementById('dynamic-prop-fields');
     if (!fieldsEl) {
       fieldsEl = document.createElement('div');
       fieldsEl.id = 'dynamic-prop-fields';
       fieldsEl.className = 'space-y-3';
       const sc = document.getElementById('selection-controls');
+      if (!sc) return;
       const firstHr = sc.querySelector('hr');
       if (firstHr) sc.insertBefore(fieldsEl, firstHr);
       else sc.prepend(fieldsEl);
@@ -263,35 +256,169 @@ const WCBuilder = (() => {
     fieldsEl.innerHTML = '';
 
     def.props.forEach(propDef => {
-      fieldsEl.appendChild(buildPropField(propDef, block.id, block.props[propDef.key]));
+      const field = buildPropField(propDef, block.id, block.props[propDef.key]);
+      if (field) fieldsEl.appendChild(field);
     });
   }
 
+  // ── PROP FIELD BUILDER ───────────────────────────────────────
   function buildPropField(propDef, blockId, currentValue) {
     const wrap  = document.createElement('div');
-    const label = `<label class="text-[11px] text-slate-400 block mb-1">${propDef.label}</label>`;
+    const label = `<label class="text-[11px] text-slate-400 block mb-1 font-semibold">${propDef.label}</label>`;
     const base  = `class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500"`;
 
     if (propDef.type === 'text') {
       wrap.innerHTML = `${label}<input type="text" ${base} value="${escHtml(currentValue ?? '')}">`;
       wrap.querySelector('input').addEventListener('input', e => updateBlockProp(blockId, propDef.key, e.target.value));
+
     } else if (propDef.type === 'textarea') {
       wrap.innerHTML = `${label}<textarea rows="3" ${base}>${escHtml(currentValue ?? '')}</textarea>`;
       wrap.querySelector('textarea').addEventListener('input', e => updateBlockProp(blockId, propDef.key, e.target.value));
+
     } else if (propDef.type === 'select') {
       const opts = (propDef.options ?? []).map(o =>
         `<option value="${o.value}" ${currentValue === o.value ? 'selected' : ''}>${o.label}</option>`
       ).join('');
       wrap.innerHTML = `${label}<select ${base}>${opts}</select>`;
       wrap.querySelector('select').addEventListener('change', e => updateBlockProp(blockId, propDef.key, e.target.value));
+
     } else if (propDef.type === 'color') {
       wrap.innerHTML = `${label}<input type="color" value="${escHtml(currentValue ?? '#000000')}" class="w-full h-9 rounded cursor-pointer border border-slate-800 bg-slate-950">`;
       wrap.querySelector('input').addEventListener('input', e => updateBlockProp(blockId, propDef.key, e.target.value));
+
+    } else if (propDef.type === 'toggle') {
+      const checked = currentValue ? 'checked' : '';
+      wrap.innerHTML = `<label class="flex items-center justify-between text-[11px] text-slate-400 font-semibold cursor-pointer">
+        <span>${propDef.label}</span>
+        <input type="checkbox" class="w-4 h-4 accent-teal-500" ${checked}>
+      </label>`;
+      wrap.querySelector('input').addEventListener('change', e => updateBlockProp(blockId, propDef.key, e.target.checked));
+
+    } else if (propDef.type === 'array') {
+      return buildArrayField(propDef, blockId, currentValue ?? []);
+
+    } else {
+      return null;
     }
+
     return wrap;
   }
 
-  // ── SAVE / PUBLISH ─────────────────────────────────────────
+  // ── ARRAY / REPEATER FIELD ───────────────────────────────────
+  function buildArrayField(propDef, blockId, items) {
+    const container = document.createElement('div');
+    container.className = 'space-y-2';
+
+    const header = document.createElement('div');
+    header.className = 'flex items-center justify-between mb-1';
+    header.innerHTML = `
+      <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">${propDef.label}</span>
+      <button class="wc-add-item bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 text-[10px] font-bold px-2 py-1 rounded transition flex items-center gap-1">
+        <i class="fas fa-plus"></i> Add ${propDef.itemLabel ?? 'Item'}
+      </button>
+    `;
+    container.appendChild(header);
+
+    const listEl = document.createElement('div');
+    listEl.className = 'space-y-2';
+    container.appendChild(listEl);
+
+    function renderItems() {
+      listEl.innerHTML = '';
+      items.forEach((item, idx) => {
+        const itemWrap = document.createElement('div');
+        itemWrap.className = 'bg-slate-950 border border-slate-800 rounded-lg overflow-hidden';
+
+        const itemHeader = document.createElement('div');
+        itemHeader.className = 'flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-slate-800/50 transition';
+        const previewText = item[propDef.fields?.[0]?.key] ?? `${propDef.itemLabel ?? 'Item'} ${idx + 1}`;
+        itemHeader.innerHTML = `
+          <span class="text-[11px] text-slate-300 font-semibold truncate">${escHtml(String(previewText))}</span>
+          <div class="flex items-center gap-1 shrink-0 ml-2">
+            <button data-move="up"   title="Move Up"   class="text-slate-500 hover:text-teal-400 px-1"><i class="fas fa-arrow-up text-[10px]"></i></button>
+            <button data-move="down" title="Move Down" class="text-slate-500 hover:text-teal-400 px-1"><i class="fas fa-arrow-down text-[10px]"></i></button>
+            <button data-remove title="Remove" class="text-slate-500 hover:text-red-400 px-1"><i class="fas fa-times text-[10px]"></i></button>
+            <i class="fas fa-chevron-down text-slate-600 text-[10px] ml-1 toggle-chevron"></i>
+          </div>
+        `;
+
+        const itemBody = document.createElement('div');
+        itemBody.className = 'px-3 pb-3 space-y-2 hidden';
+
+        (propDef.fields ?? []).forEach(fieldDef => {
+          const fWrap = buildPropField(
+            { ...fieldDef, label: fieldDef.label },
+            blockId,
+            item[fieldDef.key]
+          );
+          if (!fWrap) return;
+          const input = fWrap.querySelector('input,textarea,select');
+          if (input) {
+            const fresh = input.cloneNode(true);
+            input.replaceWith(fresh);
+            const evtName = fresh.tagName === 'SELECT' ? 'change' : (fresh.type === 'checkbox' ? 'change' : 'input');
+            fresh.addEventListener(evtName, ev => {
+              items[idx][fieldDef.key] = fresh.type === 'checkbox' ? fresh.checked : fresh.value;
+              updateBlockProp(blockId, propDef.key, items);
+              const preview = itemHeader.querySelector('span');
+              if (preview) preview.textContent = escHtml(String(items[idx][propDef.fields?.[0]?.key] ?? `${propDef.itemLabel} ${idx + 1}`));
+            });
+          }
+          itemBody.appendChild(fWrap);
+        });
+
+        itemHeader.addEventListener('click', e => {
+          if (e.target.closest('[data-remove],[data-move]')) return;
+          itemBody.classList.toggle('hidden');
+          itemHeader.querySelector('.toggle-chevron').classList.toggle('fa-chevron-down');
+          itemHeader.querySelector('.toggle-chevron').classList.toggle('fa-chevron-up');
+        });
+
+        itemHeader.querySelector('[data-remove]').addEventListener('click', e => {
+          e.stopPropagation();
+          items.splice(idx, 1);
+          updateBlockProp(blockId, propDef.key, items);
+          renderItems();
+        });
+
+        itemHeader.querySelector('[data-move="up"]').addEventListener('click', e => {
+          e.stopPropagation();
+          if (idx === 0) return;
+          [items[idx - 1], items[idx]] = [items[idx], items[idx - 1]];
+          updateBlockProp(blockId, propDef.key, items);
+          renderItems();
+        });
+
+        itemHeader.querySelector('[data-move="down"]').addEventListener('click', e => {
+          e.stopPropagation();
+          if (idx >= items.length - 1) return;
+          [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
+          updateBlockProp(blockId, propDef.key, items);
+          renderItems();
+        });
+
+        itemWrap.appendChild(itemHeader);
+        itemWrap.appendChild(itemBody);
+        listEl.appendChild(itemWrap);
+      });
+    }
+
+    header.querySelector('.wc-add-item').addEventListener('click', () => {
+      items.push(JSON.parse(JSON.stringify(propDef.itemDefault ?? {})));
+      updateBlockProp(blockId, propDef.key, items);
+      renderItems();
+      const lastItem = listEl.lastElementChild;
+      if (lastItem) {
+        const body = lastItem.querySelector('div.hidden');
+        if (body) body.classList.remove('hidden');
+      }
+    });
+
+    renderItems();
+    return container;
+  }
+
+  // ── SAVE / PUBLISH ───────────────────────────────────────────
   let autosaveTimer = null;
   function autosave() {
     clearTimeout(autosaveTimer);
@@ -317,7 +444,6 @@ const WCBuilder = (() => {
       const data = await res.json();
       if (data.success) {
         if (!silent) showToast(publish ? 'Published! 🚀' : 'Draft Saved ✓', data.message ?? 'Project updated.', 'success');
-        // Update status badge
         if (publish) {
           const badge = document.getElementById('status-badge');
           if (badge) { badge.textContent = 'Published'; badge.className = 'font-semibold uppercase text-teal-400'; }
@@ -333,11 +459,10 @@ const WCBuilder = (() => {
   async function publishProject()   { await saveProject(true); }
   async function exportProjectZip() { window.location.href = `api.php?action=export_zip&project_id=${PROJECT_ID}&csrf_token=${CSRF_TOKEN}`; }
 
-  // ── CANVAS VIEW ────────────────────────────────────────────
+  // ── CANVAS VIEW ──────────────────────────────────────────────
   function setCanvasView(mode) {
     const sizes = { desktop: 'w-full', tablet: 'max-w-[768px] mx-auto', mobile: 'max-w-[390px] mx-auto' };
     const container = document.getElementById('canvas-container');
-    // Remove old sizing classes
     ['w-full', 'max-w-[768px]', 'max-w-[390px]', 'mx-auto'].forEach(c => container.classList.remove(c));
     sizes[mode].split(' ').forEach(c => container.classList.add(c));
     ['desktop', 'tablet', 'mobile'].forEach(m => {
@@ -349,7 +474,7 @@ const WCBuilder = (() => {
     });
   }
 
-  // ── UI HELPERS ─────────────────────────────────────────────
+  // ── UI HELPERS ───────────────────────────────────────────────
   function switchControlPanelTab(tab) {
     document.getElementById('property-panel').classList.toggle('hidden', tab !== 'properties');
     document.getElementById('settings-panel').classList.toggle('hidden', tab !== 'settings');
@@ -387,7 +512,7 @@ const WCBuilder = (() => {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
-  // ── PUBLIC API ─────────────────────────────────────────────
+  // ── PUBLIC API ───────────────────────────────────────────────
   return {
     init,
     handleCanvasDrop,

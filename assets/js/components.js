@@ -40,15 +40,24 @@ const WCComponents = (() => {
       links: [{ label: 'Home', href: '#' }, { label: 'About', href: '#about' }, { label: 'Contact', href: '#contact' }]
     },
     props: [
-      { key: 'brand',    label: 'Brand Name',     type: 'text' },
-      { key: 'logo_url', label: 'Logo Image URL',  type: 'text' },
+      { key: 'brand',    label: 'Brand Name',    type: 'text' },
+      { key: 'logo_url', label: 'Logo Image URL', type: 'text' },
       { key: 'bg', label: 'Background', type: 'select', options: [
         { value: 'bg-slate-900',  label: 'Dark Slate' },
         { value: 'bg-slate-950',  label: 'Near Black' },
         { value: 'bg-white',      label: 'White' },
         { value: 'bg-teal-900',   label: 'Teal Dark' },
         { value: 'bg-indigo-950', label: 'Deep Indigo' },
-      ]}
+      ]},
+      {
+        key: 'links', label: 'Nav Links', type: 'array',
+        itemLabel: 'Link',
+        itemDefault: { label: 'New Link', href: '#' },
+        fields: [
+          { key: 'label', label: 'Label', type: 'text' },
+          { key: 'href',  label: 'URL',   type: 'text' },
+        ]
+      },
     ],
     render: (p) => {
       const links = (p.links ?? []).map(l =>
@@ -78,6 +87,15 @@ const WCComponents = (() => {
       { key: 'brand',     label: 'Brand Name', type: 'text' },
       { key: 'copyright', label: 'Copyright',  type: 'text' },
       { key: 'logo_url',  label: 'Logo URL',   type: 'text' },
+      {
+        key: 'links', label: 'Footer Links', type: 'array',
+        itemLabel: 'Link',
+        itemDefault: { label: 'New Link', href: '#' },
+        fields: [
+          { key: 'label', label: 'Label', type: 'text' },
+          { key: 'href',  label: 'URL',   type: 'text' },
+        ]
+      },
     ],
     render: (p) => {
       const links = (p.links ?? []).map(l =>
@@ -170,6 +188,16 @@ const WCComponents = (() => {
         { value: 'bg-slate-950',  label: 'Darker' },
         { value: 'bg-white',      label: 'White' },
       ]},
+      {
+        key: 'features', label: 'Feature Cards', type: 'array',
+        itemLabel: 'Feature',
+        itemDefault: { icon: 'fas fa-star', title: 'New Feature', desc: 'Describe this feature.' },
+        fields: [
+          { key: 'icon',  label: 'Icon Class (FontAwesome)', type: 'text' },
+          { key: 'title', label: 'Title',                    type: 'text' },
+          { key: 'desc',  label: 'Description',              type: 'textarea' },
+        ]
+      },
     ],
     render: (p) => {
       const items = (p.features ?? []).map(f => `
@@ -228,21 +256,36 @@ const WCComponents = (() => {
       bg: 'bg-slate-950',
       padding: 'py-16',
       plans: [
-        { name: 'Starter', price: 'Free', desc: 'Perfect for individuals.', features: ['1 project', '5 pages', 'Community support'], cta: 'Get Started', href: '#', highlight: false },
-        { name: 'Pro',     price: '$19/mo', desc: 'For growing teams.',    features: ['10 projects', 'Unlimited pages', 'Priority support'], cta: 'Start Trial', href: '#', highlight: true },
-        { name: 'Business', price: '$49/mo', desc: 'Enterprise power.',    features: ['Unlimited', 'Custom domain', 'Dedicated support'], cta: 'Contact Us', href: '#', highlight: false },
+        { name: 'Starter', price: 'Free',   desc: 'Perfect for individuals.', features: ['1 project','5 pages','Community support'], cta: 'Get Started', href: '#', highlight: false },
+        { name: 'Pro',     price: '$19/mo', desc: 'For growing teams.',       features: ['10 projects','Unlimited pages','Priority support'], cta: 'Start Trial', href: '#', highlight: true },
+        { name: 'Business',price: '$49/mo', desc: 'Enterprise power.',        features: ['Unlimited','Custom domain','Dedicated support'], cta: 'Contact Us', href: '#', highlight: false },
       ]
     },
     props: [
       { key: 'heading', label: 'Section Heading', type: 'text' },
       { key: 'bg', label: 'Background', type: 'select', options: [
-        { value: 'bg-slate-950', label: 'Near Black' }, { value: 'bg-slate-900', label: 'Dark' }, { value: 'bg-white', label: 'White' }
+        { value: 'bg-slate-950', label: 'Near Black' },
+        { value: 'bg-slate-900', label: 'Dark' },
+        { value: 'bg-white',     label: 'White' },
       ]},
+      {
+        key: 'plans', label: 'Pricing Plans', type: 'array',
+        itemLabel: 'Plan',
+        itemDefault: { name: 'New Plan', price: '$0', desc: '', features: ['Feature 1'], cta: 'Get Started', href: '#', highlight: false },
+        fields: [
+          { key: 'name',      label: 'Plan Name',               type: 'text' },
+          { key: 'price',     label: 'Price',                   type: 'text' },
+          { key: 'desc',      label: 'Description',             type: 'text' },
+          { key: 'cta',       label: 'Button Label',            type: 'text' },
+          { key: 'href',      label: 'Button URL',              type: 'text' },
+          { key: 'highlight', label: 'Highlight (Most Popular)', type: 'toggle' },
+        ]
+      },
     ],
     render: (p) => {
       const cards = (p.plans ?? []).map(plan => {
         const feats = (plan.features ?? []).map(f => `<li class="flex items-center gap-2 text-slate-300 text-sm"><i class="fas fa-check text-teal-400 text-xs"></i>${e(f)}</li>`).join('');
-        const ring  = plan.highlight ? 'border-teal-500 shadow-teal-500/10 shadow-xl' : 'border-slate-700';
+        const ring   = plan.highlight ? 'border-teal-500 shadow-teal-500/10 shadow-xl' : 'border-slate-700';
         const btnCls = plan.highlight ? 'bg-teal-500 hover:bg-teal-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-white';
         return `<div class="bg-slate-800 rounded-2xl p-8 border ${ring} flex flex-col">
           ${plan.highlight ? '<span class="text-xs font-black text-teal-400 uppercase tracking-widest mb-2">Most Popular</span>' : ''}
@@ -273,8 +316,8 @@ const WCComponents = (() => {
     icon: 'fas fa-align-left',
     defaultProps: { heading: 'Section Title', body: 'Your content goes here. Describe your product, service, or story.', bg: 'bg-slate-900', align: 'text-left', padding: 'py-12' },
     props: [
-      { key: 'heading', label: 'Heading',    type: 'text' },
-      { key: 'body',    label: 'Body Text',  type: 'textarea' },
+      { key: 'heading', label: 'Heading',   type: 'text' },
+      { key: 'body',    label: 'Body Text', type: 'textarea' },
       { key: 'bg', label: 'Background', type: 'select', options: [
         { value: 'bg-slate-900', label: 'Dark' }, { value: 'bg-slate-950', label: 'Darker' }, { value: 'bg-white', label: 'White' }
       ]},
@@ -334,6 +377,16 @@ const WCComponents = (() => {
       { key: 'bg', label: 'Background', type: 'select', options: [
         { value: 'bg-slate-900', label: 'Dark' }, { value: 'bg-slate-950', label: 'Darker' }
       ]},
+      {
+        key: 'items', label: 'Testimonials', type: 'array',
+        itemLabel: 'Testimonial',
+        itemDefault: { quote: 'Add a quote here.', author: 'Author Name', role: 'Role / Company' },
+        fields: [
+          { key: 'quote',  label: 'Quote',  type: 'textarea' },
+          { key: 'author', label: 'Author', type: 'text' },
+          { key: 'role',   label: 'Role',   type: 'text' },
+        ]
+      },
     ],
     render: (p) => {
       const cards = (p.items ?? []).map(t => `
@@ -361,10 +414,10 @@ const WCComponents = (() => {
     icon: 'fas fa-envelope',
     defaultProps: { heading: 'Get In Touch', subtext: 'We will get back to you within 24 hours.', bg: 'bg-slate-900', submit_label: 'Send Message', action: '' },
     props: [
-      { key: 'heading',      label: 'Heading',       type: 'text' },
-      { key: 'subtext',      label: 'Subtext',        type: 'text' },
-      { key: 'submit_label', label: 'Button Label',   type: 'text' },
-      { key: 'action',       label: 'Form Action URL',type: 'text' },
+      { key: 'heading',      label: 'Heading',        type: 'text' },
+      { key: 'subtext',      label: 'Subtext',         type: 'text' },
+      { key: 'submit_label', label: 'Button Label',    type: 'text' },
+      { key: 'action',       label: 'Form Action URL', type: 'text' },
     ],
     render: (p) =>
       `<section class="${e(p.bg)} py-16 px-6">
