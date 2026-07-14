@@ -3,54 +3,14 @@
  * WebCraft Render Engine v2.0
  * Compiles page JSON schema (blocks[]) -> HTML at request time.
  * No longer depends on a pre-compiled published_html column.
+ *
+ * Safe to require_once from api.php — page-output code only runs
+ * when this file is the entry-point script (direct browser request).
  */
 require_once __DIR__ . '/config.php';
 
-$slug     = $_GET['slug']     ?? '';
-$username = $_GET['user']     ?? '';
+// ── Block renderers (safe to include anywhere) ─────────────────
 
-if (empty($slug) || empty($username)) {
-    http_response_code(400);
-    die('<h1>Bad Request</h1><p>Missing slug or username.</p>');
-}
-
-$db   = get_db_connection();
-$stmt = $db->prepare('
-    SELECT p.* FROM projects p
-    JOIN users u ON p.user_id = u.id
-    WHERE p.slug = ? AND u.username = ?
-');
-$stmt->execute([$slug, $username]);
-$project = $stmt->fetch();
-
-if (!$project) {
-    http_response_code(404);
-    die('<h1>404 Not Found</h1><p>The requested website does not exist or has been unpublished.</p>');
-}
-
-// ── Parse schema ──────────────────────────────────────────────
-$raw    = $project['content_json'] ?? '{}';
-$schema = json_decode($raw, true) ?? [];
-
-// Support legacy flat-array format (v1 migration)
-if (isset($schema[0]) || (is_array($schema) && array_key_exists(0, $schema))) {
-    $blocks = $schema;
-    $meta   = [];
-} else {
-    $blocks = $schema['blocks'] ?? [];
-    $meta   = $schema['meta']   ?? [];
-}
-
-$is_draft = ($project['status'] !== 'published');
-
-if ($is_draft) {
-    if (!is_logged_in() || $_SESSION['user_id'] !== $project['user_id']) {
-        http_response_code(403);
-        die('<h1>403 Forbidden</h1><p>This site is currently a draft.</p>');
-    }
-}
-
-// ── Block renderers ───────────────────────────────────────────
 function p(array $props, string $key, string $default = ''): string {
     return htmlspecialchars($props[$key] ?? $default, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
@@ -79,7 +39,7 @@ function render_block(array $block): string {
         'testimonials'   => render_testimonials($props),
         'contact_form'   => render_contact_form($props),
         'spacer'         => render_spacer($props),
-        'html_block'     => $props['html'] ?? '',   // raw — sanitize externally if needed
+        'html_block'     => $props['html'] ?? '',
         default          => "<!-- unknown block: " . htmlspecialchars($type, ENT_QUOTES) . " -->"
     };
 }
@@ -167,10 +127,10 @@ function render_pricing_cards(array $props): string {
             '<li class="flex items-center gap-2 text-slate-300 text-sm"><i class="fas fa-check text-teal-400 text-xs"></i>' . htmlspecialchars($f, ENT_QUOTES) . '</li>',
             $plan['features'] ?? []
         ));
-        $ring   = !empty($plan['highlight']) ? 'border-teal-500 shadow-xl shadow-teal-500/10' : 'border-slate-700';
-        $btnCls = !empty($plan['highlight']) ? 'bg-teal-500 hover:bg-teal-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-white';
+        $ring    = !empty($plan['highlight']) ? 'border-teal-500 shadow-xl shadow-teal-500/10' : 'border-slate-700';
+        $btnCls  = !empty($plan['highlight']) ? 'bg-teal-500 hover:bg-teal-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-white';
         $popular = !empty($plan['highlight']) ? '<span class="text-xs font-black text-teal-400 uppercase tracking-widest mb-2 block">Most Popular</span>' : '';
-        $cards .= '<div class="bg-slate-800 rounded-2xl p-8 border ' . $ring . ' flex flex-col">' . $popular .
+        $cards  .= '<div class="bg-slate-800 rounded-2xl p-8 border ' . $ring . ' flex flex-col">' . $popular .
             '<h3 class="text-xl font-black text-white">' . htmlspecialchars($plan['name'] ?? '', ENT_QUOTES) . '</h3>' .
             '<p class="text-3xl font-black text-white mt-2">' . htmlspecialchars($plan['price'] ?? '', ENT_QUOTES) . '</p>' .
             '<p class="text-slate-400 text-sm mt-1 mb-6">' . htmlspecialchars($plan['desc'] ?? '', ENT_QUOTES) . '</p>' .
@@ -225,14 +185,59 @@ function render_spacer(array $props): string {
     return '<div class="' . p($props,'height','h-16') . ' ' . p($props,'bg','bg-transparent') . ' w-full"></div>';
 }
 
-// ── Compile all blocks ─────────────────────────────────────────
-$compiled_html = '';
-foreach ($blocks as $block) {
-    if (is_array($block)) {
-        $compiled_html .= render_block($block);
+// ── Page rendering — ONLY runs when accessed directly ──────────
+// When require_once'd by api.php, this block is skipped entirely.
+if (basename($_SERVER['SCRIPT_FILENAME']) === 'render.php') {
+
+    $slug     = $_GET['slug']     ?? '';
+    $username = $_GET['user']     ?? '';
+
+    if (empty($slug) || empty($username)) {
+        http_response_code(400);
+        die('<h1>Bad Request</h1><p>Missing slug or username.</p>');
     }
-}
-?>
+
+    $db   = get_db_connection();
+    $stmt = $db->prepare('
+        SELECT p.* FROM projects p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.slug = ? AND u.username = ?
+    ');
+    $stmt->execute([$slug, $username]);
+    $project = $stmt->fetch();
+
+    if (!$project) {
+        http_response_code(404);
+        die('<h1>404 Not Found</h1><p>The requested website does not exist or has been unpublished.</p>');
+    }
+
+    $raw    = $project['content_json'] ?? '{}';
+    $schema = json_decode($raw, true) ?? [];
+
+    if (isset($schema[0]) || (is_array($schema) && array_key_exists(0, $schema))) {
+        $blocks = $schema;
+        $meta   = [];
+    } else {
+        $blocks = $schema['blocks'] ?? [];
+        $meta   = $schema['meta']   ?? [];
+    }
+
+    $is_draft = ($project['status'] !== 'published');
+
+    if ($is_draft) {
+        if (!is_logged_in() || $_SESSION['user_id'] !== $project['user_id']) {
+            http_response_code(403);
+            die('<h1>403 Forbidden</h1><p>This site is currently a draft.</p>');
+        }
+    }
+
+    $compiled_html = '';
+    foreach ($blocks as $block) {
+        if (is_array($block)) {
+            $compiled_html .= render_block($block);
+        }
+    }
+    ?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -251,7 +256,6 @@ foreach ($blocks as $block) {
 
     <main id="wc-page"><?php echo $compiled_html; ?></main>
 
-    <!-- Built with WebCraft badge -->
     <div class="fixed bottom-4 left-4 bg-slate-900/90 backdrop-blur-md text-slate-400 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-800 shadow-xl flex items-center gap-1.5 hover:text-white transition z-50">
         <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
         <span>Built with WebCraft</span>
@@ -264,3 +268,5 @@ foreach ($blocks as $block) {
 
 </body>
 </html>
+    <?php
+} // end direct-access guard
