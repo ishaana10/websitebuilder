@@ -12,17 +12,28 @@ It features a robust authentication gate, dynamic drag-and-drop workspace, prope
   - Dynamic drag-and-drop live-editing workspace.
   - Sidebar style manager (paddings, margins, flex spacing, custom typography).
   - Real-time custom raw HTML block editor.
+  - **Undo / Redo Stack:** Solid, simple array-based history stack for workspace actions supporting standard keyboard shortcuts (`Ctrl+Z` / `Ctrl+Y`).
+  - **Responsive Device Frame Bezels:** Live simulation inside Tablet and Mobile bezel wrappers (mock phone notches and screens).
+- **Secure Asset Manager & Uploads:**
+  - Standardized serverside file upload handlers supporting genuine image validation, file size limits, and robust mime-type checks.
+  - Database-backed asset manager integration to easily upload and track custom brand logos/images.
 - **Pre-Built Themes & Templates:**
   - One-click template onboarding for SaaS Product Landers, Creative Portfolios, and Corporate Pages.
+  - Support for instant project/site duplication.
 - **Dynamic Live Interactive Components:**
   - **Floating AI Chatbot Simulation:** Fully interactive floating chat assistant with customizable conversational patterns and responsive sub-second replies.
   - **Contact & Inquiry Dynamic Forms:** Secure client-side form submissions posting AJAX payloads to verified PHP API handlers.
+  - **Testimonials Grid:** Professionally styled client review section with star metrics and team roles.
+  - **FAQ Accordions:** Collapsible, highly responsive question & answer segments.
+  - **Stats Impact Block:** Numeric metrics grids tracking company highlights.
+  - **Visual Gallery Grid:** Responsive photo grid structures with hover interactions.
 - **Production Static HTML Compiler:**
   - Compiles pages to fast static HTML caches.
   - Direct rendering via clean slug delivery wrappers with complete assets injection.
 - **Comprehensive Administration Panel:**
   - Statistical insights and diagnostics.
   - Multi-tab controls: Website instances, theme templates, secure AJAX dynamic submissions, SMTP delivery simulation logs, user accounts table, and real-time server health metrics.
+  - Quick, secure duplication controls for template and custom sandbox sites.
 - **High-Security Standards:**
   - Strong password hashing with Bcrypt.
   - Protection against Session Fixation using automated session ID regeneration.
