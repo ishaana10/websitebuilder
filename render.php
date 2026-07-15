@@ -1,23 +1,16 @@
 <?php
 /**
- * WebCraft Render Engine v2.1
+ * WebCraft Render Engine v2.2
  * Compiles page JSON schema (blocks[]) -> HTML at request time.
- *
- * Safe to require_once from api.php — page-output code only runs
- * when this file is the entry-point script (direct browser request).
- *
- * Uses a defined constant guard instead of basename() so it works
- * regardless of server path configuration or symlinks.
  */
 
-// Only define the constant if we're the entry point (not being require_once'd)
 if (!defined('WEBCRAFT_INCLUDED')) {
     define('WEBCRAFT_RENDER_STANDALONE', true);
 }
 
 require_once __DIR__ . '/config.php';
 
-// ── Block renderers (safe to include anywhere) ─────────────────
+// ── Block renderers ────────────────────────────────────────────
 
 function p(array $props, string $key, string $default = ''): string {
     return htmlspecialchars($props[$key] ?? $default, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -34,21 +27,20 @@ function render_links(array $links, string $cls): string {
 function render_block(array $block): string {
     $type  = $block['type'] ?? '';
     $props = $block['props'] ?? [];
-
     return match ($type) {
-        'navbar'         => render_navbar($props),
-        'footer'         => render_footer($props),
-        'hero'           => render_hero($props),
-        'text_block'     => render_text_block($props),
-        'image_block'    => render_image_block($props),
-        'features_grid'  => render_features_grid($props),
-        'cta_banner'     => render_cta_banner($props),
-        'pricing_cards'  => render_pricing_cards($props),
-        'testimonials'   => render_testimonials($props),
-        'contact_form'   => render_contact_form($props),
-        'spacer'         => render_spacer($props),
-        'html_block'     => $props['html'] ?? '',
-        default          => '<!-- unknown block: ' . htmlspecialchars($type, ENT_QUOTES) . ' -->'
+        'navbar'        => render_navbar($props),
+        'footer'        => render_footer($props),
+        'hero'          => render_hero($props),
+        'text_block'    => render_text_block($props),
+        'image_block'   => render_image_block($props),
+        'features_grid' => render_features_grid($props),
+        'cta_banner'    => render_cta_banner($props),
+        'pricing_cards' => render_pricing_cards($props),
+        'testimonials'  => render_testimonials($props),
+        'contact_form'  => render_contact_form($props),
+        'spacer'        => render_spacer($props),
+        'html_block'    => $props['html'] ?? '',
+        default         => '<!-- unknown block: ' . htmlspecialchars($type, ENT_QUOTES) . ' -->'
     };
 }
 
@@ -135,8 +127,8 @@ function render_pricing_cards(array $props): string {
             '<li class="flex items-center gap-2 text-slate-300 text-sm"><i class="fas fa-check text-teal-400 text-xs"></i>' . htmlspecialchars($f, ENT_QUOTES) . '</li>',
             $plan['features'] ?? []
         ));
-        $ring    = !empty($plan['highlight']) ? 'border-teal-500 shadow-xl shadow-teal-500/10' : 'border-slate-700';
-        $btnCls  = !empty($plan['highlight']) ? 'bg-teal-500 hover:bg-teal-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-white';
+        $ring   = !empty($plan['highlight']) ? 'border-teal-500 shadow-xl shadow-teal-500/10' : 'border-slate-700';
+        $btnCls = !empty($plan['highlight']) ? 'bg-teal-500 hover:bg-teal-400 text-slate-950' : 'bg-slate-700 hover:bg-slate-600 text-white';
         $popular = !empty($plan['highlight']) ? '<span class="text-xs font-black text-teal-400 uppercase tracking-widest mb-2 block">Most Popular</span>' : '';
         $cards  .= '<div class="bg-slate-800 rounded-2xl p-8 border ' . $ring . ' flex flex-col">' . $popular .
             '<h3 class="text-xl font-black text-white">' . htmlspecialchars($plan['name'] ?? '', ENT_QUOTES) . '</h3>' .
@@ -155,9 +147,9 @@ function render_pricing_cards(array $props): string {
 }
 
 function render_testimonials(array $props): string {
-    $cards = '';
+    $items = '';
     foreach ($props['items'] ?? [] as $t) {
-        $cards .= '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
+        $items .= '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">
             <i class="fas fa-quote-left text-teal-400 text-lg mb-3"></i>
             <p class="text-slate-300 text-sm leading-relaxed italic">' . htmlspecialchars($t['quote'] ?? '', ENT_QUOTES) . '</p>
             <div class="mt-4">
@@ -169,7 +161,7 @@ function render_testimonials(array $props): string {
     return '<section class="' . p($props,'bg','bg-slate-900') . ' ' . p($props,'padding','py-16') . ' px-6">
         <div class="max-w-4xl mx-auto">
             <h2 class="text-3xl font-black text-white text-center mb-10">' . p($props,'heading') . '</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">' . $cards . '</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">' . $items . '</div>
         </div>
     </section>';
 }
@@ -193,23 +185,24 @@ function render_spacer(array $props): string {
     return '<div class="' . p($props,'height','h-16') . ' ' . p($props,'bg','bg-transparent') . ' w-full"></div>';
 }
 
-// ── Page rendering — ONLY runs when accessed directly ──────────
-// Constant-based guard: reliable regardless of server path / symlinks.
-// When require_once'd by api.php, WEBCRAFT_INCLUDED is defined first,
-// so WEBCRAFT_RENDER_STANDALONE is never defined and this block is skipped.
+// ── Standalone page output — only when accessed directly ───────
 if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 
-    $slug     = $_GET['slug']     ?? '';
-    $username = $_GET['user']     ?? '';
+    // Suppress PHP notices/warnings from leaking into HTML output
+    ini_set('display_errors', '0');
+    error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+
+    $slug     = trim($_GET['slug']     ?? '');
+    $username = trim($_GET['user']     ?? '');
 
     if (empty($slug) || empty($username)) {
         http_response_code(400);
-        die('<h1>Bad Request</h1><p>Missing slug or username.</p>');
+        die('<!DOCTYPE html><html><head><title>Bad Request</title></head><body style="font-family:sans-serif;padding:2rem;background:#020617;color:#94a3b8"><h1>400 – Bad Request</h1><p>Missing slug or username.</p></body></html>');
     }
 
     $db   = get_db_connection();
     $stmt = $db->prepare('
-        SELECT p.* FROM projects p
+        SELECT p.*, u.username FROM projects p
         JOIN users u ON p.user_id = u.id
         WHERE p.slug = ? AND u.username = ?
     ');
@@ -218,13 +211,19 @@ if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 
     if (!$project) {
         http_response_code(404);
-        die('<h1>404 Not Found</h1><p>The requested website does not exist or has been unpublished.</p>');
+        die('<!DOCTYPE html><html><head><title>Not Found</title></head><body style="font-family:sans-serif;padding:2rem;background:#020617;color:#94a3b8"><h1>404 – Not Found</h1><p>This website does not exist or has been unpublished.</p></body></html>');
     }
 
     $raw    = $project['content_json'] ?? '{}';
-    $schema = json_decode($raw, true) ?? [];
+    $schema = json_decode($raw, true);
 
-    if (isset($schema[0]) || (is_array($schema) && array_key_exists(0, $schema))) {
+    // Guard: if content_json is not valid JSON or not an array/object, show empty page
+    if (!is_array($schema)) {
+        $schema = [];
+    }
+
+    if (isset($schema[0])) {
+        // Legacy flat array of blocks
         $blocks = $schema;
         $meta   = [];
     } else {
@@ -234,12 +233,9 @@ if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 
     $is_draft = ($project['status'] !== 'published');
 
-    if ($is_draft) {
-        if (!is_logged_in() || $_SESSION['user_id'] !== $project['user_id']) {
-            http_response_code(403);
-            die('<h1>403 Forbidden</h1><p>This site is currently a draft.</p>');
-        }
-    }
+    // Draft projects: show to the owner (logged-in session) OR show a draft banner
+    // We do NOT block with 403 — the owner needs to preview drafts from the builder.
+    $show_draft_banner = $is_draft;
 
     $compiled_html = '';
     foreach ($blocks as $block) {
@@ -247,7 +243,7 @@ if (defined('WEBCRAFT_RENDER_STANDALONE')) {
             $compiled_html .= render_block($block);
         }
     }
-    ?>
+?>
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -264,6 +260,12 @@ if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 </head>
 <body class="min-h-screen">
 
+<?php if ($show_draft_banner): ?>
+    <div style="background:#854d0e;color:#fef08a;text-align:center;padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:.05em;position:sticky;top:0;z-index:9999">
+        ⚠️ DRAFT PREVIEW — This page is not yet published
+    </div>
+<?php endif; ?>
+
     <main id="wc-page"><?php echo $compiled_html; ?></main>
 
     <div class="fixed bottom-4 left-4 bg-slate-900/90 backdrop-blur-md text-slate-400 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-800 shadow-xl flex items-center gap-1.5 hover:text-white transition z-50">
@@ -278,5 +280,5 @@ if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 
 </body>
 </html>
-    <?php
+<?php
 } // end standalone guard

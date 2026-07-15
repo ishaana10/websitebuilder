@@ -1,26 +1,48 @@
 <?php
 /**
- * WebCraft REST API  v2.3
+ * WebCraft REST API v2.4
+ *
+ * Content-Type is set per-action, NOT globally, so export_zip can stream
+ * a file without fighting a pre-set application/json header.
  */
-ob_start();
 define('WEBCRAFT_INCLUDED', true);
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/render.php';
-ob_end_clean();
 
-header('Content-Type: application/json');
+// All non-export actions return JSON; export_zip sets its own headers.
+// We determine the action early so we only set JSON headers when needed.
+$action  = $_GET['action'] ?? '';
+$input   = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $raw_input = file_get_contents('php://input');
+    $input = json_decode($raw_input, true) ?? [];
+    if (empty($action)) $action = $input['action'] ?? '';
+}
+
+// Resolve short aliases
+$aliases = ['save'=>'save_project','publish'=>'publish_project','delete'=>'delete_project','load'=>'load_project','export'=>'export_zip'];
+if (isset($aliases[$action])) $action = $aliases[$action];
+
+// Set JSON content-type for every action EXCEPT export_zip (which streams a file)
+if ($action !== 'export_zip') {
+    header('Content-Type: application/json; charset=UTF-8');
+}
 
 if (!is_logged_in()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized. Please login first.']);
+    if ($action !== 'export_zip') {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized. Please login first.']);
+    } else {
+        http_response_code(401);
+        echo 'Unauthorized.';
+    }
     exit;
 }
 
 $db      = get_db_connection();
 $user_id = $_SESSION['user_id'];
-$input   = json_decode(file_get_contents('php://input'), true) ?? [];
 
-// ── Helpers ─────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────
 
 function check_project_ownership($db, $project_id, $user_id) {
     $stmt = $db->prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?');
@@ -60,11 +82,7 @@ function unique_slug($db, int $user_id, string $slug, ?int $exclude_id = null): 
     return $slug;
 }
 
-// ── Router ─────────────────────────────────────────────────
-
-$action  = $_GET['action'] ?? ($input['action'] ?? '');
-$aliases = ['save'=>'save_project','publish'=>'publish_project','delete'=>'delete_project','load'=>'load_project','export'=>'export_zip'];
-if (isset($aliases[$action])) $action = $aliases[$action];
+// ── Router ─────────────────────────────────────────────────────
 
 switch ($action) {
 
@@ -185,60 +203,72 @@ switch ($action) {
         break;
 
     case 'export_zip':
-        // Removed Content-Type: application/json header for this action — we stream a file
-        header_remove('Content-Type');
-        if (!verify_csrf_token($_GET['csrf_token'] ?? '')) { http_response_code(403); echo 'Invalid CSRF token.'; exit; }
+        // No JSON header here — we stream a file download
+        if (!verify_csrf_token($_GET['csrf_token'] ?? '')) {
+            http_response_code(403);
+            header('Content-Type: text/plain');
+            echo 'Invalid or expired CSRF token. Please reload the builder and try again.';
+            exit;
+        }
         $project_id = (int)($_GET['project_id'] ?? 0);
-        if (!$project_id) { http_response_code(400); echo 'Missing project ID.'; exit; }
+        if (!$project_id) { http_response_code(400); header('Content-Type: text/plain'); echo 'Missing project ID.'; exit; }
         $project = check_project_ownership($db, $project_id, $user_id);
-        if (!$project) { http_response_code(404); echo 'Project not found.'; exit; }
+        if (!$project) { http_response_code(404); header('Content-Type: text/plain'); echo 'Project not found.'; exit; }
 
         $schema    = json_decode($project['content_json'] ?? '{}', true) ?? [];
         $blocks    = $schema['blocks'] ?? (isset($schema[0]) ? $schema : []);
-        $meta      = $schema['meta'] ?? [];
+        $meta      = $schema['meta']   ?? [];
         $body_html = '';
         foreach ($blocks as $block) { if (is_array($block)) $body_html .= render_block($block); }
 
-        $full_html = '<!DOCTYPE html>
+        $page_title = htmlspecialchars($project['name'], ENT_QUOTES);
+        $custom_css = !empty($meta['custom_css']) ? $meta['custom_css'] : '';
+        $custom_js  = !empty($meta['custom_js'])  ? '<script>' . $meta['custom_js'] . '</script>' : '';
+
+        $full_html = <<<HTML
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>' . htmlspecialchars($project['name'], ENT_QUOTES) . '</title>
+    <title>{$page_title}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body{font-family:ui-sans-serif,system-ui,sans-serif;background-color:#020617;}' .
-        (!empty($meta['custom_css']) ? $meta['custom_css'] : '') . '</style>
+    <style>body{font-family:ui-sans-serif,system-ui,sans-serif;background-color:#020617;}{$custom_css}</style>
 </head>
 <body class="min-h-screen">
-<main id="wc-page">' . $body_html . '</main>
-' . (!empty($meta['custom_js']) ? '<script>' . $meta['custom_js'] . '</script>' : '') . '
+<main id="wc-page">{$body_html}</main>
+{$custom_js}
 </body>
-</html>';
+</html>
+HTML;
 
-        $filename = ($project['slug'] ?? 'export') . '.html';
+        $filename = ($project['slug'] ?? 'export');
 
-        // Try ZipArchive first; fall back to plain HTML download if unavailable
+        // Try ZipArchive; fall back to plain .html download
         if (class_exists('ZipArchive')) {
-            $zip          = new ZipArchive();
-            $zip_filename = tempnam(sys_get_temp_dir(), 'webcraft_') . '.zip';
-            if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            $zip_path = sys_get_temp_dir() . '/webcraft_' . uniqid() . '.zip';
+            $zip = new ZipArchive();
+            if ($zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
                 $zip->addFromString('index.html', $full_html);
                 $zip->close();
                 header('Content-Type: application/zip');
-                header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
-                header('Content-Length: ' . filesize($zip_filename));
+                header('Content-Disposition: attachment; filename="' . $filename . '-export.zip"');
+                header('Content-Length: ' . filesize($zip_path));
+                header('Cache-Control: no-cache, must-revalidate');
                 header('Pragma: no-cache');
-                readfile($zip_filename);
-                unlink($zip_filename);
+                readfile($zip_path);
+                @unlink($zip_path);
                 exit;
             }
         }
 
-        // Fallback: download as plain index.html
+        // Fallback: plain HTML file download
+        $html_bytes = strlen($full_html);
         header('Content-Type: text/html; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Content-Length: ' . strlen($full_html));
+        header('Content-Disposition: attachment; filename="' . $filename . '.html"');
+        header('Content-Length: ' . $html_bytes);
+        header('Cache-Control: no-cache, must-revalidate');
         header('Pragma: no-cache');
         echo $full_html;
         exit;
