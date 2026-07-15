@@ -1,6 +1,4 @@
 # WebCraft .htaccess
-# Apache rewrite + security rules
-
 Options -Indexes
 ServerSignature Off
 
@@ -8,41 +6,33 @@ ServerSignature Off
     RewriteEngine On
 
     # Block direct access to sensitive files
-    RewriteRule ^(\.env|\.git|schema\.sql|verify_builder\.py|install\.php) - [F,L]
+    RewriteRule ^(\.env|\.git|schema\.sql|verify_builder\.py) - [F,L]
 
-    # Let real files and directories through untouched
+    # Always let real files and directories pass through untouched
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Everything else goes to index.php
+    # Everything else -> index.php
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
-# Force correct MIME types — prevents JS files being served as text/html
+# Correct MIME types
 <IfModule mod_mime.c>
     AddType application/javascript .js
-    AddType text/css .css
-    AddType text/html .php
+    AddType text/css               .css
 </IfModule>
 
-# Block direct access to assets/js from being rendered as a page
-<FilesMatch "\.(js|css|map)$">
-    <IfModule mod_headers.c>
-        Header set X-Content-Type-Options "nosniff"
-    </IfModule>
-</FilesMatch>
-
-# PHP error handling — suppress output that could corrupt JSON responses
+# Suppress PHP error output (goes to log only, never to browser)
 <IfModule mod_php.c>
     php_flag display_errors Off
-    php_flag log_errors On
+    php_flag log_errors     On
 </IfModule>
 <IfModule mod_php8.c>
     php_flag display_errors Off
-    php_flag log_errors On
+    php_flag log_errors     On
 </IfModule>
 <IfModule mod_php7.c>
     php_flag display_errors Off
-    php_flag log_errors On
+    php_flag log_errors     On
 </IfModule>

@@ -1,9 +1,6 @@
 <?php
 /**
  * WebCraft Live Interactive Workspace v2.0
- * Supports dynamic dragging, block palette, properties panel, and responsive preview.
- * JS logic lives in assets/js/builder.js (WCBuilder module)
- * Component registry lives in assets/js/components.js (WCComponents)
  */
 require_once __DIR__ . '/config.php';
 require_login();
@@ -26,13 +23,14 @@ if (!$project) {
 
 $csrf_token = generate_csrf_token();
 
-// Safely decode content_json — always output a valid JS object literal, never a double-encoded string.
-$raw_content = $project['content_json'] ?? '{}';
-$decoded     = json_decode($raw_content, true);
-// If it's valid JSON already, re-encode cleanly; otherwise default to empty schema.
+$raw_content  = $project['content_json'] ?? '{}';
+$decoded      = json_decode($raw_content, true);
 $content_state_js = ($decoded !== null)
     ? json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
     : '{"version":1,"meta":{"title":"","description":"","custom_css":"","custom_js":""},"blocks":[]}';
+
+// Live preview URL — uses the stored username from session
+$preview_url = 'render.php?slug=' . urlencode($project['slug']) . '&user=' . urlencode($_SESSION['username'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-slate-950">
@@ -47,14 +45,8 @@ $content_state_js = ($decoded !== null)
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
-        .component-selected {
-            outline: 3px solid #14b8a6 !important;
-            outline-offset: 2px;
-        }
-        .canvas-dragover {
-            background-color: rgba(20,184,166,0.05) !important;
-            border: 2px dashed #14b8a6 !important;
-        }
+        .component-selected { outline: 3px solid #14b8a6 !important; outline-offset: 2px; }
+        .canvas-dragover { background-color: rgba(20,184,166,0.05) !important; border: 2px dashed #14b8a6 !important; }
         .wc-block { transition: outline 0.1s; }
         .wc-shelf-item:active { cursor: grabbing; }
     </style>
@@ -70,7 +62,7 @@ $content_state_js = ($decoded !== null)
             <span class="h-5 w-[1px] bg-slate-700"></span>
             <div>
                 <h1 class="text-sm font-bold tracking-tight text-white leading-none"><?php echo htmlspecialchars($project['name'], ENT_QUOTES); ?></h1>
-                <p class="text-[11px] text-slate-400 mt-1">Status: <span id="status-badge" class="font-semibold uppercase text-teal-400"><?php echo htmlspecialchars(ucfirst($project['status']), ENT_QUOTES); ?></span></p>
+                <p class="text-[11px] text-slate-400 mt-1">Status: <span id="status-badge" class="font-semibold uppercase <?php echo $project['status'] === 'published' ? 'text-teal-400' : 'text-yellow-400'; ?>"><?php echo htmlspecialchars(ucfirst($project['status']), ENT_QUOTES); ?></span></p>
             </div>
         </div>
 
@@ -92,8 +84,14 @@ $content_state_js = ($decoded !== null)
             <button onclick="saveProject(false)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition">
                 <i class="fas fa-save"></i> Save Draft
             </button>
-            <button onclick="exportProjectZip()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition" title="Export as ZIP">
-                <i class="fas fa-file-archive text-teal-400"></i> Export ZIP
+            <?php if ($project['status'] === 'published'): ?>
+            <a href="<?php echo htmlspecialchars($preview_url, ENT_QUOTES); ?>" target="_blank"
+               class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition" title="Open live site in new tab">
+                <i class="fas fa-external-link-alt text-teal-400"></i> Live View
+            </a>
+            <?php endif; ?>
+            <button onclick="exportProjectZip()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition" title="Export as HTML">
+                <i class="fas fa-file-download text-teal-400"></i> Export HTML
             </button>
             <button onclick="publishProject()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2 rounded text-xs flex items-center gap-1.5 transition shadow-md shadow-teal-500/10">
                 <i class="fas fa-globe"></i> Publish Site
@@ -110,9 +108,7 @@ $content_state_js = ($decoded !== null)
                 <h2 class="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components</h2>
                 <p class="text-[11px] text-slate-400 mt-1">Drag components onto the canvas.</p>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-5" id="components-shelf">
-                <!-- Dynamically populated by WCBuilder.buildComponentShelf() -->
-            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-5" id="components-shelf"></div>
         </aside>
 
         <!-- CANVAS (CENTER) -->
@@ -125,7 +121,6 @@ $content_state_js = ($decoded !== null)
                 ondragleave="this.classList.remove('canvas-dragover');"
                 ondrop="handleCanvasDrop(event)"
             >
-                <!-- Empty state -->
                 <div id="canvas-empty-state" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
                     <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-slate-600 text-2xl mb-4 border border-slate-700">
                         <i class="fas fa-mouse-pointer"></i>
@@ -133,7 +128,6 @@ $content_state_js = ($decoded !== null)
                     <h3 class="font-bold text-slate-400 text-sm">Canvas is Empty</h3>
                     <p class="text-slate-500 text-xs mt-1.5 max-w-xs leading-relaxed">Drag a component from the left shelf to start building.</p>
                 </div>
-                <!-- Rendered blocks -->
                 <div id="canvas-content" class="space-y-2"></div>
             </div>
         </main>
@@ -145,57 +139,36 @@ $content_state_js = ($decoded !== null)
                 <p class="text-[11px] text-slate-400 mt-1">Select a block to edit its settings.</p>
             </div>
 
-            <!-- TAB SWITCHER -->
             <div class="flex border-b border-slate-800 bg-slate-950/40 shrink-0">
-                <button id="control-tab-btn-properties" onclick="switchControlPanelTab('properties')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-teal-500 text-teal-400">
-                    Properties
-                </button>
-                <button id="control-tab-btn-settings" onclick="switchControlPanelTab('settings')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white">
-                    CSS / JS
-                </button>
+                <button id="control-tab-btn-properties" onclick="switchControlPanelTab('properties')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-teal-500 text-teal-400">Properties</button>
+                <button id="control-tab-btn-settings" onclick="switchControlPanelTab('settings')" class="flex-1 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-white">CSS / JS</button>
             </div>
 
-            <!-- PROPERTIES TAB -->
             <div class="flex-1 overflow-y-auto p-4 space-y-4" id="property-panel">
-
-                <!-- No-selection state -->
                 <div id="no-selection-state" class="text-center py-12 text-slate-500">
                     <i class="fas fa-hand-pointer text-xl mb-3"></i>
                     <p class="text-xs">No block selected.</p>
                     <p class="text-[11px] text-slate-600 mt-1 leading-relaxed">Click any block on the canvas to edit it.</p>
                 </div>
 
-                <!-- Selection editing — shown when a block is selected -->
                 <div id="selection-controls" class="hidden space-y-4">
-
-                    <!-- Selected element header -->
                     <div>
                         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Selected Block</label>
                         <div class="bg-slate-950 px-3 py-2 rounded text-xs text-teal-400 font-mono flex justify-between items-center">
                             <span id="selected-component-type">—</span>
-                            <button onclick="deleteSelectedComponent()" class="text-red-400 hover:text-red-300 ml-2" title="Delete Block">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            <button onclick="deleteSelectedComponent()" class="text-red-400 hover:text-red-300 ml-2" title="Delete Block"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
-
                     <hr class="border-slate-800">
-
-                    <!-- Dynamic prop fields injected here by WCBuilder.renderPropertiesPanel() -->
                     <div id="dynamic-prop-fields" class="space-y-3"></div>
-
                     <hr class="border-slate-800">
-
-                    <!-- Common layout overrides -->
                     <div class="space-y-3">
                         <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Raw HTML Override</h4>
                         <p class="text-[10px] text-slate-500 leading-relaxed">Use the Custom HTML block type from the shelf for free-form HTML injection.</p>
                     </div>
-
                 </div>
             </div>
 
-            <!-- SETTINGS TAB (CSS/JS injection) -->
             <div class="flex-1 overflow-y-auto p-4 space-y-5 hidden" id="settings-panel">
                 <div class="space-y-4">
                     <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -210,9 +183,7 @@ $content_state_js = ($decoded !== null)
                         <label class="text-[11px] text-slate-400 block mb-1">Custom JS</label>
                         <textarea id="project-custom-js" rows="7" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" placeholder="console.log('WebCraft loaded');"></textarea>
                     </div>
-                    <button onclick="saveProject(false)" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 rounded text-xs transition">
-                        Save Settings
-                    </button>
+                    <button onclick="saveProject(false)" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 rounded text-xs transition">Save Settings</button>
                 </div>
             </div>
         </aside>
@@ -220,26 +191,20 @@ $content_state_js = ($decoded !== null)
 
     <!-- TOAST NOTIFICATION -->
     <div id="notification-toast" class="fixed bottom-6 right-6 bg-slate-900 border border-teal-500 text-white rounded-lg p-4 shadow-2xl flex items-center gap-3 max-w-sm transform translate-y-24 opacity-0 transition-all duration-300 z-50">
-        <div class="p-2 rounded-full text-sm bg-teal-500/20 text-teal-400">
-            <i class="fas fa-info-circle"></i>
-        </div>
+        <div class="p-2 rounded-full text-sm bg-teal-500/20 text-teal-400"><i class="fas fa-info-circle"></i></div>
         <div>
             <h4 class="text-xs font-bold" id="notification-title">Notification</h4>
             <p class="text-[11px] text-slate-400 mt-0.5" id="notification-desc">—</p>
         </div>
     </div>
 
-    <!-- BACKEND METADATA -->
     <script>
         const PROJECT_ID           = <?php echo (int)$project['id']; ?>;
         const CSRF_TOKEN           = "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES); ?>";
-        // content_state_js is a clean JSON object (never a double-encoded string)
         const LOADED_CONTENT_STATE = <?php echo $content_state_js; ?>;
+        const PREVIEW_URL          = "<?php echo htmlspecialchars($preview_url, ENT_QUOTES); ?>";
     </script>
-
-    <!-- Load component registry first, then builder core -->
     <script src="assets/js/components.js"></script>
     <script src="assets/js/builder.js"></script>
-
 </body>
 </html>

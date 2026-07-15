@@ -1,17 +1,11 @@
 <?php
 /**
- * WebCraft REST API  v2.2
- * Defines WEBCRAFT_INCLUDED before requiring render.php so the
- * standalone page-output block in render.php is skipped.
+ * WebCraft REST API  v2.3
  */
 ob_start();
-
-// Tell render.php it is being included, not run directly
 define('WEBCRAFT_INCLUDED', true);
-
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/render.php';
-
 ob_end_clean();
 
 header('Content-Type: application/json');
@@ -26,7 +20,7 @@ $db      = get_db_connection();
 $user_id = $_SESSION['user_id'];
 $input   = json_decode(file_get_contents('php://input'), true) ?? [];
 
-// ── Helpers ────────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────
 
 function check_project_ownership($db, $project_id, $user_id) {
     $stmt = $db->prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?');
@@ -41,29 +35,14 @@ function csrf_check(array $input): bool {
 
 function require_post(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method Not Allowed']);
-        exit;
+        http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit;
     }
 }
 
 function require_get(): void {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method Not Allowed']);
-        exit;
+        http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit;
     }
-}
-
-function compile_schema_to_html(array $schema): string {
-    if (isset($schema['blocks']) && is_array($schema['blocks'])) {
-        $html = '';
-        foreach ($schema['blocks'] as $block) {
-            if (is_array($block)) $html .= render_block($block);
-        }
-        return $html;
-    }
-    return '';
 }
 
 function make_slug(string $name): string {
@@ -81,7 +60,7 @@ function unique_slug($db, int $user_id, string $slug, ?int $exclude_id = null): 
     return $slug;
 }
 
-// ── Router ────────────────────────────────────────────────────────
+// ── Router ─────────────────────────────────────────────────
 
 $action  = $_GET['action'] ?? ($input['action'] ?? '');
 $aliases = ['save'=>'save_project','publish'=>'publish_project','delete'=>'delete_project','load'=>'load_project','export'=>'export_zip'];
@@ -92,11 +71,9 @@ switch ($action) {
     case 'save_project':
         require_post();
         if (!csrf_check($input)) { http_response_code(403); echo json_encode(['error'=>'Invalid CSRF token.']); exit; }
-
         $project_id       = (int)($input['project_id'] ?? 0) ?: null;
         $schema           = $input['schema'] ?? null;
         $content_json_raw = $input['content_json'] ?? null;
-
         if ($schema !== null) {
             $to_store = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             $name     = trim($schema['meta']['title'] ?? ($input['name'] ?? ''));
@@ -105,13 +82,12 @@ switch ($action) {
             $name     = trim($input['name'] ?? '');
         }
         $description = trim($input['description'] ?? ($schema['meta']['description'] ?? ''));
-
         if (!$project_id) {
             if (empty($name)) { http_response_code(400); echo json_encode(['error'=>'Project name is required.']); exit; }
             $slug = unique_slug($db, $user_id, make_slug($name));
-            $stmt = $db->prepare('INSERT INTO projects (user_id,name,slug,description,content_json,status) VALUES (?,?,?,?,?,\'draft\')');
             try {
-                $stmt->execute([$user_id,$name,$slug,$description,$to_store]);
+                $db->prepare('INSERT INTO projects (user_id,name,slug,description,content_json,status) VALUES (?,?,?,?,?,\'draft\')')
+                   ->execute([$user_id,$name,$slug,$description,$to_store]);
                 echo json_encode(['success'=>true,'message'=>'Project created.','project_id'=>$db->lastInsertId(),'slug'=>$slug]);
             } catch (PDOException $e) { http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
         } else {
@@ -119,13 +95,10 @@ switch ($action) {
             if (!$project) { http_response_code(404); echo json_encode(['error'=>'Project not found or unauthorized.']); exit; }
             $new_name = !empty($name) ? $name : $project['name'];
             $slug     = unique_slug($db, $user_id, make_slug($new_name), $project_id);
-            $stmt = $db->prepare('UPDATE projects SET name=?,slug=?,description=?,content_json=?,updated_at=NOW() WHERE id=?');
             try {
-                $stmt->execute([$new_name, $slug, $description ?: $project['description'], $to_store, $project_id]);
-                try {
-                    $db->prepare('INSERT INTO page_versions (project_id,schema_json,status,created_by) VALUES (?,?,\'draft\',?)')
-                       ->execute([$project_id,$to_store,$user_id]);
-                } catch (PDOException $ve) {}
+                $db->prepare('UPDATE projects SET name=?,slug=?,description=?,content_json=?,updated_at=NOW() WHERE id=?')
+                   ->execute([$new_name,$slug,$description ?: $project['description'],$to_store,$project_id]);
+                try { $db->prepare('INSERT INTO page_versions (project_id,schema_json,status,created_by) VALUES (?,?,\'draft\',?)')->execute([$project_id,$to_store,$user_id]); } catch (PDOException $ve) {}
                 echo json_encode(['success'=>true,'message'=>'Draft saved.','project_id'=>$project_id,'slug'=>$slug]);
             } catch (PDOException $e) { http_response_code(500); echo json_encode(['error'=>$e->getMessage()]); }
         }
@@ -142,13 +115,9 @@ switch ($action) {
         $to_store = $schema !== null
             ? json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
             : $project['content_json'];
-        $stmt = $db->prepare('UPDATE projects SET content_json=?,status=\'published\',updated_at=NOW() WHERE id=?');
         try {
-            $stmt->execute([$to_store, $project_id]);
-            try {
-                $db->prepare('INSERT INTO page_versions (project_id,schema_json,status,created_by) VALUES (?,?,\'published\',?)')
-                   ->execute([$project_id,$to_store,$user_id]);
-            } catch (PDOException $ve) {}
+            $db->prepare('UPDATE projects SET content_json=?,status=\'published\',updated_at=NOW() WHERE id=?')->execute([$to_store,$project_id]);
+            try { $db->prepare('INSERT INTO page_versions (project_id,schema_json,status,created_by) VALUES (?,?,\'published\',?)')->execute([$project_id,$to_store,$user_id]); } catch (PDOException $ve) {}
             echo json_encode([
                 'success' => true,
                 'message' => 'Site published successfully!',
@@ -176,11 +145,12 @@ switch ($action) {
         if (!$project_id) { http_response_code(400); echo json_encode(['error'=>'Missing project ID.']); exit; }
         $project = check_project_ownership($db, $project_id, $user_id);
         if (!$project) { http_response_code(404); echo json_encode(['error'=>'Project not found or unauthorized.']); exit; }
-        $schema = json_decode($project['content_json'] ?? '{}', true);
         echo json_encode(['success'=>true,'project'=>[
             'id'=>$project['id'],'name'=>$project['name'],'slug'=>$project['slug'],
             'description'=>$project['description'],'status'=>$project['status'],
-            'content_json'=>$project['content_json'],'schema'=>$schema,'updated_at'=>$project['updated_at']
+            'content_json'=>$project['content_json'],
+            'schema'=>json_decode($project['content_json']??'{}',true),
+            'updated_at'=>$project['updated_at']
         ]]);
         break;
 
@@ -188,7 +158,7 @@ switch ($action) {
         require_get();
         $project_id = (int)($_GET['project_id'] ?? 0);
         if (!$project_id) { http_response_code(400); echo json_encode(['error'=>'Missing project ID.']); exit; }
-        if (!check_project_ownership($db, $project_id, $user_id)) { http_response_code(404); echo json_encode(['error'=>'Project not found.']); exit; }
+        if (!check_project_ownership($db,$project_id,$user_id)) { http_response_code(404); echo json_encode(['error'=>'Project not found.']); exit; }
         try {
             $stmt = $db->prepare('SELECT id,project_id,status,created_at FROM page_versions WHERE project_id=? ORDER BY id DESC LIMIT 30');
             $stmt->execute([$project_id]);
@@ -215,33 +185,65 @@ switch ($action) {
         break;
 
     case 'export_zip':
-        require_get();
-        if (!verify_csrf_token($_GET['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['error'=>'Invalid CSRF token.']); exit; }
+        // Removed Content-Type: application/json header for this action — we stream a file
+        header_remove('Content-Type');
+        if (!verify_csrf_token($_GET['csrf_token'] ?? '')) { http_response_code(403); echo 'Invalid CSRF token.'; exit; }
         $project_id = (int)($_GET['project_id'] ?? 0);
-        if (!$project_id) { http_response_code(400); echo json_encode(['error'=>'Missing project ID.']); exit; }
+        if (!$project_id) { http_response_code(400); echo 'Missing project ID.'; exit; }
         $project = check_project_ownership($db, $project_id, $user_id);
-        if (!$project) { http_response_code(404); echo json_encode(['error'=>'Project not found or unauthorized.']); exit; }
-        $schema     = json_decode($project['content_json'] ?? '{}', true) ?? [];
-        $blocks     = $schema['blocks'] ?? (isset($schema[0]) ? $schema : []);
-        $meta       = $schema['meta'] ?? [];
-        $body_html  = '';
+        if (!$project) { http_response_code(404); echo 'Project not found.'; exit; }
+
+        $schema    = json_decode($project['content_json'] ?? '{}', true) ?? [];
+        $blocks    = $schema['blocks'] ?? (isset($schema[0]) ? $schema : []);
+        $meta      = $schema['meta'] ?? [];
+        $body_html = '';
         foreach ($blocks as $block) { if (is_array($block)) $body_html .= render_block($block); }
-        $full_html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>' . htmlspecialchars($project['name'],ENT_QUOTES) . '</title><script src="https://cdn.tailwindcss.com"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>body{font-family:ui-sans-serif,system-ui,sans-serif;background-color:#020617;}' . htmlspecialchars($meta['custom_css'] ?? '',ENT_NOQUOTES) . '</style></head><body class="min-h-screen"><main id="wc-page">' . $body_html . '</main>' . (!empty($meta['custom_js']) ? '<script>' . htmlspecialchars($meta['custom_js'],ENT_NOQUOTES) . '</script>' : '') . '</body></html>';
-        $zip = new ZipArchive();
-        $zip_filename = tempnam(sys_get_temp_dir(),'webcraft_') . '.zip';
-        if ($zip->open($zip_filename, ZipArchive::CREATE|ZipArchive::OVERWRITE) !== true) { http_response_code(500); echo json_encode(['error'=>'Could not create ZIP.']); exit; }
-        $zip->addFromString('index.html', $full_html);
-        $zip->close();
-        header_remove();
-        header('Content-Type: application/zip');
-        header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
-        header('Content-Length: ' . filesize($zip_filename));
-        readfile($zip_filename);
-        unlink($zip_filename);
+
+        $full_html = '<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . htmlspecialchars($project['name'], ENT_QUOTES) . '</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body{font-family:ui-sans-serif,system-ui,sans-serif;background-color:#020617;}' .
+        (!empty($meta['custom_css']) ? $meta['custom_css'] : '') . '</style>
+</head>
+<body class="min-h-screen">
+<main id="wc-page">' . $body_html . '</main>
+' . (!empty($meta['custom_js']) ? '<script>' . $meta['custom_js'] . '</script>' : '') . '
+</body>
+</html>';
+
+        $filename = ($project['slug'] ?? 'export') . '.html';
+
+        // Try ZipArchive first; fall back to plain HTML download if unavailable
+        if (class_exists('ZipArchive')) {
+            $zip          = new ZipArchive();
+            $zip_filename = tempnam(sys_get_temp_dir(), 'webcraft_') . '.zip';
+            if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                $zip->addFromString('index.html', $full_html);
+                $zip->close();
+                header('Content-Type: application/zip');
+                header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
+                header('Content-Length: ' . filesize($zip_filename));
+                header('Pragma: no-cache');
+                readfile($zip_filename);
+                unlink($zip_filename);
+                exit;
+            }
+        }
+
+        // Fallback: download as plain index.html
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($full_html));
+        header('Pragma: no-cache');
+        echo $full_html;
         exit;
 
     case 'upload_asset':
-        require_post();
         if (!verify_csrf_token($_POST['csrf_token'] ?? '')) { http_response_code(403); echo json_encode(['error'=>'Invalid CSRF token.']); exit; }
         $project_id = (int)($_POST['project_id'] ?? 0);
         if (!$project_id || !check_project_ownership($db,$project_id,$user_id)) { http_response_code(400); echo json_encode(['error'=>'Invalid project.']); exit; }
