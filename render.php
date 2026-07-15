@@ -1,12 +1,20 @@
 <?php
 /**
- * WebCraft Render Engine v2.0
+ * WebCraft Render Engine v2.1
  * Compiles page JSON schema (blocks[]) -> HTML at request time.
- * No longer depends on a pre-compiled published_html column.
  *
  * Safe to require_once from api.php — page-output code only runs
  * when this file is the entry-point script (direct browser request).
+ *
+ * Uses a defined constant guard instead of basename() so it works
+ * regardless of server path configuration or symlinks.
  */
+
+// Only define the constant if we're the entry point (not being require_once'd)
+if (!defined('WEBCRAFT_INCLUDED')) {
+    define('WEBCRAFT_RENDER_STANDALONE', true);
+}
+
 require_once __DIR__ . '/config.php';
 
 // ── Block renderers (safe to include anywhere) ─────────────────
@@ -40,7 +48,7 @@ function render_block(array $block): string {
         'contact_form'   => render_contact_form($props),
         'spacer'         => render_spacer($props),
         'html_block'     => $props['html'] ?? '',
-        default          => "<!-- unknown block: " . htmlspecialchars($type, ENT_QUOTES) . " -->"
+        default          => '<!-- unknown block: ' . htmlspecialchars($type, ENT_QUOTES) . ' -->'
     };
 }
 
@@ -186,8 +194,10 @@ function render_spacer(array $props): string {
 }
 
 // ── Page rendering — ONLY runs when accessed directly ──────────
-// When require_once'd by api.php, this block is skipped entirely.
-if (basename($_SERVER['SCRIPT_FILENAME']) === 'render.php') {
+// Constant-based guard: reliable regardless of server path / symlinks.
+// When require_once'd by api.php, WEBCRAFT_INCLUDED is defined first,
+// so WEBCRAFT_RENDER_STANDALONE is never defined and this block is skipped.
+if (defined('WEBCRAFT_RENDER_STANDALONE')) {
 
     $slug     = $_GET['slug']     ?? '';
     $username = $_GET['user']     ?? '';
@@ -269,4 +279,4 @@ if (basename($_SERVER['SCRIPT_FILENAME']) === 'render.php') {
 </body>
 </html>
     <?php
-} // end direct-access guard
+} // end standalone guard
