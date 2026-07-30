@@ -1,6 +1,6 @@
-# WebCraft Website Builder
+# Nuvis Webbuilder Website Builder
 
-WebCraft is a full, commercial-grade, open-source visual website builder developed with highly modular, secure, low-code paradigms. Compatible with **PHP 7.4 to 8.3+** and **MySQL/MariaDB**, WebCraft is engineered for performance, security, and developer extensibility.
+Nuvis Webbuilder is a full, commercial-grade, open-source visual website builder developed with highly modular, secure, low-code paradigms. Compatible with **PHP 8.1 to 8.3+** and **MySQL/MariaDB**, Nuvis Webbuilder is engineered for performance, security, and developer extensibility.
 
 It features a robust authentication gate, dynamic drag-and-drop workspace, properties customizer, live low-code HTML compilation, instant caching delivery wrappers, and a feature-rich admin dashboard tracking form submissions, chatbot interaction, and SMTP notification dispatch simulations.
 
@@ -45,7 +45,7 @@ It features a robust authentication gate, dynamic drag-and-drop workspace, prope
 
 ## 🛠️ Tech Stack
 
-- **Backend:** PHP 7.4+ (fully tested through PHP 8.3.6), PDO (MySQL/MariaDB).
+- **Backend:** PHP 8.1+ (fully tested through PHP 8.3.6), PDO (MySQL/MariaDB).
 - **Frontend:** HTML5, CSS3, ES6 JavaScript, Tailwind CSS CSS framework (CDN-backed), FontAwesome 6 icons.
 - **Database:** MySQL 5.7+ / MariaDB 10.4+.
 - **Testing:** Playwright automation testing suite (Python Sync API).
@@ -56,7 +56,7 @@ It features a robust authentication gate, dynamic drag-and-drop workspace, prope
 
 ### Prerequisites
 
-- A web server running PHP 7.4+ (such as Apache, Nginx, or PHP Built-in Server).
+- A web server running PHP 8.1+ (such as Apache, Nginx, or PHP Built-in Server).
 - A MySQL or MariaDB instance.
 - The PHP `zip` extension enabled (needed for the ZIP export feature).
 
@@ -64,8 +64,8 @@ It features a robust authentication gate, dynamic drag-and-drop workspace, prope
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/webcraft-site-builder.git
-   cd webcraft-site-builder
+   git clone https://github.com/yourusername/nuvis-webbuilder-site-builder.git
+   cd nuvis-webbuilder-site-builder
    ```
 
 2. **Initialize the Database Schema:**
@@ -177,7 +177,7 @@ Screenshots and videos of the flow will be captured in the `/home/jules/verifica
   - Ensure `.env` database parameters match the credentials granted in step 2.
   - Check user privileges: ensure `builder_user` has `ALL PRIVILEGES` on database `site_builder`.
 - **PHP Version Issues:**
-  - WebCraft is compatible with PHP 7.4 up to PHP 8.3+. Running older PHP versions (< 7.4) will result in syntax errors like array destructuring or short open tags. Check version with `php -v`.
+  - Nuvis Webbuilder is compatible with PHP 8.1 up to PHP 8.3+. Running older PHP versions (< 8.1) will result in syntax errors like array destructuring or short open tags. Check version with `php -v`.
 - **Zip Generation Failures ("Could not generate zip archive on server"):**
   - Verify that the PHP Zip extension is enabled on your server: `php -m | grep zip`. On Debian/Ubuntu servers, install it using `sudo apt install php-zip`.
 

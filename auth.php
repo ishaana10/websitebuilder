@@ -1,6 +1,6 @@
 <?php
 /**
- * WebCraft User Authentication and Session Manager
+ * Nuvis Webbuilder User Authentication and Session Manager
  */
 require_once __DIR__ . '/config.php';
 

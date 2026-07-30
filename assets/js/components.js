@@ -1,5 +1,5 @@
 /**
- * WebCraft Pre-Built High-Quality UI Widgets & Components
+ * Nuvis Webbuilder Pre-Built High-Quality UI Widgets & Components
  * Tailored for modern, beautiful, and fully customizable responsive websites
  */
 
@@ -11,7 +11,7 @@ const UI_COMPONENTS = [
         icon: 'fas fa-bars',
         html: `
 <nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
-    <div class="text-xl font-extrabold tracking-wider text-teal-400">WEBCRAFT</div>
+    <div class="text-xl font-extrabold tracking-wider text-teal-400">NUVIS WEBBUILDER</div>
     <div class="hidden md:flex space-x-6">
         <a href="#home" class="hover:text-teal-300 transition duration-300">Home</a>
         <a href="#features" class="hover:text-teal-300 transition duration-300">Features</a>
@@ -134,8 +134,8 @@ const UI_COMPONENTS = [
         <p class="text-slate-400 mt-2">Have questions? Drop us a line and we'll reply shortly.</p>
 
         <!-- Live AJAX Interactive Form -->
-        <form class="mt-8 space-y-4" onsubmit="event.preventDefault(); window.submitWebCraftForm(this);">
-            <div class="webcraft-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
+        <form class="mt-8 space-y-4" onsubmit="event.preventDefault(); window.submitNuvisWebbuilderForm(this);">
+            <div class="nuvis-webbuilder-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
             <input type="text" name="name" placeholder="Full Name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
             <input type="email" name="email" placeholder="Email Address" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
             <textarea name="message" placeholder="Write message..." rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm"></textarea>
@@ -154,29 +154,29 @@ const UI_COMPONENTS = [
         html: `
 <div class="fixed bottom-6 right-6 z-50 font-sans" data-component="chatbot">
     <!-- Floating Bubble Button -->
-    <button onclick="window.toggleWebCraftChat()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 focus:outline-none">
+    <button onclick="window.toggleNuvisWebbuilderChat()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 focus:outline-none">
         <i class="fas fa-comments text-xl"></i>
     </button>
 
     <!-- Chat Dialog Window (Hidden by default) -->
-    <div id="webcraft-chat-window" class="hidden absolute bottom-16 right-0 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
+    <div id="nuvis-webbuilder-chat-window" class="hidden absolute bottom-16 right-0 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
         <div class="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="font-bold text-xs text-white uppercase tracking-wider">AI Support Bot</span>
             </div>
-            <button onclick="window.toggleWebCraftChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <button onclick="window.toggleNuvisWebbuilderChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
         </div>
 
         <!-- Conversation logs -->
-        <div id="webcraft-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
+        <div id="nuvis-webbuilder-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
             <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed">
                 Hello there! Welcome to our website. How can I assist your operations today?
             </div>
         </div>
 
         <!-- Chat form input -->
-        <form onsubmit="event.preventDefault(); window.sendWebCraftChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+        <form onsubmit="event.preventDefault(); window.sendNuvisWebbuilderChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
             <input type="text" name="chat_msg" placeholder="Ask something..." required class="flex-1 bg-slate-850 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500">
             <button type="submit" class="bg-teal-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-teal-400 transition"><i class="fas fa-paper-plane"></i></button>
         </form>
@@ -204,13 +204,13 @@ const UI_COMPONENTS = [
         html: `
 <footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-lg font-black text-white">WEBCRAFT BUILDER</div>
+        <div class="text-lg font-black text-white">NUVIS WEBBUILDER BUILDER</div>
         <div class="flex space-x-6 text-sm">
             <a href="#" class="hover:text-white transition">Privacy Policy</a>
             <a href="#" class="hover:text-white transition">Terms of Use</a>
             <a href="#" class="hover:text-white transition">Support</a>
         </div>
-        <div class="text-xs text-slate-600">&copy; ${new Date().getFullYear()} WebCraft. All rights reserved. Open Source under MIT.</div>
+        <div class="text-xs text-slate-600">&copy; ${new Date().getFullYear()} Nuvis Webbuilder. All rights reserved. Open Source under MIT.</div>
     </div>
 </footer>`
     }
@@ -218,13 +218,13 @@ const UI_COMPONENTS = [
 
 // Global runtime scripts injection for live compiled renderings (Contact and Chatbot mechanics)
 if (typeof window !== 'undefined') {
-    window.submitWebCraftForm = function(formElement) {
+    window.submitNuvisWebbuilderForm = function(formElement) {
         const btn = formElement.querySelector("button[type='submit']");
-        const statusDiv = formElement.querySelector(".webcraft-form-status");
+        const statusDiv = formElement.querySelector(".nuvis-webbuilder-form-status");
 
         if (btn) btn.disabled = true;
         if (statusDiv) {
-            statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
+            statusDiv.className = "nuvis-webbuilder-form-status p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
             statusDiv.innerText = "Submitting secure entry...";
             statusDiv.classList.remove("hidden");
         }
@@ -240,16 +240,16 @@ if (typeof window !== 'undefined') {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20";
+                statusDiv.className = "nuvis-webbuilder-form-status p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20";
                 statusDiv.innerText = data.message;
                 formElement.reset();
             } else {
-                statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+                statusDiv.className = "nuvis-webbuilder-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
                 statusDiv.innerText = data.error || "Submission rejected.";
             }
         })
         .catch(err => {
-            statusDiv.className = "webcraft-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+            statusDiv.className = "nuvis-webbuilder-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
             statusDiv.innerText = "Connection Failed. Please try again.";
         })
         .finally(() => {
@@ -257,16 +257,16 @@ if (typeof window !== 'undefined') {
         });
     };
 
-    window.toggleWebCraftChat = function() {
-        const win = document.getElementById('webcraft-chat-window');
+    window.toggleNuvisWebbuilderChat = function() {
+        const win = document.getElementById('nuvis-webbuilder-chat-window');
         if (win) {
             win.classList.toggle('hidden');
         }
     };
 
-    window.sendWebCraftChatMessage = function(formElement) {
+    window.sendNuvisWebbuilderChatMessage = function(formElement) {
         const input = formElement.querySelector("input[name='chat_msg']");
-        const logs = document.getElementById('webcraft-chat-logs');
+        const logs = document.getElementById('nuvis-webbuilder-chat-logs');
 
         if (!input || !logs) return;
 
@@ -290,7 +290,7 @@ if (typeof window !== 'undefined') {
             if (userMsg.toLowerCase().includes('price') || userMsg.toLowerCase().includes('pricing') || userMsg.toLowerCase().includes('cost')) {
                 responseText = "Our software licensing models start at just $0/mo for side developer projects, and $29/mo for complete Enterprise scopes including custom raw HTML features.";
             } else if (userMsg.toLowerCase().includes('feature') || userMsg.toLowerCase().includes('capabilities')) {
-                responseText = "WebCraft specializes in real-time compilations, 100ms static optimization, robust parameterized data architectures, and dynamic visual layouts.";
+                responseText = "Nuvis Webbuilder specializes in real-time compilations, 100ms static optimization, robust parameterized data architectures, and dynamic visual layouts.";
             }
 
             aiDiv.innerText = responseText;

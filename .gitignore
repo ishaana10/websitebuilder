@@ -5,7 +5,7 @@
 *.tmp
 *.log
 
-# WebCraft local test exports
+# Nuvis Webbuilder local test exports
 *.zip
 export_test.zip
 

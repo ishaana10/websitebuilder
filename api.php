@@ -1,6 +1,6 @@
 <?php
 /**
- * WebCraft REST API Endpoints
+ * Nuvis Webbuilder REST API Endpoints
  * Supports secure operations for saving, retrieving, publishing, exporting, and deleting websites
  */
 require_once __DIR__ . '/config.php';
@@ -287,7 +287,7 @@ switch ($action) {
                     if ($block['componentId'] === 'html_raw') {
                         $html_content .= $block['raw_html'] ?? '';
                     } elseif ($block['componentId'] === 'navbar') {
-                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'WEBCRAFT';
+                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER';
                         $logoHtml = '';
                         if (!empty($block['logoImg'])) {
                             $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
@@ -315,7 +315,7 @@ switch ($action) {
     </div>
 </nav>';
                     } elseif ($block['componentId'] === 'footer') {
-                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'WEBCRAFT BUILDER';
+                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER BUILDER';
                         $logoHtml = '';
                         if (!empty($block['logoImg'])) {
                             $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
@@ -323,7 +323,7 @@ switch ($action) {
                             $logoHtml = '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
                         }
 
-                        $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' WebCraft. All rights reserved.';
+                        $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webbuilder. All rights reserved.';
 
                         $linksHtml = '';
                         $footLinks = $block['links'] ?? [
@@ -388,7 +388,7 @@ switch ($action) {
 
         // Create Zip Archive
         $zip = new ZipArchive();
-        $zip_filename = tempnam(sys_get_temp_dir(), 'webcraft_export_') . '.zip';
+        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webbuilder_export_') . '.zip';
 
         if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             http_response_code(500);

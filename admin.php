@@ -1,6 +1,6 @@
 <?php
 /**
- * WebCraft Commercial Grade Admin Control Panel
+ * Nuvis Webbuilder Commercial Grade Admin Control Panel
  * Implements high fidelity layouts, analytics charts, dynamic database-backed site listings,
  * pre-packaged templates library, user management status control, customer contact form entries,
  * simulated SMTP dispatch logs, and server performance diagnostics.
@@ -215,7 +215,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebCraft - Admin Portal</title>
+    <title>Nuvis Webbuilder - Admin Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -239,7 +239,7 @@ $csrf_token = generate_csrf_token();
             <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/40">
                 <div class="flex items-center gap-2">
                     <div class="bg-teal-500 text-slate-950 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm">WC</div>
-                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">WebCraft v1.1</span>
+                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">Nuvis Webbuilder v1.1</span>
                 </div>
             </div>
 
@@ -376,7 +376,7 @@ $csrf_token = generate_csrf_token();
                     <!-- Welcome Block -->
                     <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-xl p-8 shadow-md">
                         <div class="max-w-2xl">
-                            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-teal-500/20">Welcome to WebCraft Open-Source</span>
+                            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-teal-500/20">Welcome to Nuvis Webbuilder Open-Source</span>
                             <h2 class="text-2xl font-black text-white mt-4 tracking-tight">Design & Launch Commercial Grade Layouts</h2>
                             <p class="text-slate-300 mt-2 text-xs leading-relaxed">Combine pre-designed sections inside our premium responsive builder. Adjust content, classes, button pathways, or insert raw low-code components dynamically. Everything you create is powered by static optimization, loading under 100ms globally.</p>
                             <button onclick="openCreateModal()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-6 py-3 rounded-lg text-xs mt-6 flex items-center gap-2 transition">
@@ -642,7 +642,7 @@ $csrf_token = generate_csrf_token();
                             <h3 class="font-extrabold text-white text-xs uppercase tracking-wider mb-4 text-teal-400 flex items-center gap-1.5">
                                 <i class="fab fa-git-alt"></i> Continuous Repository Updates
                             </h3>
-                            <p class="text-xs text-slate-300 leading-relaxed mb-4">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official WebCraft git origin branch.</p>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-4">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official Nuvis Webbuilder git origin branch.</p>
 
                             <div class="bg-slate-950 p-4 rounded-lg border border-slate-850 mb-4 font-mono text-[11px] text-slate-300 space-y-1">
                                 <span class="text-slate-500">// Current Branch Status Checks:</span>

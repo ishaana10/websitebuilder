@@ -1,5 +1,5 @@
--- Database Schema for WebCraft Open-Source Commercial Builder
--- Highly Optimized and Secure Structure for PHP 7.4+ & MariaDB/MySQL
+-- Database Schema for Nuvis Webbuilder Open-Source Commercial Builder
+-- Highly Optimized and Secure Structure for PHP 8.1+ & MariaDB/MySQL
 
 CREATE DATABASE IF NOT EXISTS `site_builder` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `site_builder`;

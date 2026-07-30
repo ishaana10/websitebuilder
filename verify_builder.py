@@ -11,10 +11,10 @@ def get_latest_slug(username):
 def run_verification(page):
     ts = str(int(time.time()))
     username = f"dev_{ts}"
-    email = f"dev_{ts}@webcraft.io"
+    email = f"dev_{ts}@nuvis-webbuilder.io"
     password = "securepass123"
 
-    print("Navigating to WebCraft Landing Portal...")
+    print("Navigating to Nuvis Webbuilder Landing Portal...")
     page.goto("http://127.0.0.1:8000/index.php")
     page.wait_for_timeout(1000)
     page.screenshot(path="/home/jules/verification/screenshots/1_landing_portal.png")
@@ -32,7 +32,7 @@ def run_verification(page):
     page.click("button[type='submit']")
     page.wait_for_timeout(1500)
 
-    print("Logging into WebCraft...")
+    print("Logging into Nuvis Webbuilder...")
     page.fill("input[name='username_or_email']", username)
     page.fill("input[name='password']", password)
     page.wait_for_timeout(500)
@@ -54,6 +54,7 @@ def run_verification(page):
     print("Updating heading via live properties customizer...")
     page.fill("input[id='prop-heading-text']", "Supercharged Commercial Solutions")
     page.wait_for_timeout(1000)
+    page.screenshot(path="/home/jules/verification/screenshots/5_react_builder_workspace.png")
 
     print("Saving draft layouts...")
     page.click("button:has-text('Save Draft')")
@@ -82,7 +83,7 @@ def run_verification(page):
     print("Sending message to AI bot...")
     page.fill("input[name='chat_msg']", "What is the cost of enterprise plans?")
     page.wait_for_timeout(500)
-    page.click("form[onsubmit*='sendWebCraftChatMessage'] button[type='submit']")
+    page.click("form[onsubmit*='sendNuvisWebbuilderChatMessage'] button[type='submit']")
     page.wait_for_timeout(2000) # Wait for AI simulated reply
     page.screenshot(path="/home/jules/verification/screenshots/15_chatbot_replied.png")
 
@@ -94,7 +95,7 @@ def run_verification(page):
     page.wait_for_timeout(1000)
     page.screenshot(path="/home/jules/verification/screenshots/16_filled_contact_form.png")
 
-    page.click("form[onsubmit*='submitWebCraftForm'] button[type='submit']")
+    page.click("form[onsubmit*='submitNuvisWebbuilderForm'] button[type='submit']")
     page.wait_for_timeout(3000) # Wait for secure AJAX process & success animation alert
     page.screenshot(path="/home/jules/verification/screenshots/17_contact_form_success.png")
 
@@ -117,6 +118,8 @@ if __name__ == "__main__":
             record_video_dir="/home/jules/verification/videos"
         )
         page = context.new_page()
+        page.on("console", lambda msg: print(f"BROWSER CONSOLE: {msg.text}"))
+        page.on("pageerror", lambda err: print(f"BROWSER ERROR: {err}"))
         try:
             run_verification(page)
         except Exception as e:
