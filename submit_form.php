@@ -64,13 +64,13 @@ try {
 
     // 3. Prepare Simulated SMTP Email Notification Details
     $recipient = $project_info['owner_email'];
-    $subject = "WebCraft Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
+    $subject = "Nuvis Webbuilder Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
     $body = "Hello " . $project_info['owner_name'] . ",\n\n" .
-            "You received a new message from a site visitor on your WebCraft page:\n\n" .
+            "You received a new message from a site visitor on your Nuvis Webbuilder page:\n\n" .
             "Name: " . $name . "\n" .
             "Email: " . $email . "\n" .
             "Message: " . $message . "\n\n" .
-            "Regards,\nWebCraft Automated Engine";
+            "Regards,\nNuvis Webbuilder Automated Engine";
 
     // Insert Simulated Email Log Entry
     $stmt_email = $db->prepare("INSERT INTO email_logs (submission_id, recipient, subject, body, status) VALUES (?, ?, ?, ?, 'sent')");

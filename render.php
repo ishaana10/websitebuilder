@@ -1,7 +1,7 @@
 <?php
 /**
- * WebCraft High Performance Production Delivery Engine
- * Dynamically resolves, compiles, and renders optimized responsive websites built with WebCraft
+ * Nuvis Webbuilder High Performance Production Delivery Engine
+ * Dynamically resolves, compiles, and renders optimized responsive websites built with Nuvis Webbuilder
  */
 require_once __DIR__ . '/config.php';
 
@@ -95,7 +95,7 @@ if (!$is_published || empty($body_content)) {
     <!-- Optional site branding badge -->
     <div class="fixed bottom-4 left-4 bg-slate-900/90 backdrop-blur-md text-slate-400 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-800 shadow-xl flex items-center gap-1.5 hover:text-white transition z-50">
         <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
-        <span>Built with WebCraft</span>
+        <span>Built with Nuvis Webbuilder</span>
     </div>
 
     <!-- Inject runtime parameters and interactivity logic -->

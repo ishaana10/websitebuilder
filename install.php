@@ -1,12 +1,12 @@
 <?php
 /**
- * WebCraft Open-Source Site Builder - Automated Installer and DB Seeder
+ * Nuvis Webbuilder Open-Source Site Builder - Automated Installer and DB Seeder
  */
 require_once __DIR__ . '/config.php';
 
 header('Content-Type: text/plain; charset=utf-8');
 
-echo "=== WebCraft Automated System Installer ===\n\n";
+echo "=== Nuvis Webbuilder Automated System Installer ===\n\n";
 
 try {
     // 1. Establish initial DB connection using credentials in config.php
@@ -41,7 +41,7 @@ try {
     if ($res['admin_count'] == 0) {
         echo "⌛ Seeding default admin credentials ('admin' / 'admin123')...\n";
         $admin_user = 'admin';
-        $admin_email = 'admin@webcraft.io';
+        $admin_email = 'admin@nuvis-webbuilder.io';
         $admin_pass_hash = password_hash('admin123', PASSWORD_BCRYPT);
 
         $insert_admin = $pdo->prepare("INSERT INTO users (username, email, password_hash, role, status) VALUES (?, ?, ?, 'admin', 'active')");
@@ -97,7 +97,7 @@ try {
 <div data-component-instance="contact" class="bg-slate-900 py-16 px-6 text-slate-300">
     <div class="max-w-lg mx-auto bg-slate-950 p-8 rounded-2xl border border-slate-800">
         <h2 class="text-3xl font-extrabold text-white mb-6 text-center">Get in Touch</h2>
-        <form onsubmit="submitWebCraftForm(event, this)">
+        <form onsubmit="submitNuvisWebbuilderForm(event, this)">
             <div class="mb-4">
                 <label class="block text-sm font-semibold mb-2">Name</label>
                 <input type="text" name="name" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500">
@@ -115,23 +115,23 @@ try {
     </div>
 </div>
 <div data-component="chatbot" class="fixed bottom-6 right-6 z-50">
-    <button onclick="toggleWebCraftChatbot()" class="bg-teal-500 text-slate-950 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform">
+    <button onclick="toggleNuvisWebbuilderChatbot()" class="bg-teal-500 text-slate-950 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform">
         <i class="fas fa-comments text-2xl"></i>
     </button>
-    <div id="webcraft-chatbot-box" class="hidden fixed bottom-24 right-6 w-96 bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div id="nuvis-webbuilder-chatbot-box" class="hidden fixed bottom-24 right-6 w-96 bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         <div class="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
             <span class="font-bold text-white flex items-center gap-2">
                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
                 AI Support Bot
             </span>
-            <button onclick="toggleWebCraftChatbot()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <button onclick="toggleNuvisWebbuilderChatbot()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
         </div>
-        <div id="webcraft-chat-messages" class="h-64 p-4 overflow-y-auto space-y-3 flex flex-col text-sm text-slate-300">
+        <div id="nuvis-webbuilder-chat-messages" class="h-64 p-4 overflow-y-auto space-y-3 flex flex-col text-sm text-slate-300">
             <div class="bg-slate-900 p-3 rounded-xl max-w-[85%] self-start">
-                Hello there! I am your AI assistant. How can I help you customize your WebCraft project today?
+                Hello there! I am your AI assistant. How can I help you customize your Nuvis Webbuilder project today?
             </div>
         </div>
-        <form onsubmit="sendWebCraftChatMessage(event, this)" class="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
+        <form onsubmit="sendNuvisWebbuilderChatMessage(event, this)" class="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
             <input type="text" name="chat_msg" placeholder="Ask something..." class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500 text-sm">
             <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-950 px-3 py-2 rounded-lg"><i class="fas fa-paper-plane"></i></button>
         </form>
@@ -200,7 +200,7 @@ try {
         echo "ℹ Template themes already loaded. Skipping seeding.\n";
     }
 
-    echo "\n=== WebCraft System Successfully Installed! ===\n";
+    echo "\n=== Nuvis Webbuilder System Successfully Installed! ===\n";
 
 } catch (Exception $e) {
     echo "\n❌ INSTALLATION FAILED!\n";

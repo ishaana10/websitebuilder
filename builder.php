@@ -1,6 +1,6 @@
 <?php
 /**
- * WebCraft Live Interactive Workspace
+ * Nuvis Webbuilder Live Interactive Workspace
  * Supports dynamic dragging, custom style configurations, raw HTML editing, and dynamic views
  */
 require_once __DIR__ . '/config.php';
@@ -29,7 +29,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebCraft Builder - Editing: <?php echo sanitize_output($project['name']); ?></title>
+    <title>Nuvis Webbuilder Builder - Editing: <?php echo sanitize_output($project['name']); ?></title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -311,7 +311,7 @@ $csrf_token = generate_csrf_token();
 
                     <div>
                         <label class="text-[11px] text-slate-400 block mb-1">Custom JS Injection</label>
-                        <textarea id="project-custom-js" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" placeholder="console.log('WebCraft Custom script active');"></textarea>
+                        <textarea id="project-custom-js" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" placeholder="console.log('Nuvis Webbuilder Custom script active');"></textarea>
                     </div>
 
                     <button onclick="saveProject(false)" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 rounded text-xs transition">

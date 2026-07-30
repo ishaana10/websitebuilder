@@ -1,6 +1,6 @@
-# Contributing to WebCraft Website Builder
+# Contributing to Nuvis Webbuilder Website Builder
 
-Thank you for your interest in contributing to WebCraft! We are building a robust, open-source, secure, visual website builder, and your contributions make this platform better for everyone.
+Thank you for your interest in contributing to Nuvis Webbuilder! We are building a robust, open-source, secure, visual website builder, and your contributions make this platform better for everyone.
 
 Below are guidelines and standards to help you get started with contributing.
 
@@ -38,7 +38,7 @@ By participating in this project, you agree to keep the community welcoming, con
 To maintain a secure and clean codebase, please adhere to these parameters:
 
 ### PHP Coding Guidelines
-- **Compatible Syntax:** Maintain backward compatibility with **PHP 7.4+** while taking advantage of modern paradigms (like class constants and PDO exceptions).
+- **Compatible Syntax:** Maintain backward compatibility with **PHP 8.1+** while taking advantage of modern paradigms (like class constants and PDO exceptions).
 - **Security First:**
   - **Prepared Statements:** Never concatenate variables inside SQL queries. Use PDO placeholders `?` or named parameters.
   - **Output Sanitization:** Always sanitize user output on dynamic pages with `sanitize_output()` (htmlspecialchars) to eliminate XSS.

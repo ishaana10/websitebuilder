@@ -11,10 +11,10 @@ def get_latest_slug(username):
 def run_verification(page):
     ts = str(int(time.time()))
     username = f"dev_{ts}"
-    email = f"dev_{ts}@webcraft.io"
+    email = f"dev_{ts}@nuvis-webbuilder.io"
     password = "securepass123"
 
-    print("Navigating to WebCraft Landing Portal...")
+    print("Navigating to Nuvis Webbuilder Landing Portal...")
     page.goto("http://127.0.0.1:8000/index.php")
     page.wait_for_timeout(1000)
     page.screenshot(path="/home/jules/verification/screenshots/1_landing_portal.png")
@@ -32,7 +32,7 @@ def run_verification(page):
     page.click("button[type='submit']")
     page.wait_for_timeout(1500)
 
-    print("Logging into WebCraft...")
+    print("Logging into Nuvis Webbuilder...")
     page.fill("input[name='username_or_email']", username)
     page.fill("input[name='password']", password)
     page.wait_for_timeout(500)
@@ -82,7 +82,7 @@ def run_verification(page):
     print("Sending message to AI bot...")
     page.fill("input[name='chat_msg']", "What is the cost of enterprise plans?")
     page.wait_for_timeout(500)
-    page.click("form[onsubmit*='sendWebCraftChatMessage'] button[type='submit']")
+    page.click("form[onsubmit*='sendNuvisWebbuilderChatMessage'] button[type='submit']")
     page.wait_for_timeout(2000) # Wait for AI simulated reply
     page.screenshot(path="/home/jules/verification/screenshots/15_chatbot_replied.png")
 
@@ -94,7 +94,7 @@ def run_verification(page):
     page.wait_for_timeout(1000)
     page.screenshot(path="/home/jules/verification/screenshots/16_filled_contact_form.png")
 
-    page.click("form[onsubmit*='submitWebCraftForm'] button[type='submit']")
+    page.click("form[onsubmit*='submitNuvisWebbuilderForm'] button[type='submit']")
     page.wait_for_timeout(3000) # Wait for secure AJAX process & success animation alert
     page.screenshot(path="/home/jules/verification/screenshots/17_contact_form_success.png")
 
