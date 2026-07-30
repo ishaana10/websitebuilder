@@ -30,6 +30,21 @@ function check_project_ownership($db, $project_id, $user_id) {
 
 // Handle endpoints based on 'action' parameter or request methods
 $action = $_GET['action'] ?? '';
+if (empty($action) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $input['action'] ?? '';
+}
+
+// Support legacy action names / aliases for backwards compatibility
+$aliases = [
+    'save_project'    => 'save',
+    'publish_project' => 'publish',
+    'delete_project'  => 'delete',
+    'load_project'    => 'load',
+    'export_zip'      => 'export'
+];
+if (isset($aliases[$action])) {
+    $action = $aliases[$action];
+}
 
 switch ($action) {
     case 'save':
@@ -48,9 +63,18 @@ switch ($action) {
         }
 
         $project_id = $input['project_id'] ?? null;
+        $content_json = $input['content_json'] ?? '';
+        if (empty($content_json) && isset($input['schema'])) {
+            $content_json = json_encode($input['schema'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
         $name = trim($input['name'] ?? '');
+        if (empty($name) && isset($input['schema']['meta']['title'])) {
+            $name = trim($input['schema']['meta']['title']);
+        }
         $description = trim($input['description'] ?? '');
-        $content_json = $input['content_json'] ?? ''; // Expecting structured layout JSON
+        if (empty($description) && isset($input['schema']['meta']['description'])) {
+            $description = trim($input['schema']['meta']['description']);
+        }
 
         if (empty($name)) {
             http_response_code(400);

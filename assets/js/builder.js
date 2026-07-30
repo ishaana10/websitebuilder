@@ -31,6 +31,8 @@ function initPage() {
             if (cssArea) cssArea.value = raw.custom_css || '';
             if (jsArea)  jsArea.value  = raw.custom_js  || '';
 
+        } else if (raw && Array.isArray(raw)) {
+            page = { sections: raw.map(blockToSection) };
         } else if (raw && Array.isArray(raw.sections)) {
             page = raw;
         } else {
@@ -47,20 +49,22 @@ function initPage() {
  * Convert a legacy serialized block back into the new section shape.
  */
 function blockToSection(block) {
+    const type = block.componentId || block.type || 'unknown';
+    const props = block.props || {};
     return {
-        id: 'sec-' + (block.componentId || 'unknown') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-        type: block.componentId,
+        id: block.id || ('sec-' + type + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)),
+        type: type,
         props: {
-            heading:   block.headingText   || '',
-            text:      block.paragraphText || '',
-            brandText: block.brandText     || '',
-            logoUrl:   block.logoImg       || '',
-            copyright: block.copyright     || '',
-            links:     block.links         || [],
-            rawHtml:   block.raw_html      || '',
+            heading:   block.headingText   || props.heading || props.title || '',
+            text:      block.paragraphText || props.text || props.subtext || '',
+            brandText: block.brandText     || props.brand || props.brandText || '',
+            logoUrl:   block.logoImg       || props.logo_url || props.logoUrl || '',
+            copyright: block.copyright     || props.copyright || '',
+            links:     block.links         || props.links || [],
+            rawHtml:   block.raw_html      || props.raw_html || props.rawHtml || '',
         },
         style: {
-            classes: block.classes || [],
+            classes: block.classes || (block.style && block.style.classes) || [],
         }
     };
 }
