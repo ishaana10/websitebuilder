@@ -54,6 +54,7 @@ def run_verification(page):
     print("Updating heading via live properties customizer...")
     page.fill("input[id='prop-heading-text']", "Supercharged Commercial Solutions")
     page.wait_for_timeout(1000)
+    page.screenshot(path="/home/jules/verification/screenshots/5_react_builder_workspace.png")
 
     print("Saving draft layouts...")
     page.click("button:has-text('Save Draft')")
@@ -117,6 +118,8 @@ if __name__ == "__main__":
             record_video_dir="/home/jules/verification/videos"
         )
         page = context.new_page()
+        page.on("console", lambda msg: print(f"BROWSER CONSOLE: {msg.text}"))
+        page.on("pageerror", lambda err: print(f"BROWSER ERROR: {err}"))
         try:
             run_verification(page)
         except Exception as e:
