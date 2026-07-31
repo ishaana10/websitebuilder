@@ -4,40 +4,164 @@
  */
 
 const UI_COMPONENTS = [
+    // === HEADERS & FOOTERS ===
     {
         id: 'navbar',
         name: 'Responsive Navigation Bar',
         category: 'Headers',
         icon: 'fas fa-bars',
+        schema: [
+            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'NUVIS WEBBUILDER' },
+            { key: 'logoUrl', label: 'Logo Image URL', type: 'text', default: '' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
+            { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#14b8a6' }
+        ],
         html: `
-<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
-    <div class="text-xl font-extrabold tracking-wider text-teal-400">NUVIS WEBBUILDER</div>
+<nav class="py-4 px-6 flex justify-between items-center shadow-md rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
+    <div class="text-xl font-extrabold tracking-wider" style="color: {{accentColor}};">{{brandText}}</div>
     <div class="hidden md:flex space-x-6">
-        <a href="#home" class="hover:text-teal-300 transition duration-300">Home</a>
-        <a href="#features" class="hover:text-teal-300 transition duration-300">Features</a>
-        <a href="#pricing" class="hover:text-teal-300 transition duration-300">Pricing</a>
-        <a href="#contact" class="hover:text-teal-300 transition duration-300">Contact</a>
+        <a href="#home" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Home</a>
+        <a href="#features" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Features</a>
+        <a href="#pricing" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Pricing</a>
+        <a href="#contact" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Contact</a>
     </div>
     <div>
-        <a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a>
+        <a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: {{accentColor}}; color: {{bgColor}};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Get Started</a>
     </div>
 </nav>`
     },
     {
+        id: 'footer',
+        name: 'Corporate Footer Block',
+        category: 'Footers',
+        icon: 'fas fa-shoe-prints',
+        schema: [
+            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'NUVIS WEBBUILDER' },
+            { key: 'logoUrl', label: 'Logo Image URL', type: 'text', default: '' },
+            { key: 'copyright', label: 'Copyright Note', type: 'text', default: 'Nuvis Webbuilder. All rights reserved.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' },
+            { key: 'accentColor', label: 'Link Accent Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<footer class="py-12 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="footer">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="text-lg font-black text-white" style="color: {{accentColor}};">{{brandText}}</div>
+        <div class="flex space-x-6 text-sm">
+            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Privacy Policy</a>
+            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Terms of Use</a>
+            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Support</a>
+        </div>
+        <div class="text-xs">&copy; ${new Date().getFullYear()} {{copyright}}</div>
+    </div>
+</footer>`
+    },
+
+    // === CORE / LAYOUT BUILDING BLOCKS ===
+    {
         id: 'hero',
-        name: 'Premium Hero Section',
+        name: 'Customizable Hero',
         category: 'Hero',
         icon: 'fas fa-rocket',
+        schema: [
+            { key: 'badgeText', label: 'Badge Text', type: 'text', default: 'NEW REVOLUTION' },
+            { key: 'heading', label: 'Hero Heading', type: 'text', default: 'Build Stunning Websites In Minutes' },
+            { key: 'text', label: 'Subheading Text', type: 'textarea', default: 'The ultimate low-code drag and drop page builder designed to transform complex ideas.' },
+            { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
+            { key: 'btnBg', label: 'Primary CTA Background', type: 'color', default: '#14b8a6' },
+            { key: 'btnColor', label: 'Primary CTA Text Color', type: 'color', default: '#0f172a' },
+            { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' }
+        ],
         html: `
-<section class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white py-20 px-8 rounded-lg text-center" data-component="hero">
+<section class="py-24 px-8 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="hero">
     <div class="max-w-3xl mx-auto">
-        <span class="bg-teal-500/10 text-teal-400 font-semibold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest border border-teal-500/20">All-In-One Solution</span>
-        <h1 class="text-4xl md:text-6xl font-black mt-6 tracking-tight leading-none">Build Stunning Websites In Minutes</h1>
-        <p class="text-slate-300 mt-6 text-lg md:text-xl leading-relaxed">The ultimate low-code drag and drop page builder designed to transform complex ideas into high-converting responsive web solutions.</p>
+        <span class="font-semibold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest border" style="background-color: rgba(20, 184, 166, 0.1); color: {{btnBg}}; border-color: rgba(20, 184, 166, 0.2);">{{badgeText}}</span>
+        <h1 class="text-4xl md:text-6xl font-black mt-6 tracking-tight leading-none" style="color: {{headingColor}};">{{heading}}</h1>
+        <p class="mt-6 text-lg md:text-xl leading-relaxed" style="color: {{textColor}};">{{text}}</p>
         <div class="mt-10 flex flex-wrap justify-center gap-4">
-            <button class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold px-8 py-4 rounded-lg shadow-lg shadow-teal-500/20 transition-all duration-300 transform hover:-translate-y-0.5">Start For Free</button>
-            <button class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-8 py-4 rounded-lg border border-slate-700 transition-all duration-300">Learn More</button>
+            <button class="font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300" style="background-color: {{btnBg}}; color: {{btnColor}};">{{btnText}}</button>
+            <button class="font-bold px-8 py-4 rounded-lg border transition-all duration-300" style="border-color: rgba(255,255,255,0.2); color: {{headingColor}};">{{secondaryBtnText}}</button>
         </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'layout_grid',
+        name: 'Responsive Flex Row/Grid',
+        category: 'Headers',
+        icon: 'fas fa-th',
+        schema: [
+            { key: 'colCount', label: 'Column Count', type: 'select', default: 'grid-cols-3', options: [
+                { value: 'grid-cols-1', label: '1 Column' },
+                { value: 'grid-cols-2', label: '2 Columns' },
+                { value: 'grid-cols-3', label: '3 Columns' },
+                { value: 'grid-cols-4', label: '4 Columns' }
+            ]},
+            { key: 'heading', label: 'Section Header', type: 'text', default: 'Structured Grid Layout' },
+            { key: 'colText1', label: 'Column 1 Content', type: 'textarea', default: 'High density column structure.' },
+            { key: 'colText2', label: 'Column 2 Content', type: 'textarea', default: 'Responsive breakpoint scaling.' },
+            { key: 'colText3', label: 'Column 3 Content', type: 'textarea', default: 'Flex space distribution.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#1e293b' },
+            { key: 'headingColor', label: 'Header Text Color', type: 'color', default: '#ffffff' },
+            { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="layout_grid">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-10" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="grid gap-6 {{colCount}}">
+            <div class="p-6 rounded-lg shadow" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText1}}</div>
+            <div class="p-6 rounded-lg shadow" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText2}}</div>
+            <div class="p-6 rounded-lg shadow" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText3}}</div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'spacer_divider',
+        name: 'Spacer / Divider',
+        category: 'Headers',
+        icon: 'fas fa-arrows-alt-v',
+        schema: [
+            { key: 'height', label: 'Height (px)', type: 'select', default: 'h-12', options: [
+                { value: 'h-4', label: '16px (h-4)' },
+                { value: 'h-8', label: '32px (h-8)' },
+                { value: 'h-12', label: '48px (h-12)' },
+                { value: 'h-24', label: '96px (h-24)' }
+            ]},
+            { key: 'borderColor', label: 'Line Color', type: 'color', default: '#334155' },
+            { key: 'bgColor', label: 'Container Background', type: 'color', default: '#0f172a' },
+            { key: 'showLine', label: 'Show Divider Line', type: 'checkbox', default: true }
+        ],
+        html: `
+<div class="w-full flex items-center justify-center {{height}} rounded-lg" style="background-color: {{bgColor}};" data-component="spacer_divider">
+    <div class="w-11/12 border-t" style="border-color: {{borderColor}}; display: {{showLine ? 'block' : 'none'}};"></div>
+</div>`
+    },
+
+    // === CONTENT & MARKETING ===
+    {
+        id: 'heading_rich_text',
+        name: 'Heading & Rich Text',
+        category: 'Features',
+        icon: 'fas fa-align-left',
+        schema: [
+            { key: 'heading', label: 'Section Heading', type: 'text', default: 'Elegance meets pure performance.' },
+            { key: 'text', label: 'Rich Content Block', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Paragraph Color', type: 'color', default: '#cbd5e1' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="heading_rich_text">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h2 class="text-4xl font-extrabold tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+        <p class="text-base leading-relaxed" style="color: {{textColor}};">{{text}}</p>
     </div>
 </section>`
     },
@@ -46,212 +170,63 @@ const UI_COMPONENTS = [
         name: 'Side-by-Side Split Feature',
         category: 'Features',
         icon: 'fas fa-columns',
+        schema: [
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'Elegance meets pure performance.' },
+            { key: 'text', label: 'Feature Description', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match.' },
+            { key: 'imageUrl', label: 'Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Title Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' },
+            { key: 'imageRounding', label: 'Border Radius', type: 'select', default: 'rounded-xl', options: [
+                { value: 'rounded-none', label: 'Sharp' },
+                { value: 'rounded-lg', label: 'Medium' },
+                { value: 'rounded-xl', label: 'Large' },
+                { value: 'rounded-full', label: 'Circular' }
+            ]}
+        ],
         html: `
-<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="feature_split">
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="feature_split">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
         <div class="flex-1 space-y-6">
-            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-xs uppercase tracking-wider">Next-Gen Interface</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Elegance meets pure performance.</h2>
-            <p class="text-slate-300 text-base leading-relaxed">Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match your layout's specific branding tone perfectly.</p>
-            <div>
-                <a href="#action" class="inline-block bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-6 py-3 rounded transition duration-300 text-sm">Explore Details</a>
-            </div>
+            <span class="font-semibold px-3 py-1 rounded-full text-xs uppercase tracking-wider" style="background-color: rgba(20, 184, 166, 0.1); color: #14b8a6;">Next-Gen Interface</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+            <p class="text-base leading-relaxed" style="color: {{textColor}};">{{text}}</p>
         </div>
         <div class="flex-1 w-full">
-            <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60" alt="Visual Split Illustration" class="w-full object-cover rounded-xl shadow-lg border border-slate-800" />
+            <img src="{{imageUrl}}" alt="Feature Image" class="w-full object-cover shadow-lg border border-slate-800 {{imageRounding}}" />
         </div>
     </div>
 </section>`
     },
     {
-        id: 'features',
-        name: 'Three-Column Features Grid',
-        category: 'Features',
-        icon: 'fas fa-th-large',
-        html: `
-<section class="py-16 px-8 bg-slate-50 text-slate-800 rounded-lg" data-component="features">
-    <div class="max-w-6xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Supercharged Features</h2>
-        <p class="text-slate-500 mt-2 text-lg">Engineered for performance, customizability, and raw speed.</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition duration-300">
-                <div class="bg-teal-500/10 text-teal-600 w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                    <i class="fas fa-bolt"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900">Blazing Fast</h3>
-                <p class="text-slate-500 mt-2 text-sm leading-relaxed">Lightning-fast static page compiling ensures search engine performance optimization and perfect load times.</p>
-            </div>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition duration-300">
-                <div class="bg-teal-500/10 text-teal-600 w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900">Highly Secure</h3>
-                <p class="text-slate-500 mt-2 text-sm leading-relaxed">Integrated XSS filtering, CSRF mitigation safeguards, and secure parameterized queries defend your data.</p>
-            </div>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition duration-300">
-                <div class="bg-teal-500/10 text-teal-600 w-12 h-12 rounded-lg flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                    <i class="fas fa-edit"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900">Low Code Custom</h3>
-                <p class="text-slate-500 mt-2 text-sm leading-relaxed">Write raw custom HTML or adjust margins, paddings, borders, colors, and button pathways dynamically.</p>
-            </div>
-        </div>
-    </div>
-</section>`
-    },
-    {
-        id: 'gallery',
-        name: 'Premium Media Gallery',
-        category: 'Advanced',
-        icon: 'fas fa-images',
-        html: `
-<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="gallery">
-    <div class="max-w-6xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold tracking-tight">Our Premium Showcase</h2>
-        <p class="text-slate-400 mt-2 text-sm max-w-xl mx-auto">Explore high-fidelity visual representations of our work, system architectures, and client results.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12">
-            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" alt="Showcase 1" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
-                <div class="p-4 text-left">
-                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Workspace</h4>
-                    <p class="text-xs text-slate-300 mt-1">Stunning layout interfaces with zero drag lag.</p>
-                </div>
-            </div>
-            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
-                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60" alt="Showcase 2" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
-                <div class="p-4 text-left">
-                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Analytics</h4>
-                    <p class="text-xs text-slate-300 mt-1">Track interaction insights natively on client forms.</p>
-                </div>
-            </div>
-            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
-                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60" alt="Showcase 3" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
-                <div class="p-4 text-left">
-                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">AI Networks</h4>
-                    <p class="text-xs text-slate-300 mt-1">Integrate automated chatbot layers to boost signups.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>`
-    },
-    {
-        id: 'team',
-        name: 'Team Grid Showcase',
-        category: 'Features',
-        icon: 'fas fa-users',
-        html: `
-<section class="py-16 px-8 bg-slate-50 text-slate-800 rounded-lg" data-component="team">
-    <div class="max-w-6xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Meet the Innovators</h2>
-        <p class="text-slate-500 mt-2 text-sm max-w-md mx-auto">The engineering powerhouses behind our state-of-the-art visual builder operations.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mt-12">
-            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60" alt="Sarah Connor" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
-                <h4 class="font-bold text-slate-900 text-base">Sarah Connor</h4>
-                <p class="text-xs text-slate-500 mt-1">Founder & CEO</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=60" alt="Marcus Wright" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
-                <h4 class="font-bold text-slate-900 text-base">Marcus Wright</h4>
-                <p class="text-xs text-slate-500 mt-1">Lead Architect</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
-                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=60" alt="Elena Rostova" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
-                <h4 class="font-bold text-slate-900 text-base">Elena Rostova</h4>
-                <p class="text-xs text-slate-500 mt-1">Lead Front-end</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
-                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=60" alt="John Reese" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
-                <h4 class="font-bold text-slate-900 text-base">John Reese</h4>
-                <p class="text-xs text-slate-500 mt-1">Security Engineering</p>
-            </div>
-        </div>
-    </div>
-</section>`
-    },
-    {
-        id: 'faq',
-        name: 'Interactive FAQ Accordion',
-        category: 'Advanced',
-        icon: 'fas fa-question-circle',
-        html: `
-<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="faq">
-    <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl font-extrabold text-center tracking-tight">Frequently Asked Questions</h2>
-        <p class="text-slate-400 text-center mt-2 text-sm">Everything you need to know about our products, licenses, and visual architectures.</p>
-
-        <div class="mt-12 space-y-4">
-            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
-                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
-                    <span>How does the local compiling mechanism operate?</span>
-                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
-                </button>
-                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
-                    Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly. There are no client-side rendering bottlenecks or unnecessary database calls.
-                </div>
-            </div>
-            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
-                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
-                    <span>Can I export and host the compiled pages on my own server?</span>
-                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
-                </button>
-                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
-                    Yes! With our absolute export capability, you can click 'ZIP' to immediately download an entire production bundle including styling sheets, customized JavaScript nodes, and static HTML templates.
-                </div>
-            </div>
-            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
-                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
-                    <span>Are my custom-injected scripts filtered or fully sanitized?</span>
-                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
-                </button>
-                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
-                    Custom-injected CSS and JS styling scripts are kept safe for visual preview compiling but undergo strict server-side validation upon publishing, protecting your public web users from visual scripting injections.
-                </div>
-            </div>
-        </div>
-    </div>
-</section>`
-    },
-    {
-        id: 'testimonials',
-        name: 'Testimonials Grid',
+        id: 'testimonials_carousel',
+        name: 'Testimonials Slider',
         category: 'Features',
         icon: 'fas fa-star',
+        schema: [
+            { key: 'heading', label: 'Main Heading', type: 'text', default: 'What our clients say' },
+            { key: 'authorName', label: 'Author Name', type: 'text', default: 'Sarah Jenkins' },
+            { key: 'authorRole', label: 'Author Role', type: 'text', default: 'CTO at CloudCorp' },
+            { key: 'text', label: 'Quote content', type: 'textarea', default: 'Rebuilding our workspace with Nuvis Webbuilder decreased static page load times instantly.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Quote Color', type: 'color', default: '#cbd5e1' },
+            { key: 'accentColor', label: 'Stars / Highlight', type: 'color', default: '#fbbf24' }
+        ],
         html: `
-<section class="py-16 px-8 bg-slate-950 text-white rounded-lg" data-component="testimonials">
-    <div class="max-w-6xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold tracking-tight">Trusted Worldwide</h2>
-        <p class="text-slate-400 mt-2 text-sm max-w-sm mx-auto">Join thousands of software engineers building faster than ever before.</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
-                <p class="text-sm text-slate-300 italic leading-relaxed">"Nuvis Webbuilder solved all our quick deployment needs. Drag-and-drop combined with raw CSS injection is a developer's dream come true."</p>
-                <div class="flex items-center gap-3 mt-6">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=60" alt="Clara Jenkins" class="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                        <h4 class="font-bold text-xs">Clara Jenkins</h4>
-                        <p class="text-[10px] text-slate-500">Tech Lead at Netcore</p>
-                    </div>
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="testimonials_carousel">
+    <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl font-extrabold mb-10" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="carousel-container p-8 rounded-2xl shadow border border-slate-800" style="background-color: {{cardBg}};">
+            <div class="carousel-slide flex flex-col items-center">
+                <div class="flex gap-1 mb-4" style="color: {{accentColor}};">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                 </div>
-            </div>
-            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
-                <p class="text-sm text-slate-300 italic leading-relaxed">"Rebuilding the builder into React makes it completely seamless. State tracking, live preview compiler, and zero canvas reload lag are incredible features."</p>
-                <div class="flex items-center gap-3 mt-6">
-                    <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=60" alt="David Miller" class="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                        <h4 class="font-bold text-xs">David Miller</h4>
-                        <p class="text-[10px] text-slate-500">Fullstack Engineer</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
-                <p class="text-sm text-slate-300 italic leading-relaxed">"We compiled 15 pages in one afternoon, and absolute loading times decreased significantly. The mobile viewport bezel and undo hotkeys make editing rapid."</p>
-                <div class="flex items-center gap-3 mt-6">
-                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=60" alt="Samantha Wu" class="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                        <h4 class="font-bold text-xs">Samantha Wu</h4>
-                        <p class="text-[10px] text-slate-500">SaaS Growth Specialist</p>
-                    </div>
+                <p class="text-lg italic leading-relaxed" style="color: {{textColor}};">"{{text}}"</p>
+                <div class="mt-6">
+                    <h4 class="font-bold" style="color: {{headingColor}};">{{authorName}}</h4>
+                    <p class="text-xs" style="color: {{textColor}}; opacity: 0.8;">{{authorRole}}</p>
                 </div>
             </div>
         </div>
@@ -259,85 +234,137 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
-        id: 'pricing',
-        name: 'Pricing Plans Block',
+        id: 'pricing_comparison',
+        name: 'Interactive Pricing Matrix',
         category: 'Pricing',
         icon: 'fas fa-tags',
+        schema: [
+            { key: 'tier1Name', label: 'Tier 1 Name', type: 'text', default: 'Starter' },
+            { key: 'tier1Price', label: 'Tier 1 Price', type: 'text', default: '$19' },
+            { key: 'tier2Name', label: 'Tier 2 Name', type: 'text', default: 'Professional' },
+            { key: 'tier2Price', label: 'Tier 2 Price', type: 'text', default: '$49' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
+            { key: 'accentColor', label: 'Accent Border', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#e2e8f0' }
+        ],
         html: `
-<section class="py-16 px-8 bg-white text-slate-800 rounded-lg" data-component="pricing">
-    <div class="max-w-5xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold text-slate-900">Transparent Premium Pricing</h2>
-        <p class="text-slate-500 mt-2">Pick a plan that matches your production needs. No hidden fees.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 max-w-3xl mx-auto">
-            <!-- Free Plan -->
-            <div class="bg-slate-50 p-8 rounded-2xl border border-slate-200 flex flex-col justify-between hover:border-slate-300 transition duration-300">
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="pricing_comparison">
+    <div class="max-w-5xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center mb-12">Flexible Pricing Packages</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="p-8 rounded-2xl border border-slate-700 text-center flex flex-col justify-between" style="background-color: {{cardBg}};">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-700">Developer Plan</h3>
-                    <div class="text-4xl font-black mt-4">$0 <span class="text-sm font-normal text-slate-500">/mo</span></div>
-                    <p class="text-slate-500 text-xs mt-2">Perfect for side projects and local prototyping</p>
-                    <ul class="mt-6 text-left space-y-3 text-sm">
-                        <li class="flex items-center text-slate-600"><i class="fas fa-check text-emerald-500 mr-2"></i> 3 Projects Sandbox</li>
-                        <li class="flex items-center text-slate-600"><i class="fas fa-check text-emerald-500 mr-2"></i> HTML5 Export Ready</li>
-                        <li class="flex items-center text-slate-400 line-through"><i class="fas fa-times text-slate-300 mr-2"></i> Custom Domain Linking</li>
+                    <h3 class="text-xl font-bold mb-4">{{tier1Name}}</h3>
+                    <div class="text-4xl font-black mb-4">{{tier1Price}} <span class="text-sm font-normal opacity-70">/mo</span></div>
+                    <ul class="text-sm space-y-3 my-6 text-left">
+                        <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> 3 Sandbox Projects</li>
+                        <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> Absolute raw HTML export</li>
                     </ul>
                 </div>
-                <button class="bg-slate-800 hover:bg-slate-700 text-white font-bold w-full py-3 rounded-lg mt-8 transition">Get Started</button>
+                <button class="w-full py-3 rounded-lg font-bold" style="background-color: {{accentColor}}; color: {{bgColor}};">Get Started</button>
             </div>
-            <!-- Pro Plan -->
-            <div class="bg-slate-900 text-white p-8 rounded-2xl border-2 border-teal-500 flex flex-col justify-between shadow-xl relative">
-                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-slate-950 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+            <div class="p-8 rounded-2xl border-2 text-center flex flex-col justify-between" style="background-color: {{cardBg}}; border-color: {{accentColor}};">
                 <div>
-                    <h3 class="text-lg font-bold text-teal-400">Enterprise Pro</h3>
-                    <div class="text-4xl font-black mt-4">$29 <span class="text-sm font-normal text-slate-400">/mo</span></div>
-                    <p class="text-slate-400 text-xs mt-2">For custom scale deployment of premium apps</p>
-                    <ul class="mt-6 text-left space-y-3 text-sm">
-                        <li class="flex items-center text-slate-200"><i class="fas fa-check text-teal-400 mr-2"></i> Unlimited Sites</li>
-                        <li class="flex items-center text-slate-200"><i class="fas fa-check text-teal-400 mr-2"></i> Priority Live Compiles</li>
-                        <li class="flex items-center text-slate-200"><i class="fas fa-check text-teal-400 mr-2"></i> Full Raw HTML Access</li>
-                        <li class="flex items-center text-slate-200"><i class="fas fa-check text-teal-400 mr-2"></i> Premium Developer Templates</li>
+                    <h3 class="text-xl font-bold mb-4" style="color: {{accentColor}};">{{tier2Name}}</h3>
+                    <div class="text-4xl font-black mb-4">{{tier2Price}} <span class="text-sm font-normal opacity-70">/mo</span></div>
+                    <ul class="text-sm space-y-3 my-6 text-left">
+                        <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> Unlimited Websites</li>
+                        <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> AI Assistant Modules</li>
                     </ul>
                 </div>
-                <button class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black w-full py-3 rounded-lg mt-8 transition">Go Enterprise</button>
+                <button class="w-full py-3 rounded-lg font-bold text-slate-950" style="background-color: {{accentColor}};">Go Pro</button>
             </div>
         </div>
+    </div>
+</section>`
+    },
+
+    // === INTERACTIVE & MEDIA ===
+    {
+        id: 'media_carousel',
+        name: 'Carousel Slider',
+        category: 'Advanced',
+        icon: 'fas fa-images',
+        schema: [
+            { key: 'heading', label: 'Carousel Header', type: 'text', default: 'Interactive Showcase' },
+            { key: 'imgUrl1', label: 'Slide 1 Image', type: 'text', default: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60' },
+            { key: 'imgUrl2', label: 'Slide 2 Image', type: 'text', default: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=60' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Navigation Arrows Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="media_carousel">
+    <h2 class="text-2xl font-bold mb-6 text-white">{{heading}}</h2>
+    <div class="carousel-container relative max-w-xl mx-auto h-64 overflow-hidden rounded-xl border border-slate-800">
+        <div class="carousel-slide w-full h-full">
+            <img src="{{imgUrl1}}" class="w-full h-full object-cover" />
+        </div>
+        <div class="carousel-slide w-full h-full hidden">
+            <img src="{{imgUrl2}}" class="w-full h-full object-cover" />
+        </div>
+        <button onclick="window.nextCarouselSlide(this)" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white" style="background-color: rgba(0,0,0,0.5);" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='#fff'">
+            <i class="fas fa-chevron-right"></i>
+        </button>
     </div>
 </section>`
     },
     {
-        id: 'cta',
-        name: 'Urgent Call To Action',
-        category: 'Hero',
-        icon: 'fas fa-bullhorn',
+        id: 'interactive_tabs',
+        name: 'Responsive Tabs Component',
+        category: 'Advanced',
+        icon: 'fas fa-folder',
+        schema: [
+            { key: 'tab1Title', label: 'Tab 1 Heading', type: 'text', default: 'Platform' },
+            { key: 'tab1Text', label: 'Tab 1 Body', type: 'textarea', default: 'Fully integrated drag and drop builder.' },
+            { key: 'tab2Title', label: 'Tab 2 Heading', type: 'text', default: 'Database' },
+            { key: 'tab2Text', label: 'Tab 2 Body', type: 'textarea', default: 'MariaDB persistent storage pipelines.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'accentColor', label: 'Active Tab Border', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Content Color', type: 'color', default: '#94a3b8' }
+        ],
         html: `
-<section class="py-16 px-8 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 rounded-lg text-center relative overflow-hidden" data-component="cta">
-    <div class="max-w-4xl mx-auto space-y-6 relative z-10">
-        <h2 class="text-3xl md:text-5xl font-black tracking-tight uppercase leading-none">Ready to start compiling?</h2>
-        <p class="text-slate-900 font-medium text-base md:text-lg max-w-xl mx-auto leading-relaxed">Deploy premium single-page web applications with absolute precision and unmatched modern aesthetics.</p>
-        <div class="flex justify-center gap-4 pt-4">
-            <a href="#register" class="bg-slate-950 hover:bg-slate-900 text-teal-400 font-extrabold px-8 py-3 rounded-lg text-sm tracking-wide shadow-xl transition transform hover:-translate-y-0.5">Start Now - Free</a>
+<section class="py-16 px-8 rounded-lg tabs-container" style="background-color: {{bgColor}};" data-component="interactive_tabs">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex border-b border-slate-800 mb-6 gap-4">
+            <button onclick="window.switchTab(this, 0)" class="tab-btn pb-3 text-xs font-bold uppercase border-b-2 tracking-wider transition-all" style="border-color: {{accentColor}}; color: {{accentColor}};" data-active-color="{{accentColor}}">
+                {{tab1Title}}
+            </button>
+            <button onclick="window.switchTab(this, 1)" class="tab-btn pb-3 text-xs font-bold uppercase border-b-2 tracking-wider transition-all" style="border-color: transparent; color: #94a3b8;" data-active-color="{{accentColor}}">
+                {{tab2Title}}
+            </button>
         </div>
+        <div class="tab-content" style="color: {{textColor}};">{{tab1Text}}</div>
+        <div class="tab-content hidden" style="color: {{textColor}};">{{tab2Text}}</div>
     </div>
-    <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
 </section>`
     },
+
+    // === FORMS & CONVERSION ===
     {
         id: 'contact',
         name: 'Secure Contact Form',
         category: 'Forms',
         icon: 'fas fa-envelope',
+        schema: [
+            { key: 'heading', label: 'Form Title', type: 'text', default: 'Get In Touch' },
+            { key: 'text', label: 'Sub-text prompt', type: 'textarea', default: 'Have questions? Drop us a line.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'btnBg', label: 'Button Background', type: 'color', default: '#14b8a6' },
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#0f172a' }
+        ],
         html: `
-<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="contact">
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="contact">
     <div class="max-w-md mx-auto text-center">
-        <h2 class="text-3xl font-extrabold text-teal-400">Get In Touch</h2>
-        <p class="text-slate-400 mt-2">Have questions? Drop us a line and we'll reply shortly.</p>
+        <h2 class="text-3xl font-extrabold" style="color: {{btnBg}};">{{heading}}</h2>
+        <p class="text-slate-400 mt-2 text-sm">{{text}}</p>
 
-        <!-- Live AJAX Interactive Form -->
         <form class="mt-8 space-y-4" onsubmit="event.preventDefault(); window.submitNuvisWebbuilderForm(this);">
             <div class="nuvis-webbuilder-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
-            <input type="text" name="name" placeholder="Full Name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
-            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm" />
-            <textarea name="message" placeholder="Write message..." rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-teal-500 focus:outline-none text-sm"></textarea>
-            <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold w-full py-3 rounded-lg transition-all text-sm tracking-wide flex items-center justify-center gap-2">
+            <input type="text" name="name" placeholder="Full Name" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500 text-sm" />
+            <input type="email" name="email" placeholder="Email Address" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500 text-sm" />
+            <textarea name="message" placeholder="Write message..." rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500 text-sm"></textarea>
+            <button type="submit" class="font-bold w-full py-3 rounded-lg transition-all text-sm tracking-wide flex items-center justify-center gap-2" style="background-color: {{btnBg}}; color: {{btnColor}};">
                 <span>Send Message</span>
             </button>
         </form>
@@ -345,77 +372,264 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
-        id: 'chatbot',
-        name: 'Interactive AI Chatbot',
+        id: 'newsletter_signup',
+        name: 'Newsletter Signup Banner',
         category: 'Forms',
-        icon: 'fas fa-comments',
+        icon: 'fas fa-paper-plane',
+        schema: [
+            { key: 'heading', label: 'Main Header', type: 'text', default: 'Subscribe to our newsletter' },
+            { key: 'text', label: 'Subtext promise', type: 'text', default: 'Receive developer updates twice a month. No spam.' },
+            { key: 'btnText', label: 'Button Text', type: 'text', default: 'Subscribe' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#1e293b' },
+            { key: 'accentColor', label: 'Button Accent Color', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' }
+        ],
         html: `
-<div class="fixed bottom-6 right-6 z-50 font-sans" data-component="chatbot">
-    <!-- Floating Bubble Button -->
-    <button onclick="window.toggleNuvisWebbuilderChat()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 focus:outline-none">
-        <i class="fas fa-comments text-xl"></i>
-    </button>
-
-    <!-- Chat Dialog Window (Hidden by default) -->
-    <div id="nuvis-webbuilder-chat-window" class="hidden absolute bottom-16 right-0 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col">
-        <div class="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="font-bold text-xs text-white uppercase tracking-wider">AI Support Bot</span>
-            </div>
-            <button onclick="window.toggleNuvisWebbuilderChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
-        </div>
-
-        <!-- Conversation logs -->
-        <div id="nuvis-webbuilder-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
-            <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed">
-                Hello there! Welcome to our website. How can I assist your operations today?
-            </div>
-        </div>
-
-        <!-- Chat form input -->
-        <form onsubmit="event.preventDefault(); window.sendNuvisWebbuilderChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
-            <input type="text" name="chat_msg" placeholder="Ask something..." required class="flex-1 bg-slate-850 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500">
-            <button type="submit" class="bg-teal-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-teal-400 transition"><i class="fas fa-paper-plane"></i></button>
+<section class="py-12 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="newsletter_signup">
+    <div class="max-w-2xl mx-auto space-y-4">
+        <h3 class="text-2xl font-bold">{{heading}}</h3>
+        <p class="text-sm opacity-80">{{text}}</p>
+        <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mt-6" onsubmit="event.preventDefault(); alert('Subscribed successfully!');">
+            <input type="email" required placeholder="Enter your email" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500">
+            <button type="submit" class="font-bold px-6 py-2.5 rounded-lg text-xs hover:opacity-90" style="background-color: {{accentColor}}; color: {{bgColor}};">{{btnText}}</button>
         </form>
     </div>
+</section>`
+    },
+
+    // === E-COMMERCE / PRODUCT ===
+    {
+        id: 'product_shelf',
+        name: 'Product Shelf Card',
+        category: 'Pricing',
+        icon: 'fas fa-shopping-bag',
+        schema: [
+            { key: 'title', label: 'Product Title', type: 'text', default: 'Nuvis Developer Pro License' },
+            { key: 'price', label: 'Price Tag', type: 'text', default: '$129.00' },
+            { key: 'desc', label: 'Product Highlights', type: 'textarea', default: 'Absolute priority compiling with secure persistent storage logic.' },
+            { key: 'imgUrl', label: 'Product Image', type: 'text', default: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&auto=format&fit=crop&q=60' },
+            { key: 'bgColor', label: 'Card Background', type: 'color', default: '#111827' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#e2e8f0' },
+            { key: 'btnBg', label: 'Button Accent', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<div class="max-w-sm mx-auto rounded-xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col justify-between" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="product_shelf">
+    <img src="{{imgUrl}}" class="w-full h-48 object-cover" />
+    <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <h4 class="font-extrabold text-base leading-tight">{{title}}</h4>
+            <span class="text-sm font-black px-2 py-1 rounded" style="background-color: rgba(20,184,166,0.1); color: {{btnBg}};">{{price}}</span>
+        </div>
+        <p class="text-xs opacity-85 leading-relaxed">{{desc}}</p>
+        <button onclick="window.addToMiniCart()" class="w-full font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition hover:opacity-90" style="background-color: {{btnBg}}; color: {{bgColor}};">
+            <i class="fas fa-shopping-cart mr-2"></i> Add To Cart
+        </button>
+    </div>
 </div>`
+    },
+    {
+        id: 'cart_mini',
+        name: 'Live Mini-Cart Widget',
+        category: 'Pricing',
+        icon: 'fas fa-shopping-cart',
+        schema: [
+            { key: 'heading', label: 'Header Text', type: 'text', default: 'Your Checkout Cart' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Theme Highlight', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Label Color', type: 'color', default: '#ffffff' }
+        ],
+        html: `
+<section class="p-6 rounded-lg border border-slate-800 flex justify-between items-center max-w-md mx-auto" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="cart_mini">
+    <div class="flex items-center gap-3">
+        <i class="fas fa-shopping-cart text-xl" style="color: {{accentColor}};"></i>
+        <div>
+            <h5 class="font-bold text-sm">{{heading}}</h5>
+            <span class="text-xs opacity-70"><span id="mini-cart-count">0</span> item(s) selected</span>
+        </div>
+    </div>
+    <div class="flex gap-2">
+        <button onclick="window.clearMiniCart()" class="px-3 py-1.5 rounded text-[10px] uppercase font-bold border border-slate-700 hover:bg-slate-800">Clear</button>
+        <button onclick="alert('Proceeding to visual mock checkout!');" class="px-3 py-1.5 rounded text-[10px] uppercase font-bold text-slate-950 hover:opacity-95" style="background-color: {{accentColor}};">Checkout</button>
+    </div>
+</section>`
+    },
+
+    // === UTILITY & ADVANCED ===
+    {
+        id: 'faq',
+        name: 'Interactive FAQ Accordion',
+        category: 'Advanced',
+        icon: 'fas fa-question-circle',
+        schema: [
+            { key: 'heading', label: 'FAQ Title', type: 'text', default: 'Frequently Asked Questions' },
+            { key: 'q1', label: 'Question 1', type: 'text', default: 'How does the local compiling mechanism operate?' },
+            { key: 'a1', label: 'Answer 1', type: 'textarea', default: 'Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly.' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#020617' },
+            { key: 'headingColor', label: 'Header Text Color', type: 'color', default: '#ffffff' },
+            { key: 'accentColor', label: 'Accordions Active Accent', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="faq">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center tracking-tight mb-10" style="color: {{headingColor}};">{{heading}}</h2>
+
+        <div class="space-y-4">
+            <div class="border rounded-lg overflow-hidden border-slate-800" style="background-color: {{cardBg}};">
+                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center transition" style="color: {{headingColor}};">
+                    <span>{{q1}}</span>
+                    <i class="fas fa-chevron-down opacity-60"></i>
+                </button>
+                <div class="faq-accordion-content hidden px-6 pb-5 text-xs border-t border-slate-900 pt-3 leading-relaxed" style="color: {{accentColor}};">
+                    {{a1}}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>`
     },
     {
         id: 'html_raw',
         name: 'Low-Code Custom Raw HTML',
         category: 'Advanced',
         icon: 'fas fa-code',
+        schema: [
+            { key: 'rawHtml', label: 'Custom HTML Code', type: 'textarea', default: '<div class="p-6 bg-slate-950 border border-slate-800 rounded-lg text-center text-xs text-teal-400">Custom Code Block Injected</div>' }
+        ],
         html: `
 <div class="bg-slate-100 p-8 rounded-lg border-2 border-dashed border-slate-300 text-center" data-component="html_raw">
     <div class="text-slate-400 mb-2"><i class="fas fa-code text-2xl"></i></div>
     <div class="font-bold text-slate-700 text-sm">Low-Code Raw HTML Area</div>
-    <div class="text-slate-500 text-xs mt-1">Select this block and click 'Edit HTML' in properties to insert raw customized layout code.</div>
     <div class="custom-html-container hidden mt-4 text-left"></div>
 </div>`
     },
     {
-        id: 'footer',
-        name: 'Corporate Footer Block',
-        category: 'Footers',
-        icon: 'fas fa-shoe-prints',
+        id: 'chatbot',
+        name: 'Interactive AI Chatbot',
+        category: 'Advanced',
+        icon: 'fas fa-comments',
+        schema: [
+            { key: 'agentName', label: 'Bot Title', type: 'text', default: 'AI Support Bot' },
+            { key: 'accentColor', label: 'Bubble Highlight Color', type: 'color', default: '#14b8a6' },
+            { key: 'bgColor', label: 'Chat Dialog Background', type: 'color', default: '#0f172a' }
+        ],
         html: `
-<footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-lg font-black text-white">NUVIS WEBBUILDER BUILDER</div>
-        <div class="flex space-x-6 text-sm">
-            <a href="#" class="hover:text-white transition">Privacy Policy</a>
-            <a href="#" class="hover:text-white transition">Terms of Use</a>
-            <a href="#" class="hover:text-white transition">Support</a>
+<div class="fixed bottom-6 right-6 z-50 font-sans" data-component="chatbot">
+    <button onclick="window.toggleNuvisWebbuilderChat()" class="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 focus:outline-none" style="background-color: {{accentColor}};">
+        <i class="fas fa-comments text-xl text-slate-950"></i>
+    </button>
+    <div id="nuvis-webbuilder-chat-window" class="hidden absolute bottom-16 right-0 w-80 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col" style="background-color: {{bgColor}};">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-bold text-xs text-white uppercase tracking-wider">{{agentName}}</span>
+            </div>
+            <button onclick="window.toggleNuvisWebbuilderChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
         </div>
-        <div class="text-xs text-slate-600">&copy; ${new Date().getFullYear()} Nuvis Webbuilder. All rights reserved. Open Source under MIT.</div>
+        <div id="nuvis-webbuilder-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
+            <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed">
+                Hello there! Welcome. How can I assist your operations today?
+            </div>
+        </div>
+        <form onsubmit="event.preventDefault(); window.sendNuvisWebbuilderChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+            <input type="text" name="chat_msg" placeholder="Ask something..." required class="flex-1 bg-slate-850 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500">
+            <button type="submit" class="font-bold px-3 py-1.5 rounded-lg text-xs hover:opacity-90" style="background-color: {{accentColor}}; color: {{bgColor}};"><i class="fas fa-paper-plane text-slate-950"></i></button>
+        </form>
     </div>
-</footer>`
+</div>`
+    },
+
+    // === NICE-TO-HAVE / DIFFERENTIATORS ===
+    {
+        id: 'before_after_slider',
+        name: 'Before/After Image Slider',
+        category: 'Advanced',
+        icon: 'fas fa-columns',
+        schema: [
+            { key: 'beforeImg', label: 'Before Image (Left)', type: 'text', default: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop&q=60' },
+            { key: 'afterImg', label: 'After Image (Right)', type: 'text', default: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60' },
+            { key: 'bgColor', label: 'Wrapper Background', type: 'color', default: '#020617' },
+            { key: 'sliderColor', label: 'Slider Handle Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="before_after_slider">
+    <div class="before-after-container relative max-w-xl mx-auto h-72 rounded-xl overflow-hidden border border-slate-800 select-none">
+        <div class="absolute inset-0 w-full h-full">
+            <img src="{{afterImg}}" class="w-full h-full object-cover" />
+        </div>
+        <div class="before-image absolute inset-0 h-full overflow-hidden" style="width: 50%;">
+            <img src="{{beforeImg}}" class="absolute left-0 top-0 w-full h-full object-cover max-w-none" style="width: 576px; height: 288px;" />
+        </div>
+        <input type="range" min="0" max="100" value="50" oninput="window.updateBeforeAfterSlider(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-20" />
+        <div class="absolute top-0 bottom-0 pointer-events-none z-10 w-0.5" style="left: 50%; background-color: {{sliderColor}}; transform: translateX(-50%);"></div>
+    </div>
+</section>`
     }
 ];
 
 // Global runtime scripts injection for live compiled renderings (Contact, Chatbot, and FAQ mechanics)
 if (typeof window !== 'undefined') {
+    // Mini-cart initializer
+    window.updateMiniCartCount = function() {
+        const countEl = document.getElementById('mini-cart-count');
+        if (countEl) {
+            let count = parseInt(localStorage.getItem('cart_count') || '0');
+            countEl.innerText = count;
+        }
+    };
+
+    window.addToMiniCart = function() {
+        let count = parseInt(localStorage.getItem('cart_count') || '0') + 1;
+        localStorage.setItem('cart_count', count);
+        window.updateMiniCartCount();
+        alert('Item added to cart!');
+    };
+
+    window.clearMiniCart = function() {
+        localStorage.setItem('cart_count', '0');
+        window.updateMiniCartCount();
+    };
+
+    // Before/After slider updater
+    window.updateBeforeAfterSlider = function(input) {
+        const parent = input.closest('.before-after-container');
+        if (parent) {
+            const beforeImg = parent.querySelector('.before-image');
+            const handleLine = parent.querySelector('.absolute.top-0.bottom-0');
+            if (beforeImg) beforeImg.style.width = input.value + '%';
+            if (handleLine) handleLine.style.left = input.value + '%';
+        }
+    };
+
+    // Carousel transitions
+    window.nextCarouselSlide = function(btn) {
+        const parent = btn.closest('.carousel-container');
+        if (parent) {
+            const slides = parent.querySelectorAll('.carousel-slide');
+            let activeIdx = Array.from(slides).findIndex(s => !s.classList.contains('hidden'));
+            if (activeIdx !== -1) {
+                slides[activeIdx].classList.add('hidden');
+                activeIdx = (activeIdx + 1) % slides.length;
+                slides[activeIdx].classList.remove('hidden');
+            }
+        }
+    };
+
+    // Switch Tabs
+    window.switchTab = function(btn, index) {
+        const parent = btn.closest('.tabs-container');
+        if (parent) {
+            const tabs = parent.querySelectorAll('.tab-content');
+            const buttons = parent.querySelectorAll('.tab-btn');
+            tabs.forEach((t, idx) => t.classList.toggle('hidden', idx !== index));
+            buttons.forEach((b, idx) => {
+                const activeColor = b.getAttribute('data-active-color') || '#14b8a6';
+                b.style.borderColor = idx === index ? activeColor : 'transparent';
+                b.style.color = idx === index ? activeColor : '#94a3b8';
+            });
+        }
+    };
+
     window.submitNuvisWebbuilderForm = function(formElement) {
         const btn = formElement.querySelector("button[type='submit']");
         const statusDiv = formElement.querySelector(".nuvis-webbuilder-form-status");
@@ -428,7 +642,6 @@ if (typeof window !== 'undefined') {
         }
 
         const formData = new FormData(formElement);
-        // Find associated active project metadata context on compile
         formData.append('project_id', typeof PROJECT_ID !== 'undefined' ? PROJECT_ID : '1');
 
         fetch('submit_form.php', {
@@ -473,7 +686,8 @@ if (typeof window !== 'undefined') {
 
         // Append User Message bubble
         const userDiv = document.createElement('div');
-        userDiv.className = "bg-teal-500 text-slate-950 p-2 rounded-lg self-end max-w-[85%] leading-relaxed font-bold";
+        userDiv.className = "bg-teal-500 text-slate-950 p-2 rounded-lg self-end max-w-[85%] leading-relaxed font-bold text-xs";
+        userDiv.style.backgroundColor = 'rgb(20, 184, 166)';
         userDiv.innerText = userMsg;
         logs.appendChild(userDiv);
         logs.scrollTop = logs.scrollHeight;
@@ -481,9 +695,8 @@ if (typeof window !== 'undefined') {
         // Simulate AI Bot typing
         setTimeout(() => {
             const aiDiv = document.createElement('div');
-            aiDiv.className = "bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed";
+            aiDiv.className = "bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed text-xs";
 
-            // Standard AI Knowledge template responses
             let responseText = "That's an interesting query! Our technical team can certainly assist you. Let us know your contact information via the contact form above.";
             if (userMsg.toLowerCase().includes('price') || userMsg.toLowerCase().includes('pricing') || userMsg.toLowerCase().includes('cost')) {
                 responseText = "Our software licensing models start at just $0/mo for side developer projects, and $29/mo for complete Enterprise scopes including custom raw HTML features.";
@@ -502,13 +715,15 @@ if (typeof window !== 'undefined') {
         const icon = buttonElement.querySelector("i");
         if (accordionContent) {
             const isHidden = accordionContent.classList.contains('hidden');
-            if (isHidden) {
-                accordionContent.classList.remove('hidden');
-                if (icon) icon.className = "fas fa-chevron-up text-teal-400 transition-transform";
-            } else {
-                accordionContent.classList.add('hidden');
-                if (icon) icon.className = "fas fa-chevron-down text-slate-500 transition-transform";
+            accordionContent.classList.toggle('hidden', !isHidden);
+            if (icon) {
+                icon.className = isHidden ? "fas fa-chevron-up text-teal-400 transition-transform" : "fas fa-chevron-down text-slate-500 transition-transform";
             }
         }
     };
+
+    // Auto-sync cart on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+        window.updateMiniCartCount();
+    });
 }
