@@ -4,6 +4,7 @@
  * Processes customer inputs, saves them securely, and simulates SMTP notification emails
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/EmailService.php';
 
 header('Content-Type: application/json');
 
@@ -40,7 +41,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 // 1. Resolve project and owner email to notify them
 $stmt_proj = $db->prepare("
-    SELECT projects.name AS project_name, users.email AS owner_email, users.username AS owner_name
+    SELECT projects.name AS project_name, projects.content_json, users.email AS owner_email, users.username AS owner_name
     FROM projects
     JOIN users ON projects.user_id = users.id
     WHERE projects.id = ?
@@ -54,6 +55,27 @@ if (!$project_info) {
     exit;
 }
 
+// Extract email settings from project content state
+$custom_recipient = '';
+$auto_responder_enabled = false;
+$template_theme = 'modern_minimalist';
+$auto_responder_subject = 'Thank you for contacting us!';
+$auto_responder_body = "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team";
+
+try {
+    $content_json = json_decode($project_info['content_json'] ?? '[]', true);
+    if ($content_json && isset($content_json['email_settings'])) {
+        $email_settings = $content_json['email_settings'];
+        $custom_recipient = trim($email_settings['recipient'] ?? '');
+        $auto_responder_enabled = !empty($email_settings['auto_responder_enabled']);
+        $template_theme = $email_settings['template_theme'] ?? 'modern_minimalist';
+        $auto_responder_subject = $email_settings['auto_responder_subject'] ?? $auto_responder_subject;
+        $auto_responder_body = $email_settings['auto_responder_body'] ?? $auto_responder_body;
+    }
+} catch (Exception $e) {
+    error_log("Failed to parse project email configurations: " . $e->getMessage());
+}
+
 try {
     $db->beginTransaction();
 
@@ -62,19 +84,32 @@ try {
     $stmt_insert->execute([$project_id, $name, $email, $message]);
     $submission_id = $db->lastInsertId();
 
-    // 3. Prepare Simulated SMTP Email Notification Details
-    $recipient = $project_info['owner_email'];
-    $subject = "Nuvis Webbuilder Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
-    $body = "Hello " . $project_info['owner_name'] . ",\n\n" .
-            "You received a new message from a site visitor on your Nuvis Webbuilder page:\n\n" .
-            "Name: " . $name . "\n" .
-            "Email: " . $email . "\n" .
-            "Message: " . $message . "\n\n" .
-            "Regards,\nNuvis Webbuilder Automated Engine";
+    // 3. Resolve Destination notification recipient
+    $recipient = !empty($custom_recipient) ? $custom_recipient : $project_info['owner_email'];
 
-    // Insert Simulated Email Log Entry
-    $stmt_email = $db->prepare("INSERT INTO email_logs (submission_id, recipient, subject, body, status) VALUES (?, ?, ?, ?, 'sent')");
-    $stmt_email->execute([$submission_id, $recipient, $subject, $body]);
+    // 4. Construct beautiful notification template for administrator
+    $admin_subject = "Nuvis Webbuilder Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
+    $admin_content = "Hello " . $project_info['owner_name'] . ",\n\n" .
+                     "You received a new message from a site visitor on your Nuvis Webbuilder page:\n\n" .
+                     "Name: " . $name . "\n" .
+                     "Email: " . $email . "\n" .
+                     "Message: " . $message;
+
+    $admin_html_body = EmailService::getTemplate($template_theme, $admin_subject, $admin_content, "Securely processed by Nuvis Webbuilder Notification Module.");
+
+    // Send and Log Administrator notification alert
+    EmailService::send($recipient, $admin_subject, $admin_html_body, $admin_content, $submission_id);
+
+    // 5. Send automated HTML email response template back to the customer if configured
+    if ($auto_responder_enabled) {
+        $customer_subject = $auto_responder_subject;
+        $customer_content = "Dear " . $name . ",\n\n" . $auto_responder_body;
+
+        $customer_html_body = EmailService::getTemplate($template_theme, $customer_subject, $customer_content, "Sent on behalf of " . $project_info['project_name']);
+
+        // Dispatch auto-responder
+        EmailService::send($email, $customer_subject, $customer_html_body, $customer_content, $submission_id);
+    }
 
     $db->commit();
 

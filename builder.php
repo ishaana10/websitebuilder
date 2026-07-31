@@ -139,6 +139,13 @@ $csrf_token = generate_csrf_token();
             const [customJs, setCustomJs] = useState('');
             const [projectStatus, setProjectStatus] = useState(PROJECT_STATUS);
 
+            // --- Nuvis Email Module Settings ---
+            const [emailRecipient, setEmailRecipient] = useState('');
+            const [autoResponderEnabled, setAutoResponderEnabled] = useState(false);
+            const [emailTemplateTheme, setEmailTemplateTheme] = useState('modern_minimalist'); // modern_minimalist, elegant, tech_light
+            const [autoResponderSubject, setAutoResponderSubject] = useState('Thank you for contacting us!');
+            const [autoResponderBody, setAutoResponderBody] = useState('Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team');
+
             // --- Undo/Redo History States ---
             const [history, setHistory] = useState([]);
             const [historyIndex, setHistoryIndex] = useState(-1);
@@ -157,6 +164,11 @@ $csrf_token = generate_csrf_token();
                     let initialSections = [];
                     let initialCss = '';
                     let initialJs = '';
+                    let rec = '';
+                    let autoResp = false;
+                    let templTheme = 'modern_minimalist';
+                    let autoSub = 'Thank you for contacting us!';
+                    let autoBody = 'Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team';
 
                     // Parsing formats
                     if (raw && Array.isArray(raw.blocks)) {
@@ -169,6 +181,15 @@ $csrf_token = generate_csrf_token();
                         initialJs = raw.custom_js || '';
                     } else if (raw && Array.isArray(raw)) {
                         initialSections = raw.map(blockToSection);
+                    }
+
+                    // Extract integrated Nuvis Email module configuration state
+                    if (raw && raw.email_settings) {
+                        rec = raw.email_settings.recipient || '';
+                        autoResp = !!raw.email_settings.auto_responder_enabled;
+                        templTheme = raw.email_settings.template_theme || 'modern_minimalist';
+                        autoSub = raw.email_settings.auto_responder_subject || 'Thank you for contacting us!';
+                        autoBody = raw.email_settings.auto_responder_body || 'Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team';
                     }
 
                     // Fallback navbar & footer links migration if undefined
@@ -194,6 +215,11 @@ $csrf_token = generate_csrf_token();
                     setSections(initialSections);
                     setCustomCss(initialCss);
                     setCustomJs(initialJs);
+                    setEmailRecipient(rec);
+                    setAutoResponderEnabled(autoResp);
+                    setEmailTemplateTheme(templTheme);
+                    setAutoResponderSubject(autoSub);
+                    setAutoResponderBody(autoBody);
 
                     // Initialize history stack
                     setHistory([initialSections]);
@@ -414,6 +440,14 @@ $csrf_token = generate_csrf_token();
                     blocks:     blocks,
                     custom_css: customCss,
                     custom_js:  customJs,
+                    // Nuvis Email module configuration parameters
+                    email_settings: {
+                        recipient: emailRecipient,
+                        auto_responder_enabled: autoResponderEnabled,
+                        template_theme: emailTemplateTheme,
+                        auto_responder_subject: autoResponderSubject,
+                        auto_responder_body: autoResponderBody
+                    }
                 });
             };
 
@@ -876,7 +910,7 @@ $csrf_token = generate_csrf_token();
                                     Properties
                                 </button>
                                 <button onClick={() => setRightPanelTab('settings')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'settings' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    Project CSS/JS
+                                    Project Settings & Mail
                                 </button>
                             </div>
 
@@ -1345,20 +1379,62 @@ $csrf_token = generate_csrf_token();
                                     )}
                                 </div>
                             ) : (
-                                /* ADVANCED CUSTOM SETTINGS TAB (CSS/JS INJECTIONS) */
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                /* ADVANCED CUSTOM SETTINGS TAB (CSS/JS INJECTIONS & EMAIL CONFIGURATION MODULE) */
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                    {/* NUVIS EMAIL CONFIGURATION MODULE */}
+                                    <div className="space-y-4 bg-slate-950/40 p-3.5 rounded-lg border border-slate-850">
+                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-paper-plane"></i> Nuvis Email Module
+                                        </h4>
+                                        <p className="text-[10px] text-slate-400 leading-relaxed">Configure form-notification alerts, SMTP dispatch routes, and automatic responder templates securely.</p>
+
+                                        <div>
+                                            <label className="text-[11px] text-slate-400 block mb-1">Inquiry Notification Recipient</label>
+                                            <input type="email" value={emailRecipient} onChange={(e) => setEmailRecipient(e.target.value)} placeholder="e.g., sales@nuvis.com" className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                            <span className="text-[9px] text-slate-500 mt-1 block">Recipient email for form notifications (fallback to your account email).</span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between border-t border-slate-800/80 pt-2.5">
+                                            <label className="text-[11px] text-slate-400 block font-semibold">Enable Customer Auto-Responder</label>
+                                            <input type="checkbox" checked={autoResponderEnabled} onChange={(e) => setAutoResponderEnabled(e.target.checked)} className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0" />
+                                        </div>
+
+                                        {autoResponderEnabled && (
+                                            <div className="space-y-3.5 border-t border-slate-800/80 pt-2.5">
+                                                <div>
+                                                    <label className="text-[11px] text-slate-400 block mb-1">Email Template Style</label>
+                                                    <select value={emailTemplateTheme} onChange={(e) => setEmailTemplateTheme(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none">
+                                                        <option value="modern_minimalist">Modern Minimalist (Teal)</option>
+                                                        <option value="elegant">Elegant Indigo Gold (Royal)</option>
+                                                        <option value="tech_light">Tech Light (Clean Blue)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] text-slate-400 block mb-1">Auto-Response Subject</label>
+                                                    <input type="text" value={autoResponderSubject} onChange={(e) => setAutoResponderSubject(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] text-slate-400 block mb-1">Auto-Response Message Body</label>
+                                                    <textarea rows={4} value={autoResponderBody} onChange={(e) => setAutoResponderBody(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs font-sans text-slate-200 focus:outline-none focus:border-teal-500" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <hr className="border-slate-850" />
+
+                                    {/* STANDARD SCRIPT AND STYLE INJECTIONS */}
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-sliders-h"></i> Custom Script Injection</h4>
-                                        <p className="text-[10px] text-slate-400 leading-relaxed">Inject stylesheet styling rules and client-side behavioral callbacks directly into compiled pages.</p>
 
                                         <div>
                                             <label className="text-[11px] text-slate-400 block mb-1">Custom CSS Stylesheet</label>
-                                            <textarea rows={6} value={customCss} onChange={(e) => setCustomCss(e.target.value)} placeholder="body { background-color: #0b0f19; }" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none focus:border-teal-500" />
+                                            <textarea rows={4} value={customCss} onChange={(e) => setCustomCss(e.target.value)} placeholder="body { background-color: #0b0f19; }" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none focus:border-teal-500" />
                                         </div>
 
                                         <div>
                                             <label className="text-[11px] text-slate-400 block mb-1">Custom JavaScript Logic</label>
-                                            <textarea rows={6} value={customJs} onChange={(e) => setCustomJs(e.target.value)} placeholder="console.log('Nuvis Webbuilder custom scripts active');" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" />
+                                            <textarea rows={4} value={customJs} onChange={(e) => setCustomJs(e.target.value)} placeholder="console.log('Nuvis Webbuilder custom scripts active');" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" />
                                         </div>
 
                                         <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition">
