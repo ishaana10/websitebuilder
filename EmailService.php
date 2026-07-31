@@ -44,7 +44,7 @@ class EmailService {
         .logo-text { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: {$primaryColor}; text-transform: uppercase; }
         .title { font-size: 24px; font-weight: 800; margin-top: 12px; color: " . ($theme === 'tech_light' ? '#0f172a' : '#ffffff') . "; }
         .body-content { font-size: 14px; line-height: 1.6; color: {$textColor}; margin-bottom: 24px; }
-        .footer-note { font-size: 11px; color: " . ($theme === 'tech_light' ? '#64748b' : '#94a3b8') . "; border-t: 1px solid rgba(0,0,0,0.05); padding-top: 16px; text-align: center; }
+        .footer-note { font-size: 11px; color: " . ($theme === 'tech_light' ? '#64748b' : '#94a3b8') . "; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 16px; text-align: center; }
         .btn { display: inline-block; background-color: {$primaryColor}; color: " . ($theme === 'tech_light' ? '#ffffff' : '#0f172a') . "; font-weight: bold; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 13px; margin-top: 16px; }
     </style>
 </head>
