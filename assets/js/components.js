@@ -42,6 +42,28 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
+        id: 'feature_split',
+        name: 'Side-by-Side Split Feature',
+        category: 'Features',
+        icon: 'fas fa-columns',
+        html: `
+<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="feature_split">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        <div class="flex-1 space-y-6">
+            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-xs uppercase tracking-wider">Next-Gen Interface</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Elegance meets pure performance.</h2>
+            <p class="text-slate-300 text-base leading-relaxed">Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match your layout's specific branding tone perfectly.</p>
+            <div>
+                <a href="#action" class="inline-block bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-6 py-3 rounded transition duration-300 text-sm">Explore Details</a>
+            </div>
+        </div>
+        <div class="flex-1 w-full">
+            <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60" alt="Visual Split Illustration" class="w-full object-cover rounded-xl shadow-lg border border-slate-800" />
+        </div>
+    </div>
+</section>`
+    },
+    {
         id: 'features',
         name: 'Three-Column Features Grid',
         category: 'Features',
@@ -72,6 +94,165 @@ const UI_COMPONENTS = [
                 </div>
                 <h3 class="text-xl font-bold text-slate-900">Low Code Custom</h3>
                 <p class="text-slate-500 mt-2 text-sm leading-relaxed">Write raw custom HTML or adjust margins, paddings, borders, colors, and button pathways dynamically.</p>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'gallery',
+        name: 'Premium Media Gallery',
+        category: 'Advanced',
+        icon: 'fas fa-images',
+        html: `
+<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="gallery">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-3xl font-extrabold tracking-tight">Our Premium Showcase</h2>
+        <p class="text-slate-400 mt-2 text-sm max-w-xl mx-auto">Explore high-fidelity visual representations of our work, system architectures, and client results.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12">
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" alt="Showcase 1" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Workspace</h4>
+                    <p class="text-xs text-slate-300 mt-1">Stunning layout interfaces with zero drag lag.</p>
+                </div>
+            </div>
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60" alt="Showcase 2" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Analytics</h4>
+                    <p class="text-xs text-slate-300 mt-1">Track interaction insights natively on client forms.</p>
+                </div>
+            </div>
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60" alt="Showcase 3" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">AI Networks</h4>
+                    <p class="text-xs text-slate-300 mt-1">Integrate automated chatbot layers to boost signups.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'team',
+        name: 'Team Grid Showcase',
+        category: 'Features',
+        icon: 'fas fa-users',
+        html: `
+<section class="py-16 px-8 bg-slate-50 text-slate-800 rounded-lg" data-component="team">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Meet the Innovators</h2>
+        <p class="text-slate-500 mt-2 text-sm max-w-md mx-auto">The engineering powerhouses behind our state-of-the-art visual builder operations.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mt-12">
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60" alt="Sarah Connor" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
+                <h4 class="font-bold text-slate-900 text-base">Sarah Connor</h4>
+                <p class="text-xs text-slate-500 mt-1">Founder & CEO</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=60" alt="Marcus Wright" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
+                <h4 class="font-bold text-slate-900 text-base">Marcus Wright</h4>
+                <p class="text-xs text-slate-500 mt-1">Lead Architect</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=60" alt="Elena Rostova" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
+                <h4 class="font-bold text-slate-900 text-base">Elena Rostova</h4>
+                <p class="text-xs text-slate-500 mt-1">Lead Front-end</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=60" alt="John Reese" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-teal-500 shadow-sm" />
+                <h4 class="font-bold text-slate-900 text-base">John Reese</h4>
+                <p class="text-xs text-slate-500 mt-1">Security Engineering</p>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'faq',
+        name: 'Interactive FAQ Accordion',
+        category: 'Advanced',
+        icon: 'fas fa-question-circle',
+        html: `
+<section class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="faq">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center tracking-tight">Frequently Asked Questions</h2>
+        <p class="text-slate-400 text-center mt-2 text-sm">Everything you need to know about our products, licenses, and visual architectures.</p>
+
+        <div class="mt-12 space-y-4">
+            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
+                    <span>How does the local compiling mechanism operate?</span>
+                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
+                </button>
+                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
+                    Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly. There are no client-side rendering bottlenecks or unnecessary database calls.
+                </div>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
+                    <span>Can I export and host the compiled pages on my own server?</span>
+                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
+                </button>
+                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
+                    Yes! With our absolute export capability, you can click 'ZIP' to immediately download an entire production bundle including styling sheets, customized JavaScript nodes, and static HTML templates.
+                </div>
+            </div>
+            <div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center hover:bg-slate-900 transition">
+                    <span>Are my custom-injected scripts filtered or fully sanitized?</span>
+                    <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
+                </button>
+                <div class="faq-accordion-content hidden px-6 pb-5 text-xs text-slate-400 border-t border-slate-900/50 pt-3 leading-relaxed">
+                    Custom-injected CSS and JS styling scripts are kept safe for visual preview compiling but undergo strict server-side validation upon publishing, protecting your public web users from visual scripting injections.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'testimonials',
+        name: 'Testimonials Grid',
+        category: 'Features',
+        icon: 'fas fa-star',
+        html: `
+<section class="py-16 px-8 bg-slate-950 text-white rounded-lg" data-component="testimonials">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-3xl font-extrabold tracking-tight">Trusted Worldwide</h2>
+        <p class="text-slate-400 mt-2 text-sm max-w-sm mx-auto">Join thousands of software engineers building faster than ever before.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"Nuvis Webbuilder solved all our quick deployment needs. Drag-and-drop combined with raw CSS injection is a developer's dream come true."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=60" alt="Clara Jenkins" class="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                        <h4 class="font-bold text-xs">Clara Jenkins</h4>
+                        <p class="text-[10px] text-slate-500">Tech Lead at Netcore</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"Rebuilding the builder into React makes it completely seamless. State tracking, live preview compiler, and zero canvas reload lag are incredible features."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=60" alt="David Miller" class="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                        <h4 class="font-bold text-xs">David Miller</h4>
+                        <p class="text-[10px] text-slate-500">Fullstack Engineer</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"We compiled 15 pages in one afternoon, and absolute loading times decreased significantly. The mobile viewport bezel and undo hotkeys make editing rapid."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=60" alt="Samantha Wu" class="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                        <h4 class="font-bold text-xs">Samantha Wu</h4>
+                        <p class="text-[10px] text-slate-500">SaaS Growth Specialist</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -120,6 +301,23 @@ const UI_COMPONENTS = [
             </div>
         </div>
     </div>
+</section>`
+    },
+    {
+        id: 'cta',
+        name: 'Urgent Call To Action',
+        category: 'Hero',
+        icon: 'fas fa-bullhorn',
+        html: `
+<section class="py-16 px-8 bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 rounded-lg text-center relative overflow-hidden" data-component="cta">
+    <div class="max-w-4xl mx-auto space-y-6 relative z-10">
+        <h2 class="text-3xl md:text-5xl font-black tracking-tight uppercase leading-none">Ready to start compiling?</h2>
+        <p class="text-slate-900 font-medium text-base md:text-lg max-w-xl mx-auto leading-relaxed">Deploy premium single-page web applications with absolute precision and unmatched modern aesthetics.</p>
+        <div class="flex justify-center gap-4 pt-4">
+            <a href="#register" class="bg-slate-950 hover:bg-slate-900 text-teal-400 font-extrabold px-8 py-3 rounded-lg text-sm tracking-wide shadow-xl transition transform hover:-translate-y-0.5">Start Now - Free</a>
+        </div>
+    </div>
+    <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
 </section>`
     },
     {
@@ -216,7 +414,7 @@ const UI_COMPONENTS = [
     }
 ];
 
-// Global runtime scripts injection for live compiled renderings (Contact and Chatbot mechanics)
+// Global runtime scripts injection for live compiled renderings (Contact, Chatbot, and FAQ mechanics)
 if (typeof window !== 'undefined') {
     window.submitNuvisWebbuilderForm = function(formElement) {
         const btn = formElement.querySelector("button[type='submit']");
@@ -297,5 +495,20 @@ if (typeof window !== 'undefined') {
             logs.appendChild(aiDiv);
             logs.scrollTop = logs.scrollHeight;
         }, 800);
+    };
+
+    window.toggleNuvisFaqAccordion = function(buttonElement) {
+        const accordionContent = buttonElement.nextElementSibling;
+        const icon = buttonElement.querySelector("i");
+        if (accordionContent) {
+            const isHidden = accordionContent.classList.contains('hidden');
+            if (isHidden) {
+                accordionContent.classList.remove('hidden');
+                if (icon) icon.className = "fas fa-chevron-up text-teal-400 transition-transform";
+            } else {
+                accordionContent.classList.add('hidden');
+                if (icon) icon.className = "fas fa-chevron-down text-slate-500 transition-transform";
+            }
+        }
     };
 }

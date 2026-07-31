@@ -171,6 +171,26 @@ $csrf_token = generate_csrf_token();
                         initialSections = raw.map(blockToSection);
                     }
 
+                    // Fallback navbar & footer links migration if undefined
+                    initialSections = initialSections.map(s => {
+                        if (s.type === 'navbar' && (!s.props.links || s.props.links.length === 0)) {
+                            s.props.links = [
+                                { text: 'Home', url: '#home' },
+                                { text: 'Features', url: '#features' },
+                                { text: 'Pricing', url: '#pricing' },
+                                { text: 'Contact', url: '#contact' }
+                            ];
+                        }
+                        if (s.type === 'footer' && (!s.props.links || s.props.links.length === 0)) {
+                            s.props.links = [
+                                { text: 'Privacy Policy', url: '#' },
+                                { text: 'Terms of Use', url: '#' },
+                                { text: 'Support', url: '#' }
+                            ];
+                        }
+                        return s;
+                    });
+
                     setSections(initialSections);
                     setCustomCss(initialCss);
                     setCustomJs(initialJs);
@@ -239,19 +259,34 @@ $csrf_token = generate_csrf_token();
             // --- Map legacy blocks to React Sections ---
             function blockToSection(block) {
                 return {
-                    id: 'sec-' + (block.componentId || 'unknown') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-                    type: block.componentId,
+                    id: block.id || 'sec-' + (block.componentId || 'unknown') + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+                    type: block.componentId || block.type,
                     props: {
-                        heading:   block.headingText   || '',
-                        text:      block.paragraphText || '',
-                        brandText: block.brandText     || 'NUVIS WEBBUILDER',
-                        logoUrl:   block.logoImg       || '',
-                        copyright: block.copyright     || '',
-                        links:     block.links         || [],
-                        rawHtml:   block.raw_html      || '',
+                        heading:   block.headingText   || (block.props && block.props.heading) || '',
+                        text:      block.paragraphText || (block.props && block.props.text) || '',
+                        brandText: block.brandText     || (block.props && block.props.brandText) || 'NUVIS WEBBUILDER',
+                        logoUrl:   block.logoImg       || (block.props && block.props.logoUrl) || '',
+                        copyright: block.copyright     || (block.props && block.props.copyright) || '',
+                        links:     block.links         || (block.props && block.props.links) || [],
+                        rawHtml:   block.raw_html      || (block.props && block.props.rawHtml) || '',
+                        // Premium Custom Styling properties
+                        imageUrl:  (block.props && block.props.imageUrl) || '',
+                        imageRounding: (block.props && block.props.imageRounding) || 'rounded-xl',
+                        imageShadow:   (block.props && block.props.imageShadow) || 'shadow-lg',
+                        imageBorder:   (block.props && block.props.imageBorder) || 'border-0',
+
+                        headingSize:   (block.props && block.props.headingSize) || 'text-3xl md:text-5xl',
+                        headingWeight: (block.props && block.props.headingWeight) || 'font-extrabold',
+                        headingAlign:  (block.props && block.props.headingAlign) || 'text-center',
+                        headingColor:  (block.props && block.props.headingColor) || 'text-white',
+
+                        textSize:      (block.props && block.props.textSize) || 'text-base',
+                        textWeight:    (block.props && block.props.textWeight) || 'font-normal',
+                        textAlign:     (block.props && block.props.textAlign) || 'text-center',
+                        textColor:     (block.props && block.props.textColor) || 'text-slate-300',
                     },
                     style: {
-                        classes: block.classes || [],
+                        classes: block.classes || (block.style && block.style.classes) || [],
                     }
                 };
             }
@@ -279,9 +314,41 @@ $csrf_token = generate_csrf_token();
                         copyright: '',
                         links:     [],
                         rawHtml:   '',
+                        // Premium Custom Styling defaults
+                        imageUrl:  componentId === 'feature_split' ? 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60' : '',
+                        imageRounding: 'rounded-xl',
+                        imageShadow:   'shadow-lg',
+                        imageBorder:   'border-0',
+
+                        headingSize:   'text-3xl md:text-5xl',
+                        headingWeight: 'font-extrabold',
+                        headingAlign:  'text-center',
+                        headingColor:  'text-white',
+
+                        textSize:      'text-base',
+                        textWeight:    'font-normal',
+                        textAlign:     'text-center',
+                        textColor:     'text-slate-300',
                     },
                     style: { classes: [] }
                 };
+
+                // Add preconfigured links for navbar/footer
+                if (componentId === 'navbar') {
+                    newSection.props.links = [
+                        { text: 'Home', url: '#home' },
+                        { text: 'Features', url: '#features' },
+                        { text: 'Pricing', url: '#pricing' },
+                        { text: 'Contact', url: '#contact' }
+                    ];
+                }
+                if (componentId === 'footer') {
+                    newSection.props.links = [
+                        { text: 'Privacy Policy', url: '#' },
+                        { text: 'Terms of Use', url: '#' },
+                        { text: 'Support', url: '#' }
+                    ];
+                }
 
                 const updated = [...sections, newSection];
                 updateSectionsWithHistory(updated);
@@ -329,6 +396,7 @@ $csrf_token = generate_csrf_token();
             // --- Serializing layout data for Save ---
             const serializeCanvas = () => {
                 const blocks = sections.map(sec => ({
+                    id:            sec.id,
                     componentId:   sec.type,
                     headingText:   sec.props.heading   || '',
                     paragraphText: sec.props.text      || '',
@@ -338,6 +406,7 @@ $csrf_token = generate_csrf_token();
                     logoImg:       sec.props.logoUrl   || '',
                     copyright:     sec.props.copyright || '',
                     links:         sec.props.links     || [],
+                    props:         sec.props,
                 }));
 
                 return JSON.stringify({
@@ -385,6 +454,11 @@ $csrf_token = generate_csrf_token();
 
                 let rawMarkup = compDef.html;
 
+                // Dynamic Typography styling helper
+                const applyTypography = (content, sizeClass, weightClass, alignClass, colorClass) => {
+                    return `<div class="${sizeClass} ${weightClass} ${alignClass} ${colorClass} transition duration-150">${content}</div>`;
+                };
+
                 if (sec.type === 'navbar') {
                     const brandText = p.brandText || 'NUVIS WEBBUILDER';
                     const logoHtml = p.logoUrl
@@ -397,7 +471,7 @@ $csrf_token = generate_csrf_token();
                     ]).map(lnk => `<a href="${lnk.url}" class="hover:text-teal-300 transition duration-300">${lnk.text}</a>`).join('\n');
 
                     rawMarkup = `
-<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
+<nav id="${sec.id}" class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
     <div class="text-xl font-extrabold tracking-wider text-teal-400">${logoHtml}</div>
     <div class="hidden md:flex space-x-6">${linksHtml}</div>
     <div>
@@ -417,7 +491,7 @@ $csrf_token = generate_csrf_token();
                     ]).map(lnk => `<a href="${lnk.url}" class="hover:text-white transition">${lnk.text}</a>`).join('\n');
 
                     rawMarkup = `
-<footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
+<footer id="${sec.id}" class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div>${logoHtml}</div>
         <div class="flex space-x-6 text-sm">${linksHtml}</div>
@@ -426,21 +500,175 @@ $csrf_token = generate_csrf_token();
 </footer>`;
                 } else if (sec.type === 'html_raw') {
                     if (p.rawHtml) {
-                        rawMarkup = `<div data-component="html_raw" class="custom-html-container">${p.rawHtml}</div>`;
+                        rawMarkup = `<div id="${sec.id}" data-component="html_raw" class="custom-html-container">${p.rawHtml}</div>`;
                     }
+                } else if (sec.type === 'feature_split') {
+                    const headingText = p.heading || 'Elegance meets pure performance.';
+                    const paragraphText = p.text || 'Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match your layout\'s specific branding tone perfectly.';
+                    const imageRounding = p.imageRounding || 'rounded-xl';
+                    const imageShadow = p.imageShadow || 'shadow-lg';
+                    const imageBorder = p.imageBorder || 'border-0';
+                    const imageUrl = p.imageUrl || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60';
+
+                    rawMarkup = `
+<section id="${sec.id}" class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="feature_split">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        <div class="flex-1 space-y-6">
+            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-xs uppercase tracking-wider">Next-Gen Interface</span>
+            ${applyTypography(headingText, p.headingSize, p.headingWeight, p.headingAlign, p.headingColor)}
+            ${applyTypography(paragraphText, p.textSize, p.textWeight, p.textAlign, p.textColor)}
+            <div>
+                <a href="#action" class="inline-block bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-6 py-3 rounded transition duration-300 text-sm">Explore Details</a>
+            </div>
+        </div>
+        <div class="flex-1 w-full">
+            <img src="${imageUrl}" alt="Visual Split Illustration" class="w-full object-cover ${imageRounding} ${imageShadow} ${imageBorder} transition duration-150" />
+        </div>
+    </div>
+</section>`;
+                } else if (sec.type === 'gallery') {
+                    const headingText = p.heading || 'Our Premium Showcase';
+                    const paragraphText = p.text || 'Explore high-fidelity visual representations of our work, system architectures, and client results.';
+                    const imageRounding = p.imageRounding || 'rounded-lg';
+                    const imageShadow = p.imageShadow || 'shadow-md';
+                    const imageBorder = p.imageBorder || 'border-0';
+
+                    rawMarkup = `
+<section id="${sec.id}" class="py-16 px-8 bg-slate-900 text-white rounded-lg" data-component="gallery">
+    <div class="max-w-6xl mx-auto text-center">
+        ${applyTypography(headingText, p.headingSize, p.headingWeight, p.headingAlign, p.headingColor)}
+        ${applyTypography(paragraphText, p.textSize, p.textWeight, p.textAlign, p.textColor)}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-12">
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" alt="Showcase 1" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105 ${imageRounding} ${imageShadow} ${imageBorder}" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Workspace</h4>
+                    <p class="text-xs text-slate-300 mt-1">Stunning layout interfaces with zero drag lag.</p>
+                </div>
+            </div>
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60" alt="Showcase 2" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105 ${imageRounding} ${imageShadow} ${imageBorder}" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">Analytics</h4>
+                    <p class="text-xs text-slate-300 mt-1">Track interaction insights natively on client forms.</p>
+                </div>
+            </div>
+            <div class="overflow-hidden rounded-lg shadow-md border border-slate-800 bg-slate-950 group">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60" alt="Showcase 3" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105 ${imageRounding} ${imageShadow} ${imageBorder}" />
+                <div class="p-4 text-left">
+                    <h4 class="font-bold text-xs text-teal-400 uppercase tracking-widest">AI Networks</h4>
+                    <p class="text-xs text-slate-300 mt-1">Integrate automated chatbot layers to boost signups.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>`;
+                } else if (sec.type === 'team') {
+                    const headingText = p.heading || 'Meet the Innovators';
+                    const paragraphText = p.text || 'The engineering powerhouses behind our state-of-the-art visual builder operations.';
+                    const imageRounding = p.imageRounding || 'rounded-full';
+                    const imageShadow = p.imageShadow || 'shadow-sm';
+                    const imageBorder = p.imageBorder || 'border-2 border-teal-500';
+
+                    rawMarkup = `
+<section id="${sec.id}" class="py-16 px-8 bg-slate-50 text-slate-800 rounded-lg" data-component="team">
+    <div class="max-w-6xl mx-auto text-center">
+        ${applyTypography(headingText, p.headingSize, p.headingWeight, p.headingAlign, p.headingColor === 'text-white' ? 'text-slate-900' : p.headingColor)}
+        ${applyTypography(paragraphText, p.textSize, p.textWeight, p.textAlign, p.textColor === 'text-slate-300' ? 'text-slate-500' : p.textColor)}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mt-12">
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60" alt="Sarah Connor" class="w-20 h-20 object-cover mx-auto mb-4 ${imageRounding} ${imageShadow} ${imageBorder} transition duration-150" />
+                <h4 class="font-bold text-slate-900 text-base">Sarah Connor</h4>
+                <p class="text-xs text-slate-500 mt-1">Founder & CEO</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=60" alt="Marcus Wright" class="w-20 h-20 object-cover mx-auto mb-4 ${imageRounding} ${imageShadow} ${imageBorder} transition duration-150" />
+                <h4 class="font-bold text-slate-900 text-base">Marcus Wright</h4>
+                <p class="text-xs text-slate-500 mt-1">Lead Architect</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=60" alt="Elena Rostova" class="w-20 h-20 object-cover mx-auto mb-4 ${imageRounding} ${imageShadow} ${imageBorder} transition duration-150" />
+                <h4 class="font-bold text-slate-900 text-base">Elena Rostova</h4>
+                <p class="text-xs text-slate-500 mt-1">Lead Front-end</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-100 text-center shadow-sm">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=60" alt="John Reese" class="w-20 h-20 object-cover mx-auto mb-4 ${imageRounding} ${imageShadow} ${imageBorder} transition duration-150" />
+                <h4 class="font-bold text-slate-900 text-base">John Reese</h4>
+                <p class="text-xs text-slate-500 mt-1">Security Engineering</p>
+            </div>
+        </div>
+    </div>
+</section>`;
+                } else if (sec.type === 'testimonials') {
+                    const headingText = p.heading || 'Trusted Worldwide';
+                    const paragraphText = p.text || 'Join thousands of software engineers building faster than ever before.';
+                    const imageRounding = p.imageRounding || 'rounded-full';
+                    const imageShadow = p.imageShadow || 'shadow-sm';
+                    const imageBorder = p.imageBorder || 'border-0';
+
+                    rawMarkup = `
+<section id="${sec.id}" class="py-16 px-8 bg-slate-950 text-white rounded-lg" data-component="testimonials">
+    <div class="max-w-6xl mx-auto text-center">
+        ${applyTypography(headingText, p.headingSize, p.headingWeight, p.headingAlign, p.headingColor)}
+        ${applyTypography(paragraphText, p.textSize, p.textWeight, p.textAlign, p.textColor)}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"Nuvis Webbuilder solved all our quick deployment needs. Drag-and-drop combined with raw CSS injection is a developer's dream come true."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=60" alt="Clara Jenkins" class="w-10 h-10 object-cover ${imageRounding} ${imageShadow} ${imageBorder}" />
+                    <div>
+                        <h4 class="font-bold text-xs">Clara Jenkins</h4>
+                        <p class="text-[10px] text-slate-500">Tech Lead at Netcore</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"Rebuilding the builder into React makes it completely seamless. State tracking, live preview compiler, and zero canvas reload lag are incredible features."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=60" alt="David Miller" class="w-10 h-10 object-cover ${imageRounding} ${imageShadow} ${imageBorder}" />
+                    <div>
+                        <h4 class="font-bold text-xs">David Miller</h4>
+                        <p class="text-[10px] text-slate-500">Fullstack Engineer</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left flex flex-col justify-between">
+                <p class="text-sm text-slate-300 italic leading-relaxed">"We compiled 15 pages in one afternoon, and absolute loading times decreased significantly. The mobile viewport bezel and undo hotkeys make editing rapid."</p>
+                <div class="flex items-center gap-3 mt-6">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=60" alt="Samantha Wu" class="w-10 h-10 object-cover ${imageRounding} ${imageShadow} ${imageBorder}" />
+                    <div>
+                        <h4 class="font-bold text-xs">Samantha Wu</h4>
+                        <p class="text-[10px] text-slate-500">SaaS Growth Specialist</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>`;
                 } else {
-                    // Standard visual widgets (Hero, Features, Pricing, Contact, Chatbot)
+                    // Standard visual widgets (Hero, Features, Pricing, CTA, Contact, Chatbot, FAQ)
                     // We parse and inject headings or custom styling classes
                     const temp = document.createElement('div');
                     temp.innerHTML = rawMarkup;
 
+                    const rootNode = temp.querySelector('[data-component]');
+                    if (rootNode) {
+                        rootNode.id = sec.id;
+                    }
+
                     if (p.heading) {
                         const h = temp.querySelector('h1, h2, h3');
-                        if (h) h.innerText = p.heading;
+                        if (h) {
+                            h.innerText = p.heading;
+                            h.className = `${p.headingSize} ${p.headingWeight} ${p.headingAlign} ${p.headingColor} transition duration-150`;
+                        }
                     }
                     if (p.text) {
                         const pr = temp.querySelector('p');
-                        if (pr) pr.innerText = p.text;
+                        if (pr) {
+                            pr.innerText = p.text;
+                            pr.className = `${p.textSize} ${p.textWeight} ${p.textAlign} ${p.textColor} mt-4 transition duration-150`;
+                        }
                     }
                     if (sec.style && sec.style.classes && sec.style.classes.length) {
                         const innerTag = temp.querySelector('[data-component] > *') || temp.querySelector('[data-component]');
@@ -552,7 +780,7 @@ $csrf_token = generate_csrf_token();
                                 Save Draft
                             </button>
                             <button onClick={downloadZip} className="bg-slate-850 hover:bg-slate-800 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition border border-slate-800" title="Download standalone code ZIP archive">
-                                <i class="fas fa-file-archive text-teal-400"></i> ZIP
+                                <i className="fas fa-file-archive text-teal-400"></i> ZIP
                             </button>
                             <button onClick={publishProject} disabled={isPublishing} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2 rounded text-xs flex items-center gap-1.5 transition shadow-lg shadow-teal-500/10">
                                 {isPublishing ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-globe"></i>}
@@ -568,7 +796,7 @@ $csrf_token = generate_csrf_token();
                         <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0">
                             <div className="p-4 border-b border-slate-800 bg-slate-900/50">
                                 <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
-                                <p class="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
+                                <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -622,7 +850,7 @@ $csrf_token = generate_csrf_token();
                                                         <button title="Move Up" onClick={(e) => { e.stopPropagation(); moveSectionUp(idx); }} disabled={idx === 0} className={`disabled:opacity-30`}><i className="fas fa-arrow-up"></i></button>
                                                         <button title="Move Down" onClick={(e) => { e.stopPropagation(); moveSectionDown(idx); }} disabled={idx === sections.length - 1} className={`disabled:opacity-30`}><i className="fas fa-arrow-down"></i></button>
                                                         <button title="Duplicate" onClick={(e) => { e.stopPropagation(); duplicateSection(idx); }}><i className="fas fa-copy"></i></button>
-                                                        <button title="Remove" className="text-slate-950 hover:text-red-900" onClick={(e) => { e.stopPropagation(); deleteSection(sec.id); }}><i class="fas fa-trash-alt"></i></button>
+                                                        <button title="Remove" className="text-slate-950 hover:text-red-900" onClick={(e) => { e.stopPropagation(); deleteSection(sec.id); }}><i className="fas fa-trash-alt"></i></button>
                                                     </div>
                                                 </div>
 
@@ -675,7 +903,7 @@ $csrf_token = generate_csrf_token();
 
                                             <hr className="border-slate-800" />
 
-                                            {/* NAVBAR CUSTOM VIEW */}
+                                            {/* NAVBAR CUSTOM VIEW WITH INTERACTIVE MENU LINK SELECTION */}
                                             {selectedSection.type === 'navbar' && (
                                                 <div className="space-y-4">
                                                     <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-bars"></i> Navbar Settings</h4>
@@ -695,10 +923,71 @@ $csrf_token = generate_csrf_token();
                                                             updateSectionsWithHistory(updated);
                                                         }} placeholder="https://example.com/logo.png" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
                                                     </div>
+
+                                                    {/* Navigation Links Configurator */}
+                                                    <div className="space-y-2 border-t border-slate-800 pt-3">
+                                                        <div className="flex justify-between items-center">
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menu links & Selections</label>
+                                                            <button onClick={() => {
+                                                                const updatedLinks = [...(selectedSection.props.links || []), { text: 'New Link', url: '#' }];
+                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                updateSectionsWithHistory(updated);
+                                                            }} className="text-[10px] text-teal-400 hover:text-teal-300 font-extrabold flex items-center gap-1">
+                                                                <i className="fas fa-plus"></i> Add Link
+                                                            </button>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                            {(selectedSection.props.links || []).map((lnk, lIdx) => (
+                                                                <div key={lIdx} className="bg-slate-950 p-2.5 rounded border border-slate-800 space-y-2">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[10px] text-slate-500 font-bold uppercase">Item #{lIdx + 1}</span>
+                                                                        <button onClick={() => {
+                                                                            const updatedLinks = (selectedSection.props.links || []).filter((_, i) => i !== lIdx);
+                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }} className="text-[10px] text-red-400 hover:text-red-300">
+                                                                            <i className="fas fa-trash-alt"></i> Remove
+                                                                        </button>
+                                                                    </div>
+                                                                    <input type="text" placeholder="Display Label" value={lnk.text} onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        const updatedLinks = (selectedSection.props.links || []).map((item, i) => i === lIdx ? { ...item, text: val } : item);
+                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                        updateSectionsWithHistory(updated);
+                                                                    }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-500" />
+
+                                                                    <div className="flex gap-1.5">
+                                                                        {/* Target Select Option */}
+                                                                        <select value={lnk.url.startsWith('#sec-') ? lnk.url : 'custom'} onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const finalUrl = val === 'custom' ? '#' : val;
+                                                                            const updatedLinks = (selectedSection.props.links || []).map((item, i) => i === lIdx ? { ...item, url: finalUrl } : item);
+                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }} className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-teal-500">
+                                                                            <option value="custom">Custom URL Link</option>
+                                                                            {sections.filter(s => s.id !== selectedSection.id).map(s => (
+                                                                                <option key={s.id} value={`#${s.id}`}>Section: {s.type} ({s.id.slice(-5)})</option>
+                                                                            ))}
+                                                                        </select>
+
+                                                                        {!lnk.url.startsWith('#sec-') && (
+                                                                            <input type="text" placeholder="Custom URL (e.g. #contact)" value={lnk.url} onChange={(e) => {
+                                                                                const val = e.target.value;
+                                                                                const updatedLinks = (selectedSection.props.links || []).map((item, i) => i === lIdx ? { ...item, url: val } : item);
+                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                                updateSectionsWithHistory(updated);
+                                                                            }} className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500" />
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            {/* FOOTER CUSTOM VIEW */}
+                                            {/* FOOTER CUSTOM VIEW WITH LINK Configurator */}
                                             {selectedSection.type === 'footer' && (
                                                 <div className="space-y-4">
                                                     <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-shoe-prints"></i> Footer Settings</h4>
@@ -726,6 +1015,48 @@ $csrf_token = generate_csrf_token();
                                                             updateSectionsWithHistory(updated);
                                                         }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
                                                     </div>
+
+                                                    {/* Footer Links Configurator */}
+                                                    <div className="space-y-2 border-t border-slate-800 pt-3">
+                                                        <div className="flex justify-between items-center">
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Footer links</label>
+                                                            <button onClick={() => {
+                                                                const updatedLinks = [...(selectedSection.props.links || []), { text: 'New Link', url: '#' }];
+                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                updateSectionsWithHistory(updated);
+                                                            }} className="text-[10px] text-teal-400 hover:text-teal-300 font-extrabold flex items-center gap-1">
+                                                                <i className="fas fa-plus"></i> Add Link
+                                                            </button>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                            {(selectedSection.props.links || []).map((lnk, lIdx) => (
+                                                                <div key={lIdx} className="bg-slate-950 p-2 rounded border border-slate-800 space-y-1.5">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[9px] text-slate-500 font-bold uppercase">Link #{lIdx + 1}</span>
+                                                                        <button onClick={() => {
+                                                                            const updatedLinks = (selectedSection.props.links || []).filter((_, i) => i !== lIdx);
+                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }} className="text-[9px] text-red-400 hover:text-red-300">
+                                                                            <i className="fas fa-trash-alt"></i> Remove
+                                                                        </button>
+                                                                    </div>
+                                                                    <input type="text" placeholder="Display Label" value={lnk.text} onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        const updatedLinks = (selectedSection.props.links || []).map((item, i) => i === lIdx ? { ...item, text: val } : item);
+                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                        updateSectionsWithHistory(updated);
+                                                                    }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                                    <input type="text" placeholder="URL Target" value={lnk.url} onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        const updatedLinks = (selectedSection.props.links || []).map((item, i) => i === lIdx ? { ...item, url: val } : item);
+                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: updatedLinks } } : s);
+                                                                        updateSectionsWithHistory(updated);
+                                                                    }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -744,25 +1075,207 @@ $csrf_token = generate_csrf_token();
                                                 </div>
                                             )}
 
-                                            {/* STANDARD COMPONENT CONTENT EDITORS (HEADINGS & PARAGRAPHS) */}
-                                            {selectedSection.type !== 'navbar' && selectedSection.type !== 'footer' && selectedSection.type !== 'html_raw' && (
-                                                <div className="space-y-3">
-                                                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Content Editor</h4>
+                                            {/* PREMIUM IMAGE / PICTURE STYLING CONTROLS */}
+                                            {['feature_split', 'gallery', 'team', 'testimonials'].includes(selectedSection.type) && (
+                                                <div className="space-y-4 border-t border-slate-800 pt-3">
+                                                    <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-image"></i> Premium Image customizer</h4>
+
+                                                    {selectedSection.type === 'feature_split' && (
+                                                        <div>
+                                                            <label className="text-[11px] text-slate-400 block mb-1">Custom Picture URL</label>
+                                                            <input type="text" value={selectedSection.props.imageUrl || ''} onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, imageUrl: val } } : s);
+                                                                updateSectionsWithHistory(updated);
+                                                            }} placeholder="Paste custom image URL..." className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                        </div>
+                                                    )}
+
+                                                    {/* Image Rounding Corners preset */}
                                                     <div>
+                                                        <label className="text-[11px] text-slate-400 block mb-1">Image Corner Rounding</label>
+                                                        <select value={selectedSection.props.imageRounding || 'rounded-xl'} onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, imageRounding: val } } : s);
+                                                            updateSectionsWithHistory(updated);
+                                                        }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                            <option value="rounded-none">Sharp Corners (rounded-none)</option>
+                                                            <option value="rounded-md">Medium Rounding (rounded-md)</option>
+                                                            <option value="rounded-xl">Standard Pill (rounded-xl)</option>
+                                                            <option value="rounded-3xl">Extra Round (rounded-3xl)</option>
+                                                            <option value="rounded-full">Perfect Circle (rounded-full)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Image Shadows preset */}
+                                                    <div>
+                                                        <label className="text-[11px] text-slate-400 block mb-1">Image Shadow Contrast</label>
+                                                        <select value={selectedSection.props.imageShadow || 'shadow-lg'} onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, imageShadow: val } } : s);
+                                                            updateSectionsWithHistory(updated);
+                                                        }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                            <option value="shadow-none">No Shadow</option>
+                                                            <option value="shadow-md">Soft Shadow (shadow-md)</option>
+                                                            <option value="shadow-lg">Elevated Dark (shadow-lg)</option>
+                                                            <option value="shadow-2xl">Extreme Bevel (shadow-2xl)</option>
+                                                            <option value="shadow-teal-500/30">Teal Glow (shadow-teal-500/30)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Image Borders preset */}
+                                                    <div>
+                                                        <label className="text-[11px] text-slate-400 block mb-1">Image Border Accents</label>
+                                                        <select value={selectedSection.props.imageBorder || 'border-0'} onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, imageBorder: val } } : s);
+                                                            updateSectionsWithHistory(updated);
+                                                        }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                            <option value="border-0">No Border</option>
+                                                            <option value="border-2 border-slate-800">Slate Slate (border-2)</option>
+                                                            <option value="border-2 border-teal-500">Teal Highlight (border-2)</option>
+                                                            <option value="border-4 border-slate-950">Deep Inset Frame (border-4)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* STANDARD COMPONENT CONTENT EDITORS (HEADINGS & PARAGRAPHS) WITH PREMIUM TYPOGRAPHY STYLING */}
+                                            {selectedSection.type !== 'navbar' && selectedSection.type !== 'footer' && selectedSection.type !== 'html_raw' && (
+                                                <div className="space-y-4 border-t border-slate-800 pt-3">
+                                                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Content & Word Styling</h4>
+
+                                                    {/* HEADING TEXT INPUT AND CUSTOM TYPOGRAPHY */}
+                                                    <div className="space-y-2">
                                                         <label className="text-[11px] text-slate-400 block mb-1">Heading / Title</label>
                                                         <input type="text" id="prop-heading-text" value={selectedSection.props.heading || ''} onChange={(e) => {
                                                             const val = e.target.value;
                                                             const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, heading: val } } : s);
                                                             updateSectionsWithHistory(updated);
                                                         }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
+
+                                                        {/* Typography customization toolbar */}
+                                                        <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-2 rounded border border-slate-800/80">
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Heading Size</label>
+                                                                <select value={selectedSection.props.headingSize || 'text-3xl md:text-5xl'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, headingSize: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-xl">Small (text-xl)</option>
+                                                                    <option value="text-3xl">Medium (text-3xl)</option>
+                                                                    <option value="text-3xl md:text-5xl">Large (text-5xl)</option>
+                                                                    <option value="text-4xl md:text-6xl">Hero Bold (text-6xl)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Heading Weight</label>
+                                                                <select value={selectedSection.props.headingWeight || 'font-extrabold'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, headingWeight: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="font-normal">Normal</option>
+                                                                    <option value="font-semibold">Semibold</option>
+                                                                    <option value="font-bold">Bold</option>
+                                                                    <option value="font-black">Extra Heavy</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Heading Align</label>
+                                                                <select value={selectedSection.props.headingAlign || 'text-center'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, headingAlign: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-left">Left</option>
+                                                                    <option value="text-center">Center</option>
+                                                                    <option value="text-right">Right</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Heading Color</label>
+                                                                <select value={selectedSection.props.headingColor || 'text-white'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, headingColor: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-white">White</option>
+                                                                    <option value="text-teal-400">Teal</option>
+                                                                    <option value="text-emerald-400">Emerald</option>
+                                                                    <option value="text-indigo-400">Indigo</option>
+                                                                    <option value="text-slate-900">Dark Slate</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
+
+                                                    {/* DESCRIPTION TEXT INPUT AND CUSTOM TYPOGRAPHY */}
+                                                    <div className="space-y-2">
                                                         <label className="text-[11px] text-slate-400 block mb-1">Paragraph Description</label>
                                                         <textarea rows={3} value={selectedSection.props.text || ''} onChange={(e) => {
                                                             const val = e.target.value;
                                                             const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text: val } } : s);
                                                             updateSectionsWithHistory(updated);
                                                         }} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
+
+                                                        {/* Description Typography customizer */}
+                                                        <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-2 rounded border border-slate-800/80">
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Word Size</label>
+                                                                <select value={selectedSection.props.textSize || 'text-base'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, textSize: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-xs">Extra Small (text-xs)</option>
+                                                                    <option value="text-sm">Small (text-sm)</option>
+                                                                    <option value="text-base">Standard (text-base)</option>
+                                                                    <option value="text-lg">Large (text-lg)</option>
+                                                                    <option value="text-xl">Extra Large (text-xl)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Word Weight</label>
+                                                                <select value={selectedSection.props.textWeight || 'font-normal'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, textWeight: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="font-normal">Normal</option>
+                                                                    <option value="font-medium">Medium</option>
+                                                                    <option value="font-semibold">Semibold</option>
+                                                                    <option value="font-bold">Bold</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Word Align</label>
+                                                                <select value={selectedSection.props.textAlign || 'text-center'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, textAlign: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-left">Left</option>
+                                                                    <option value="text-center">Center</option>
+                                                                    <option value="text-right">Right</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[9px] text-slate-500 font-bold block mb-1">Word Color</label>
+                                                                <select value={selectedSection.props.textColor || 'text-slate-300'} onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, textColor: val } } : s);
+                                                                    updateSectionsWithHistory(updated);
+                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[10px] text-white focus:outline-none">
+                                                                    <option value="text-slate-300">Default Slate</option>
+                                                                    <option value="text-slate-400">Muted Gray</option>
+                                                                    <option value="text-teal-400">Teal Accents</option>
+                                                                    <option value="text-emerald-400">Emerald Accents</option>
+                                                                    <option value="text-slate-600">Dark Charcoal</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -836,7 +1349,7 @@ $csrf_token = generate_csrf_token();
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-sliders-h"></i> Custom Script Injection</h4>
-                                        <p class="text-[10px] text-slate-400 leading-relaxed">Inject stylesheet styling rules and client-side behavioral callbacks directly into compiled pages.</p>
+                                        <p className="text-[10px] text-slate-400 leading-relaxed">Inject stylesheet styling rules and client-side behavioral callbacks directly into compiled pages.</p>
 
                                         <div>
                                             <label className="text-[11px] text-slate-400 block mb-1">Custom CSS Stylesheet</label>
