@@ -557,6 +557,178 @@ const UI_COMPONENTS = [
         <div class="absolute top-0 bottom-0 pointer-events-none z-10 w-0.5" style="left: 50%; background-color: {{sliderColor}}; transform: translateX(-50%);"></div>
     </div>
 </section>`
+    },
+    {
+        id: 'logo_grid',
+        name: 'Client Logo Grid',
+        category: 'Features',
+        icon: 'fas fa-images',
+        schema: [
+            { key: 'heading', label: 'Heading Title', type: 'text', default: 'Trusted by the world\'s best teams' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' }
+        ],
+        html: `
+<section class="py-12 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="logo_grid">
+    <div class="max-w-6xl mx-auto">
+        <h3 class="text-sm font-semibold uppercase tracking-wider mb-8">{{heading}}</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center opacity-70">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60" class="h-8 object-contain filter grayscale invert" alt="Logo 1" />
+            <img src="https://images.unsplash.com/photo-1618005198143-d36680004cdf?w=120&auto=format&fit=crop&q=60" class="h-8 object-contain filter grayscale invert" alt="Logo 2" />
+            <img src="https://images.unsplash.com/photo-1618005131359-2547e18930c4?w=120&auto=format&fit=crop&q=60" class="h-8 object-contain filter grayscale invert" alt="Logo 3" />
+            <img src="https://images.unsplash.com/photo-1618005154255-61188587f2e0?w=120&auto=format&fit=crop&q=60" class="h-8 object-contain filter grayscale invert" alt="Logo 4" />
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'cta_banner',
+        name: 'CTA Banner',
+        category: 'Hero',
+        icon: 'fas fa-bullhorn',
+        schema: [
+            { key: 'heading', label: 'CTA Heading', type: 'text', default: 'Ready to accelerate your workflow?' },
+            { key: 'text', label: 'CTA Text Content', type: 'textarea', default: 'Join thousands of builders already compiling blazing fast commercial websites with Nuvis.' },
+            { key: 'btnText', label: 'Button Text', type: 'text', default: 'Get Started Now' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
+            { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="cta_banner">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h2 class="text-3xl md:text-5xl font-black tracking-tight" style="color: {{textColor}};">{{heading}}</h2>
+        <p class="text-base md:text-lg max-w-2xl mx-auto opacity-90" style="color: {{textColor}};">{{text}}</p>
+        <div class="pt-4">
+            <button class="font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105" style="background-color: {{btnBg}}; color: {{btnColor}};">{{btnText}}</button>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'team_showcase',
+        name: 'Team Showcase Cards',
+        category: 'Features',
+        icon: 'fas fa-users',
+        schema: [
+            { key: 'heading', label: 'Section Heading', type: 'text', default: 'Meet our visionary leaders' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="team_showcase">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center mb-12" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-6 rounded-xl text-center shadow border border-slate-800" style="background-color: {{cardBg}};">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60" class="w-24 h-24 rounded-full mx-auto object-cover mb-4 border-2 border-teal-500" alt="Team Member 1" />
+                <h3 class="text-lg font-bold" style="color: {{headingColor}};">Alexandra Vance</h3>
+                <p class="text-xs text-teal-400 mb-3 uppercase tracking-wider font-semibold">CEO & Founder</p>
+                <p class="text-xs leading-relaxed" style="color: {{textColor}};">Alexandra guides the overall strategic direction and architecture of Nuvis.</p>
+            </div>
+            <div class="p-6 rounded-xl text-center shadow border border-slate-800" style="background-color: {{cardBg}};">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=60" class="w-24 h-24 rounded-full mx-auto object-cover mb-4 border-2 border-teal-500" alt="Team Member 2" />
+                <h3 class="text-lg font-bold" style="color: {{headingColor}};">Marcus Sterling</h3>
+                <p class="text-xs text-teal-400 mb-3 uppercase tracking-wider font-semibold">Chief Architect</p>
+                <p class="text-xs leading-relaxed" style="color: {{textColor}};">Marcus leads the precompiled compiler engineering and database structures.</p>
+            </div>
+            <div class="p-6 rounded-xl text-center shadow border border-slate-800" style="background-color: {{cardBg}};">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=60" class="w-24 h-24 rounded-full mx-auto object-cover mb-4 border-2 border-teal-500" alt="Team Member 3" />
+                <h3 class="text-lg font-bold" style="color: {{headingColor}};">Sonia Kova</h3>
+                <p class="text-xs text-teal-400 mb-3 uppercase tracking-wider font-semibold">Head of UX Design</p>
+                <p class="text-xs leading-relaxed" style="color: {{textColor}};">Sonia crafts clean aesthetic patterns to streamline drag-and-drop actions.</p>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'stats_grid',
+        name: 'Statistics / Numbers Grid',
+        category: 'Features',
+        icon: 'fas fa-chart-bar',
+        schema: [
+            { key: 'heading', label: 'Section Heading', type: 'text', default: 'Our Performance In Numbers' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' },
+            { key: 'accentColor', label: 'Accent Highlight Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="stats_grid">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-12 text-white">{{heading}}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+                <div class="text-4xl md:text-5xl font-black mb-2" style="color: {{accentColor}};">99.9%</div>
+                <div class="text-xs uppercase tracking-wider font-medium opacity-80">Server Uptime</div>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-black mb-2" style="color: {{accentColor}};">15M+</div>
+                <div class="text-xs uppercase tracking-wider font-medium opacity-80">APIs Processed</div>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-black mb-2" style="color: {{accentColor}};">100ms</div>
+                <div class="text-xs uppercase tracking-wider font-medium opacity-80">Average Load Time</div>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-black mb-2" style="color: {{accentColor}};">25k+</div>
+                <div class="text-xs uppercase tracking-wider font-medium opacity-80">Global Installs</div>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'video_player',
+        name: 'Interactive Video Player',
+        category: 'Advanced',
+        icon: 'fas fa-video',
+        schema: [
+            { key: 'heading', label: 'Video Title', type: 'text', default: 'See Nuvis Webbuilder In Action' },
+            { key: 'videoUrl', label: 'Video URL', type: 'text', default: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="video_player">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h2 class="text-2xl md:text-3xl font-bold" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="relative aspect-video rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
+            <video src="{{videoUrl}}" controls="true" class="w-full h-full object-cover"></video>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'image_gallery',
+        name: 'Image Gallery',
+        category: 'Advanced',
+        icon: 'fas fa-images',
+        schema: [
+            { key: 'heading', label: 'Gallery Heading', type: 'text', default: 'Explore our latest visual designs' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="image_gallery">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-10" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" alt="Gallery Image 1" />
+            </div>
+            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group">
+                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" alt="Gallery Image 2" />
+            </div>
+            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-300 group-hover:scale-105" alt="Gallery Image 3" />
+            </div>
+        </div>
+    </div>
+</section>`
     }
 ];
 
