@@ -32,6 +32,77 @@ function check_project_ownership($db, $project_id, $user_id) {
 $action = $_GET['action'] ?? '';
 
 switch ($action) {
+    case 'upload_image':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+
+        // Verify CSRF
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? '');
+        if (!verify_csrf_token($csrf)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Invalid CSRF security token.']);
+            exit;
+        }
+
+        if (!isset($_FILES['image'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'No image file uploaded.']);
+            exit;
+        }
+
+        $file = $_FILES['image'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Upload error code: ' . $file['error']]);
+            exit;
+        }
+
+        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($mime_type, $allowed_types)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid file type. Allowed: JPG, PNG, WEBP, GIF, SVG.']);
+            exit;
+        }
+
+        // Create uploads folder if not exists
+        $upload_dir = __DIR__ . '/uploads';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        if (empty($extension)) {
+            $ext_map = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/gif' => 'gif',
+                'image/svg+xml' => 'svg'
+            ];
+            $extension = $ext_map[$mime_type] ?? 'bin';
+        }
+
+        $safe_filename = 'img_' . bin2hex(random_bytes(16)) . '.' . $extension;
+        $destination = $upload_dir . '/' . $safe_filename;
+
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            echo json_encode([
+                'success' => true,
+                'url' => 'uploads/' . $safe_filename
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to move uploaded file.']);
+        }
+        exit;
+
     case 'save':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
