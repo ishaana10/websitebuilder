@@ -102,7 +102,7 @@ if (!$is_published || empty($body_content)) {
     <script>
         const PROJECT_ID = <?php echo (int)$project['id']; ?>;
     </script>
-    <script src="assets/js/components.js"></script>
+    <script src="assets/js/components.js?v=<?php echo time(); ?>"></script>
     <?php if (!empty($custom_js)): ?>
     <script>
         <?php echo $custom_js; ?>

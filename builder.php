@@ -131,7 +131,7 @@ $csrf_token = generate_csrf_token();
     </script>
 
     <!-- COMPONENTS DICTIONARY SOURCE -->
-    <script src="assets/js/components.js"></script>
+    <script src="assets/js/components.js?v=<?php echo time(); ?>"></script>
 
     <!-- REACT VISUAL BUILDER CORE ENGINE -->
     <script type="text/babel" data-presets="react">
@@ -194,6 +194,8 @@ $csrf_token = generate_csrf_token();
             const [activeSectionId, setActiveSectionId] = useState(null);
             const [activeElementId, setActiveElementId] = useState(null); // active element path e.g. 'el-0'
             const [propsSubTab, setPropsSubTab] = useState('block'); // 'block' or 'element'
+            const [customComponents, setCustomComponents] = useState([]);
+            const [isCustomCompModalOpen, setIsCustomCompModalOpen] = useState(false);
             const [canvasView, setCanvasView] = useState('desktop'); // desktop, tablet, mobile
             const [rightPanelTab, setRightPanelTab] = useState('properties'); // properties, settings
             const [customCss, setCustomCss] = useState('');
@@ -220,6 +222,68 @@ $csrf_token = generate_csrf_token();
             const [isPublishing, setIsPublishing] = useState(false);
             const [toast, setToast] = useState(null);
 
+            // --- Custom Component Modal States ---
+            const [newCompName, setNewCompName] = useState('My Custom Component');
+            const [newCompCategory, setNewCompCategory] = useState('Advanced');
+            const [newCompIcon, setNewCompIcon] = useState('fas fa-cube');
+            const [newCompHtml, setNewCompHtml] = useState('<div class="p-8 rounded-lg bg-slate-900 border border-slate-800 text-center" data-component="my_custom_component">\n    <h3 class="text-xl font-bold text-teal-400 mb-2">{{heading}}</h3>\n    <p class="text-xs text-slate-400">{{text}}</p>\n</div>');
+            const [newCompFields, setNewCompFields] = useState([
+                { key: 'heading', label: 'Heading Text', type: 'text', default: 'Hello World' },
+                { key: 'text', label: 'Body Text', type: 'textarea', default: 'This is my customizable component description.' }
+            ]);
+
+            const addNewCompField = () => {
+                setNewCompFields([...newCompFields, { key: `field_${Date.now()}`, label: 'New Field Label', type: 'text', default: 'Default Value' }]);
+            };
+
+            const updateNewCompField = (idx, key, val) => {
+                const updated = newCompFields.map((f, i) => idx === i ? { ...f, [key]: val } : f);
+                setNewCompFields(updated);
+            };
+
+            const removeNewCompField = (idx) => {
+                setNewCompFields(newCompFields.filter((_, i) => idx !== i));
+            };
+
+            const handleCreateCustomComponentSubmit = (e) => {
+                e.preventDefault();
+
+                // Construct safe lowercase unique ID from name
+                const derivedId = newCompName.toLowerCase().trim().replace(/[^a-z0-9_]+/g, '_');
+
+                if (customComponents.some(c => c.id === derivedId) || UI_COMPONENTS.some(c => c.id === derivedId)) {
+                    showToast("Validation Error", "A component with a similar name or ID already exists on the shelf.");
+                    return;
+                }
+
+                // Verify that raw HTML has data-component attribute on root
+                let finalHtml = newCompHtml.trim();
+                if (!finalHtml.includes('data-component=')) {
+                    // Try to inject data-component attribute into the first tag
+                    finalHtml = finalHtml.replace(/<([a-zA-Z0-9]+)/, `<$1 data-component="${derivedId}"`);
+                }
+
+                const newComponent = {
+                    id: derivedId,
+                    name: newCompName,
+                    category: newCompCategory,
+                    icon: newCompIcon,
+                    schema: newCompFields,
+                    html: finalHtml
+                };
+
+                const updatedComponents = [...customComponents, newComponent];
+                setCustomComponents(updatedComponents);
+                setIsCustomCompModalOpen(false);
+
+                showToast("Component Created!", `${newCompName} added to the Components Shelf. Try dragging it to the canvas!`);
+
+                // Auto save project with the new custom components serialized
+                setTimeout(() => {
+                    saveProject(true);
+                }, 505);
+            };
+
             // --- Load Page State on Bootstrap ---
             useEffect(() => {
                 try {
@@ -234,6 +298,7 @@ $csrf_token = generate_csrf_token();
                     let templTheme = 'modern_minimalist';
                     let autoSub = 'Thank you for contacting us!';
                     let autoBody = 'Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team';
+                    let initialCustomComponents = [];
 
                     // Parsing formats
                     if (raw && Array.isArray(raw.blocks)) {
@@ -257,9 +322,16 @@ $csrf_token = generate_csrf_token();
                         autoBody = raw.email_settings.auto_responder_body || 'Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team';
                     }
 
+                    if (raw && Array.isArray(raw.custom_components)) {
+                        initialCustomComponents = raw.custom_components;
+                    }
+
+                    // Combine built-in and loaded custom components for defaults parser
+                    const tempCombined = [...UI_COMPONENTS, ...initialCustomComponents];
+
                     // Populate missing props with schema defaults
                     initialSections = initialSections.map(s => {
-                        const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (s.type || '').toLowerCase().trim());
+                        const compDef = tempCombined.find(c => c.id.toLowerCase() === (s.type || '').toLowerCase().trim());
                         if (compDef && compDef.schema) {
                             compDef.schema.forEach(field => {
                                 if (s.props[field.key] === undefined) {
@@ -270,6 +342,7 @@ $csrf_token = generate_csrf_token();
                         return s;
                     });
 
+                    setCustomComponents(initialCustomComponents);
                     setSections(initialSections);
                     setCustomCss(initialCss);
                     setCustomJs(initialJs);
@@ -287,6 +360,9 @@ $csrf_token = generate_csrf_token();
                     console.error("Bootstrapping content JSON error: ", e);
                 }
             }, []);
+
+            // Dynamic derived list of all active components (pre-built + custom)
+            const ACTIVE_COMPONENTS = [...UI_COMPONENTS, ...customComponents];
 
             // --- History Stack Helpers ---
             const commitToHistory = (newSections) => {
@@ -343,7 +419,7 @@ $csrf_token = generate_csrf_token();
             // --- Map legacy blocks to React Sections ---
             function blockToSection(block) {
                 const initialProps = {};
-                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (block.componentId || block.type || '').toLowerCase().trim());
+                const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (block.componentId || block.type || '').toLowerCase().trim());
                 if (compDef && compDef.schema) {
                     compDef.schema.forEach(field => {
                         initialProps[field.key] = field.default;
@@ -380,7 +456,7 @@ $csrf_token = generate_csrf_token();
             const handleCanvasDrop = (e) => {
                 e.preventDefault();
                 const componentId = e.dataTransfer.getData('text/plain');
-                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (componentId || '').toLowerCase().trim());
+                const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (componentId || '').toLowerCase().trim());
                 if (!compDef) return;
 
                 const defaultProps = {};
@@ -461,6 +537,7 @@ $csrf_token = generate_csrf_token();
                     blocks:     blocks,
                     custom_css: customCss,
                     custom_js:  customJs,
+                    custom_components: customComponents,
                     // Nuvis Email module configuration parameters
                     email_settings: {
                         recipient: emailRecipient,
@@ -504,7 +581,7 @@ $csrf_token = generate_csrf_token();
 
             // DYNAMIC KEY-VALUE TEMPLATING COMPILER
             const compileSectionHtml = (sec, isBuilderMode = true) => {
-                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
+                const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
                 if (!compDef) return '';
 
                 let compiledHtml = compDef.html;
@@ -555,6 +632,18 @@ $csrf_token = generate_csrf_token();
                 const rootNode = temp.querySelector('[data-component]');
                 if (rootNode) {
                     rootNode.id = sec.id;
+
+                    // Component-level background overrides
+                    if (sec.bg_color_override) {
+                        rootNode.style.backgroundColor = sec.bg_color_override;
+                        rootNode.style.backgroundImage = 'none';
+                    }
+                    if (sec.bg_image_override) {
+                        rootNode.style.backgroundImage = `url('${sec.bg_image_override}')`;
+                        rootNode.style.backgroundSize = 'cover';
+                        rootNode.style.backgroundPosition = 'center';
+                        rootNode.style.backgroundRepeat = 'no-repeat';
+                    }
                 }
 
                 // --- ELEMENT-LEVEL SELECTION AND OVERRIDES ENHANCEMENT ---
@@ -585,6 +674,17 @@ $csrf_token = generate_csrf_token();
                     // Apply saved element level overrides if any
                     if (sec.element_overrides && sec.element_overrides[path]) {
                         const override = sec.element_overrides[path];
+
+                        // Hide element option
+                        if (override.hidden) {
+                            if (isBuilderMode) {
+                                el.style.opacity = '0.3';
+                                el.style.outline = '1px dashed #ef4444';
+                                el.title = 'Hidden in Production';
+                            } else {
+                                el.style.display = 'none';
+                            }
+                        }
 
                         // Text / HTML / Src content overrides
                         if (override.text !== undefined) {
@@ -726,14 +826,19 @@ $csrf_token = generate_csrf_token();
 
                         {/* LEFT COLUMN - COMPONENTS LIBRARY */}
                         <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2">
                                 <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
                                 <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
+                                <button
+                                    onClick={() => setIsCustomCompModalOpen(true)}
+                                    className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow">
+                                    <i className="fas fa-plus-circle"></i> Create Custom Component
+                                </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                                 {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
-                                    const items = UI_COMPONENTS.filter(comp => comp.category === cat);
+                                    const items = ACTIVE_COMPONENTS.filter(comp => comp.category === cat);
                                     if (items.length === 0) return null;
                                     return (
                                         <div key={cat} className="space-y-2">
@@ -852,7 +957,7 @@ $csrf_token = generate_csrf_token();
 
                                             {/* DYNAMIC COMPONENT SCHEMA FIELDS GENERATION */}
                                             {(() => {
-                                                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (selectedSection.type || '').toLowerCase().trim());
+                                                const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (selectedSection.type || '').toLowerCase().trim());
                                                 if (!compDef || !compDef.schema) return null;
 
                                                 return (
@@ -915,6 +1020,108 @@ $csrf_token = generate_csrf_token();
                                                             }
                                                             return null;
                                                         })}
+
+                                                        {/* Global Component Background Overrides */}
+                                                        <div className="pt-4 border-t border-slate-800 space-y-3">
+                                                            <h5 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-image"></i> Component Background Override
+                                                            </h5>
+
+                                                            {/* Background Color Picker */}
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[11px] text-slate-400 block">Bg Color Override</label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-[10px] font-mono text-slate-400">{selectedSection.bg_color_override || 'Default'}</span>
+                                                                    <input
+                                                                        type="color"
+                                                                        value={selectedSection.bg_color_override || '#0f172a'}
+                                                                        onChange={(e) => {
+                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_color_override: e.target.value } : s);
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }}
+                                                                        className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer"
+                                                                    />
+                                                                    {selectedSection.bg_color_override && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_color_override: undefined } : s);
+                                                                                updateSectionsWithHistory(updated);
+                                                                            }}
+                                                                            className="text-xs text-rose-400 hover:text-rose-300 font-bold"
+                                                                            title="Clear Color">
+                                                                            <i className="fas fa-undo"></i>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Background Image Input */}
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[11px] text-slate-400 block">Bg Image Override URL</label>
+                                                                <div className="flex gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={selectedSection.bg_image_override || ''}
+                                                                        onChange={(e) => {
+                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_image_override: e.target.value || undefined } : s);
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }}
+                                                                        placeholder="https://example.com/image.jpg"
+                                                                        className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none"
+                                                                    />
+                                                                    {selectedSection.bg_image_override && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_image_override: undefined } : s);
+                                                                                updateSectionsWithHistory(updated);
+                                                                            }}
+                                                                            className="px-2 bg-slate-950 border border-slate-800 rounded text-rose-400 hover:text-rose-300 text-xs"
+                                                                            title="Clear Image">
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Upload Background Image Button */}
+                                                                <label className="w-full text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[10px] font-bold py-1.5 px-3 rounded cursor-pointer transition block">
+                                                                    <i className="fas fa-upload mr-1.5"></i> Upload Bg Image
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files[0];
+                                                                            if (!file) return;
+
+                                                                            const formData = new FormData();
+                                                                            formData.append('image', file);
+                                                                            formData.append('csrf_token', CSRF_TOKEN);
+
+                                                                            showToast("Uploading Background...", "Transmitting resource to server.");
+
+                                                                            fetch('api.php?action=upload_image', {
+                                                                                method: 'POST',
+                                                                                headers: {
+                                                                                    'X-CSRF-TOKEN': CSRF_TOKEN
+                                                                                },
+                                                                                body: formData
+                                                                            })
+                                                                            .then(res => res.json())
+                                                                            .then(data => {
+                                                                                if (data.success) {
+                                                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_image_override: data.url } : s);
+                                                                                    updateSectionsWithHistory(updated);
+                                                                                    showToast("Success", "Background image updated successfully!");
+                                                                                } else {
+                                                                                    showToast("Upload Error", data.error || "Failed to process background image.");
+                                                                                }
+                                                                            })
+                                                                            .catch(err => showToast("Network Error", err.message));
+                                                                        }}
+                                                                        className="hidden"
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 );
                                             })()}
@@ -1170,6 +1377,20 @@ $csrf_token = generate_csrf_token();
                                                                     </label>
                                                                 </div>
                                                             )}
+
+                                                            <div className="pt-2 border-t border-slate-800/40">
+                                                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={!!currentOverrides.hidden}
+                                                                        onChange={(e) => handleOverrideChange('hidden', e.target.checked)}
+                                                                        className="rounded bg-slate-950 border-slate-800 text-teal-500 focus:ring-0"
+                                                                    />
+                                                                    <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <i className="fas fa-eye-slash"></i> Hide individual element
+                                                                    </span>
+                                                                </label>
+                                                            </div>
                                                         </div>
 
                                                         <hr className="border-slate-800" />
@@ -1544,6 +1765,165 @@ $csrf_token = generate_csrf_token();
                                         </div>
                                     );
                                 })()}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CUSTOM COMPONENT SHELF CREATOR MODAL */}
+                    {isCustomCompModalOpen && (
+                        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+                                {/* Modal Header */}
+                                <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/40">
+                                    <h3 className="text-sm font-extrabold text-teal-400 uppercase tracking-widest flex items-center gap-2">
+                                        <i className="fas fa-plus-circle"></i> Create Custom Component Shelf Widget
+                                    </h3>
+                                    <button onClick={() => setIsCustomCompModalOpen(false)} className="text-slate-400 hover:text-white">
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </div>
+
+                                {/* Modal Body (Scrollable Form) */}
+                                <form onSubmit={handleCreateCustomComponentSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Component Name */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Component Name</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={newCompName}
+                                                onChange={(e) => setNewCompName(e.target.value)}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                placeholder="e.g. Testimonial Grid"
+                                            />
+                                        </div>
+
+                                        {/* Category */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Category</label>
+                                            <select
+                                                value={newCompCategory}
+                                                onChange={(e) => setNewCompCategory(e.target.value)}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Icon */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">FontAwesome Icon Class</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={newCompIcon}
+                                                onChange={(e) => setNewCompIcon(e.target.value)}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                                                placeholder="e.g. fas fa-cube"
+                                            />
+                                        </div>
+                                        <div className="flex items-end pb-1.5">
+                                            <div className="bg-slate-950/60 rounded px-3 py-2 border border-slate-800 text-xs text-teal-400 flex items-center gap-2">
+                                                <span className="text-[10px] font-semibold text-slate-500">Live Icon Preview:</span>
+                                                <i className={newCompIcon || 'fas fa-question'}></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* HTML Template */}
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Template Raw HTML (supporting {"{{curly_fields}}"})</label>
+                                        <textarea
+                                            required
+                                            rows="5"
+                                            value={newCompHtml}
+                                            onChange={(e) => setNewCompHtml(e.target.value)}
+                                            className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                                            placeholder="<div class='p-6'><h3>{{title}}</h3></div>"
+                                        />
+                                    </div>
+
+                                    {/* Dynamic Properties Fields List */}
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dynamic Fields Schema (Props)</h4>
+                                            <button
+                                                type="button"
+                                                onClick={addNewCompField}
+                                                className="bg-slate-800 hover:bg-slate-750 text-teal-400 font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider border border-slate-700">
+                                                <i className="fas fa-plus mr-1"></i> Add Custom Field
+                                            </button>
+                                        </div>
+
+                                        {newCompFields.length === 0 ? (
+                                            <p className="text-center py-4 text-slate-500 text-xs border border-dashed border-slate-800 rounded-lg">No schema fields specified. Component will be static.</p>
+                                        ) : (
+                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                {newCompFields.map((field, idx) => (
+                                                    <div key={idx} className="p-3 bg-slate-950 border border-slate-850 rounded-lg flex items-center gap-2 text-xs">
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={field.key}
+                                                            onChange={(e) => updateNewCompField(idx, 'key', e.target.value)}
+                                                            className="w-1/4 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white font-mono"
+                                                            placeholder="key"
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={field.label}
+                                                            onChange={(e) => updateNewCompField(idx, 'label', e.target.value)}
+                                                            className="w-1/4 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white"
+                                                            placeholder="Label"
+                                                        />
+                                                        <select
+                                                            value={field.type}
+                                                            onChange={(e) => updateNewCompField(idx, 'type', e.target.value)}
+                                                            className="w-1/4 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-300">
+                                                            <option value="text">text</option>
+                                                            <option value="textarea">textarea</option>
+                                                            <option value="color">color</option>
+                                                            <option value="checkbox">checkbox</option>
+                                                        </select>
+                                                        <input
+                                                            type="text"
+                                                            value={field.default}
+                                                            onChange={(e) => updateNewCompField(idx, 'default', e.target.value)}
+                                                            className="flex-1 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-white"
+                                                            placeholder="Default"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeNewCompField(idx)}
+                                                            className="text-rose-400 hover:text-rose-300 px-1 text-xs">
+                                                            <i className="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action button */}
+                                    <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCustomCompModalOpen(false)}
+                                            className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold rounded">
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-black rounded uppercase tracking-wider">
+                                            Create & Add Component
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     )}

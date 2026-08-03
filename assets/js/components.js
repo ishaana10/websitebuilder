@@ -18,13 +18,29 @@ const UI_COMPONENTS = [
             { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#14b8a6' }
         ],
         html: `
-<nav class="py-4 px-6 flex justify-between items-center shadow-md rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
-    <div class="text-xl font-extrabold tracking-wider" style="color: {{accentColor}};">{{brandText}}</div>
-    <div class="hidden md:flex space-x-6">
-        {{links}}
+<nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
+    <div class="flex justify-between items-center">
+        <div class="text-xl font-extrabold tracking-wider" style="color: {{accentColor}};">{{brandText}}</div>
+
+        <!-- Desktop Links -->
+        <div class="hidden md:flex space-x-6">
+            {{links}}
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- CTA Button -->
+            <a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: {{accentColor}}; color: {{bgColor}};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Get Started</a>
+
+            <!-- Mobile Burger Toggle -->
+            <button onclick="const m = this.closest('[data-component]').querySelector('.mobile-menu'); m.classList.toggle('hidden');" class="md:hidden text-xl focus:outline-none" style="color: {{textColor}};">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
     </div>
-    <div>
-        <a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: {{accentColor}}; color: {{bgColor}};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Get Started</a>
+
+    <!-- Mobile Menu dropdown -->
+    <div class="mobile-menu hidden md:hidden flex flex-col space-y-3 mt-4 pt-4 border-t border-slate-700/50">
+        {{links}}
     </div>
 </nav>`
     },
