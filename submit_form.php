@@ -55,7 +55,7 @@ if (!$project_info) {
     exit;
 }
 
-// Extract email settings from project content state
+// Extract global email settings as the default configurations
 $custom_recipient = '';
 $auto_responder_enabled = false;
 $template_theme = 'modern_minimalist';
@@ -63,12 +63,27 @@ $auto_responder_subject = 'Thank you for contacting us!';
 $auto_responder_body = "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team";
 
 try {
+    $stmt_global = $db->query("SELECT * FROM email_settings LIMIT 1");
+    $global_email = $stmt_global->fetch();
+    if ($global_email) {
+        $custom_recipient = trim($global_email['recipient_email'] ?? '');
+        $auto_responder_enabled = !empty($global_email['auto_responder_enabled']);
+        $template_theme = $global_email['template_theme'] ?? 'modern_minimalist';
+        $auto_responder_subject = $global_email['auto_responder_subject'] ?? $auto_responder_subject;
+        $auto_responder_body = $global_email['auto_responder_body'] ?? $auto_responder_body;
+    }
+} catch (Exception $e) {
+    error_log("Failed to load global email settings: " . $e->getMessage());
+}
+
+// Fallback to project-level email settings if they exist
+try {
     $content_json = json_decode($project_info['content_json'] ?? '[]', true);
-    if ($content_json && isset($content_json['email_settings'])) {
+    if ($content_json && isset($content_json['email_settings']) && !empty($content_json['email_settings']['recipient'])) {
         $email_settings = $content_json['email_settings'];
-        $custom_recipient = trim($email_settings['recipient'] ?? '');
+        $custom_recipient = trim($email_settings['recipient'] ?? $custom_recipient);
         $auto_responder_enabled = !empty($email_settings['auto_responder_enabled']);
-        $template_theme = $email_settings['template_theme'] ?? 'modern_minimalist';
+        $template_theme = $email_settings['template_theme'] ?? $template_theme;
         $auto_responder_subject = $email_settings['auto_responder_subject'] ?? $auto_responder_subject;
         $auto_responder_body = $email_settings['auto_responder_body'] ?? $auto_responder_body;
     }

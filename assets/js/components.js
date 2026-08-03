@@ -21,10 +21,7 @@ const UI_COMPONENTS = [
 <nav class="py-4 px-6 flex justify-between items-center shadow-md rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
     <div class="text-xl font-extrabold tracking-wider" style="color: {{accentColor}};">{{brandText}}</div>
     <div class="hidden md:flex space-x-6">
-        <a href="#home" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Home</a>
-        <a href="#features" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Features</a>
-        <a href="#pricing" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Pricing</a>
-        <a href="#contact" class="transition duration-300" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Contact</a>
+        {{links}}
     </div>
     <div>
         <a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: {{accentColor}}; color: {{bgColor}};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Get Started</a>
@@ -49,9 +46,7 @@ const UI_COMPONENTS = [
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div class="text-lg font-black text-white" style="color: {{accentColor}};">{{brandText}}</div>
         <div class="flex space-x-6 text-sm">
-            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Privacy Policy</a>
-            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Terms of Use</a>
-            <a href="#" class="transition" style="color: {{textColor}};" onmouseover="this.style.color='{{accentColor}}'" onmouseout="this.style.color='{{textColor}}'">Support</a>
+            {{links}}
         </div>
         <div class="text-xs">&copy; ${new Date().getFullYear()} {{copyright}}</div>
     </div>
@@ -494,13 +489,11 @@ const UI_COMPONENTS = [
         category: 'Advanced',
         icon: 'fas fa-code',
         schema: [
-            { key: 'rawHtml', label: 'Custom HTML Code', type: 'textarea', default: '<div class="p-6 bg-slate-950 border border-slate-800 rounded-lg text-center text-xs text-teal-400">Custom Code Block Injected</div>' }
+            { key: 'rawHtml', label: 'Custom HTML Code', type: 'textarea', default: '<div class="p-6 bg-slate-950 border border-slate-800 rounded-lg text-center text-xs text-teal-400 font-mono">Custom Code Block Injected</div>' }
         ],
         html: `
-<div class="bg-slate-100 p-8 rounded-lg border-2 border-dashed border-slate-300 text-center" data-component="html_raw">
-    <div class="text-slate-400 mb-2"><i class="fas fa-code text-2xl"></i></div>
-    <div class="font-bold text-slate-700 text-sm">Low-Code Raw HTML Area</div>
-    <div class="custom-html-container hidden mt-4 text-left"></div>
+<div class="p-2 border border-slate-800 rounded bg-slate-950 text-slate-100" data-component="html_raw">
+    <div class="custom-html-container text-left">{{rawHtml}}</div>
 </div>`
     },
     {
