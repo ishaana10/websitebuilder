@@ -118,6 +118,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
                 echo json_encode(['success' => true, 'output' => nl2br(sanitize_output($output))]);
             }
             exit;
+        } elseif ($action === 'update_email_settings' && is_admin()) {
+            $recipient_email = trim($_POST['recipient_email'] ?? '');
+            $auto_responder_enabled = isset($_POST['auto_responder_enabled']) ? 1 : 0;
+            $auto_responder_subject = trim($_POST['auto_responder_subject'] ?? '');
+            $auto_responder_body = trim($_POST['auto_responder_body'] ?? '');
+            $template_theme = trim($_POST['template_theme'] ?? 'modern_minimalist');
+
+            if (empty($recipient_email)) {
+                $error_msg = "Recipient email is required.";
+            } elseif (!filter_var($recipient_email, FILTER_VALIDATE_EMAIL)) {
+                $error_msg = "Invalid recipient email format.";
+            } else {
+                $stmt = $db->query("SELECT COUNT(*) FROM email_settings");
+                if ($stmt->fetchColumn() == 0) {
+                    $stmt_ins = $db->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme) VALUES (?, ?, ?, ?, ?)");
+                    $stmt_ins->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme]);
+                } else {
+                    $stmt_upd = $db->prepare("UPDATE email_settings SET recipient_email = ?, auto_responder_enabled = ?, auto_responder_subject = ?, auto_responder_body = ?, template_theme = ? WHERE id = 1");
+                    $stmt_upd->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme]);
+                }
+                $success_msg = "Global email settings updated successfully!";
+            }
+        } elseif ($action === 'send_test_email' && is_admin()) {
+            $test_recipient = trim($_POST['test_recipient'] ?? '');
+            $test_subject = trim($_POST['test_subject'] ?? '');
+            $test_theme = trim($_POST['test_theme'] ?? 'modern_minimalist');
+            $test_body = trim($_POST['test_body'] ?? '');
+
+            if (empty($test_recipient)) {
+                $error_msg = "Test recipient email is required.";
+            } elseif (!filter_var($test_recipient, FILTER_VALIDATE_EMAIL)) {
+                $error_msg = "Invalid test recipient email format.";
+            } elseif (empty($test_subject)) {
+                $error_msg = "Test subject is required.";
+            } else {
+                require_once __DIR__ . '/EmailService.php';
+                $html_body = EmailService::getTemplate($test_theme, $test_subject, $test_body, "Simulated outbound test email from Nuvis Webbuilder admin panel.");
+                $sent = EmailService::send($test_recipient, $test_subject, $html_body, $test_body, null);
+                if ($sent) {
+                    $success_msg = "Simulated SMTP test email dispatched successfully! View logs below.";
+                } else {
+                    $error_msg = "Failed to dispatch simulated test email.";
+                }
+            }
         }
     }
 }
@@ -180,6 +224,24 @@ try {
     ");
     $stmt_log->execute([$user_id]);
     $email_logs = $stmt_log->fetchAll();
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
+// Fetch global email settings
+$email_settings = [
+    'recipient_email' => 'admin@nuvis-webbuilder.io',
+    'auto_responder_enabled' => 1,
+    'auto_responder_subject' => 'Thank you for contacting us!',
+    'auto_responder_body' => "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team",
+    'template_theme' => 'modern_minimalist'
+];
+try {
+    $stmt_email = $db->query("SELECT * FROM email_settings LIMIT 1");
+    $fetched_email = $stmt_email->fetch();
+    if ($fetched_email) {
+        $email_settings = $fetched_email;
+    }
 } catch (PDOException $e) {
     error_log($e->getMessage());
 }
@@ -283,6 +345,9 @@ $csrf_token = generate_csrf_token();
                 </button>
                 <button onclick="switchTab('tab-system', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
                     <i class="fas fa-server text-sm"></i> System Diagnostics
+                </button>
+                <button onclick="switchTab('tab-email', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-mail-bulk text-sm"></i> Email Settings & Test
                 </button>
                 <?php endif; ?>
             </nav>
@@ -660,6 +725,96 @@ $csrf_token = generate_csrf_token();
                         </div>
                     </div>
                 </div>
+
+                <!-- TAB: GLOBAL EMAIL SETTINGS & TEST PAGE -->
+                <div id="tab-email" class="tab-content space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                        <!-- Configuration Card -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-md space-y-4">
+                            <h3 class="font-extrabold text-white text-xs uppercase tracking-widest text-teal-400 flex items-center gap-2">
+                                <i class="fas fa-paper-plane text-sm"></i> Global Email Configuration
+                            </h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">Customize notification dispatch rules, active responder messages, and visual theme styles globally across all system forms.</p>
+
+                            <form action="admin.php?action=update_email_settings" method="POST" class="space-y-4">
+                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Inquiry Notification Recipient</label>
+                                    <input type="email" name="recipient_email" required value="<?php echo sanitize_output($email_settings['recipient_email']); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                    <span class="text-[9px] text-slate-500 mt-1 block">The primary email address where new website contact form submissions will be routed.</span>
+                                </div>
+
+                                <div class="flex items-center justify-between border-t border-slate-800/80 pt-3">
+                                    <label class="text-xs font-semibold text-slate-300">Enable Customer Auto-Responder</label>
+                                    <input type="checkbox" name="auto_responder_enabled" value="1" <?php echo $email_settings['auto_responder_enabled'] ? 'checked' : ''; ?> class="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0">
+                                </div>
+
+                                <div class="space-y-4 border-t border-slate-800/80 pt-3">
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Email Template Theme</label>
+                                        <select name="template_theme" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                            <option value="modern_minimalist" <?php echo $email_settings['template_theme'] === 'modern_minimalist' ? 'selected' : ''; ?>>Modern Minimalist (Teal)</option>
+                                            <option value="elegant" <?php echo $email_settings['template_theme'] === 'elegant' ? 'selected' : ''; ?>>Elegant Indigo Gold (Royal)</option>
+                                            <option value="tech_light" <?php echo $email_settings['template_theme'] === 'tech_light' ? 'selected' : ''; ?>>Tech Light (Clean Blue)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Auto-Response Subject</label>
+                                        <input type="text" name="auto_responder_subject" value="<?php echo sanitize_output($email_settings['auto_responder_subject']); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Auto-Response Message Body</label>
+                                        <textarea name="auto_responder_body" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-teal-500 font-sans"><?php echo sanitize_output($email_settings['auto_responder_body']); ?></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition uppercase tracking-wider">
+                                    Save Configurations
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Test Page Card -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-md space-y-4">
+                            <h3 class="font-extrabold text-white text-xs uppercase tracking-widest text-teal-400 flex items-center gap-2">
+                                <i class="fas fa-vial text-sm"></i> SMTP Delivery & Template Test Page
+                            </h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">Directly simulate outbound template delivery and verify responsiveness using the premium inline templates.</p>
+
+                            <form action="admin.php?action=send_test_email" method="POST" class="space-y-4">
+                                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Test Recipient Email</label>
+                                    <input type="email" name="test_recipient" required placeholder="e.g., test@nuvis.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Test Email Subject</label>
+                                    <input type="text" name="test_subject" required value="Nuvis Webbuilder SMTP Dispatch Verification" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Template theme style</label>
+                                    <select name="test_theme" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                        <option value="modern_minimalist">Modern Minimalist (Teal)</option>
+                                        <option value="elegant">Elegant Indigo Gold (Royal)</option>
+                                        <option value="tech_light">Tech Light (Clean Blue)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Test Message Body</label>
+                                    <textarea name="test_body" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-teal-500 font-sans font-mono">Hello there! This is a secure visual template simulation routed from your administrator testing panel to check SMTP logs. Everything looks excellent!</textarea>
+                                </div>
+
+                                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition uppercase tracking-wider flex items-center justify-center gap-1.5 font-bold">
+                                    <i class="fas fa-paper-plane"></i> Send Test Email
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
                 <?php endif; ?>
 
                 <!-- TAB 7: ACCOUNT SECURITY -->
@@ -750,6 +905,7 @@ $csrf_token = generate_csrf_token();
             if (tabId === 'tab-security') vTitle.innerText = 'Account Security';
             if (tabId === 'tab-users') vTitle.innerText = 'User Access Controls';
             if (tabId === 'tab-system') vTitle.innerText = 'System Diagnostics';
+            if (tabId === 'tab-email') vTitle.innerText = 'Global Email Settings';
         }
 
         // Modal triggers

@@ -67,3 +67,13 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
     FOREIGN KEY (`submission_id`) REFERENCES `contact_submissions`(`id`) ON DELETE CASCADE,
     INDEX `idx_submission_id` (`submission_id`)
 ) ENGINE=InnoDB;
+
+-- Global Email settings
+CREATE TABLE IF NOT EXISTS `email_settings` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `recipient_email` VARCHAR(255) NOT NULL DEFAULT 'admin@nuvis-webbuilder.io',
+    `auto_responder_enabled` TINYINT(1) NOT NULL DEFAULT 1,
+    `auto_responder_subject` VARCHAR(255) NOT NULL DEFAULT 'Thank you for contacting us!',
+    `auto_responder_body` TEXT NOT NULL,
+    `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
+) ENGINE=InnoDB;

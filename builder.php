@@ -42,6 +42,8 @@ $csrf_token = generate_csrf_token();
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel for in-browser JSX parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <!-- Ace Code Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" crossorigin="anonymous"></script>
 
     <style>
         /* Custom scrollbar */
@@ -129,6 +131,57 @@ $csrf_token = generate_csrf_token();
     <script type="text/babel" data-presets="react">
         const { useState, useEffect, useRef } = React;
 
+        // --- React-friendly Ace Editor Wrapper ---
+        function AceEditor({ value, mode, onChange, className, style, readOnly = false }) {
+            const editorRef = useRef(null);
+            const aceInstance = useRef(null);
+
+            useEffect(() => {
+                if (editorRef.current) {
+                    const editor = ace.edit(editorRef.current);
+                    editor.setTheme("ace/theme/tomorrow_night_eighties");
+                    editor.session.setMode(`ace/mode/${mode}`);
+                    editor.setOptions({
+                        fontSize: "12px",
+                        showPrintMargin: false,
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: true,
+                        readOnly: readOnly,
+                        useWorker: false // Disables worker to avoid sandbox/origin issues
+                    });
+
+                    editor.setValue(value === undefined ? "" : value, -1);
+
+                    editor.session.on('change', () => {
+                        const val = editor.getValue();
+                        if (onChange) onChange(val);
+                    });
+
+                    aceInstance.current = editor;
+                }
+
+                return () => {
+                    if (aceInstance.current) {
+                        aceInstance.current.destroy();
+                    }
+                };
+            }, []);
+
+            useEffect(() => {
+                if (aceInstance.current && aceInstance.current.getValue() !== value) {
+                    aceInstance.current.setValue(value === undefined ? "" : value, -1);
+                }
+            }, [value]);
+
+            useEffect(() => {
+                if (aceInstance.current) {
+                    aceInstance.current.session.setMode(`ace/mode/${mode}`);
+                }
+            }, [mode]);
+
+            return <div ref={editorRef} className={className} style={style} />;
+        }
+
         function App() {
             // --- Core States ---
             const [sections, setSections] = useState([]);
@@ -138,6 +191,10 @@ $csrf_token = generate_csrf_token();
             const [customCss, setCustomCss] = useState('');
             const [customJs, setCustomJs] = useState('');
             const [projectStatus, setProjectStatus] = useState(PROJECT_STATUS);
+
+            // --- Code Editor Tab States ---
+            const [isFullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
+            const [codeEditorTab, setCodeEditorTab] = useState('css'); // css, js, html_raw
 
             // --- Nuvis Email Module Settings ---
             const [emailRecipient, setEmailRecipient] = useState('');
@@ -194,7 +251,7 @@ $csrf_token = generate_csrf_token();
 
                     // Populate missing props with schema defaults
                     initialSections = initialSections.map(s => {
-                        const compDef = UI_COMPONENTS.find(c => c.id === s.type);
+                        const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (s.type || '').toLowerCase().trim());
                         if (compDef && compDef.schema) {
                             compDef.schema.forEach(field => {
                                 if (s.props[field.key] === undefined) {
@@ -278,7 +335,7 @@ $csrf_token = generate_csrf_token();
             // --- Map legacy blocks to React Sections ---
             function blockToSection(block) {
                 const initialProps = {};
-                const compDef = UI_COMPONENTS.find(c => c.id === (block.componentId || block.type));
+                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (block.componentId || block.type || '').toLowerCase().trim());
                 if (compDef && compDef.schema) {
                     compDef.schema.forEach(field => {
                         initialProps[field.key] = field.default;
@@ -315,7 +372,7 @@ $csrf_token = generate_csrf_token();
             const handleCanvasDrop = (e) => {
                 e.preventDefault();
                 const componentId = e.dataTransfer.getData('text/plain');
-                const compDef = UI_COMPONENTS.find(c => c.id === componentId);
+                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (componentId || '').toLowerCase().trim());
                 if (!compDef) return;
 
                 const defaultProps = {};
@@ -439,7 +496,7 @@ $csrf_token = generate_csrf_token();
 
             // DYNAMIC KEY-VALUE TEMPLATING COMPILER
             const compileSectionHtml = (sec) => {
-                const compDef = UI_COMPONENTS.find(c => c.id === sec.type);
+                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
                 if (!compDef) return '';
 
                 let compiledHtml = compDef.html;
@@ -452,6 +509,36 @@ $csrf_token = generate_csrf_token();
                         const regex = new RegExp(`{{\\s*${field.key}\\s*}}`, 'g');
                         compiledHtml = compiledHtml.replace(regex, val);
                     });
+                }
+
+                // Dynamic custom compilers for links in Navigation bar and Footer
+                if (sec.type.toLowerCase() === 'navbar' || sec.type.toLowerCase() === 'footer') {
+                    const links = sec.props.links || (sec.type.toLowerCase() === 'navbar' ? [
+                        { text: 'Home', url: '#home' },
+                        { text: 'Features', url: '#features' },
+                        { text: 'Pricing', url: '#pricing' },
+                        { text: 'Contact', url: '#contact' }
+                    ] : [
+                        { text: 'Privacy Policy', url: '#privacy' },
+                        { text: 'Terms of Use', url: '#terms' },
+                        { text: 'Support', url: '#support' }
+                    ]);
+
+                    const textColor = sec.props.textColor || '#94a3b8';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+
+                    const linksHtml = links.map(link => `
+                        <a href="${link.url}" class="transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${link.text}</a>
+                    `).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/g, linksHtml);
+                }
+
+                // Dynamic fix for spacer_divider showLine conditional expression
+                if (sec.type.toLowerCase() === 'spacer_divider') {
+                    const showLine = sec.props.showLine !== undefined ? sec.props.showLine : true;
+                    const displayVal = showLine ? 'block' : 'none';
+                    compiledHtml = compiledHtml.replace(/{{\s*showLine\s*\?\s*'block'\s*:\s*'none'\s*}}/g, displayVal);
                 }
 
                 // Always inject section id as root ID
@@ -662,12 +749,15 @@ $csrf_token = generate_csrf_token();
                                     Properties
                                 </button>
                                 <button onClick={() => setRightPanelTab('settings')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'settings' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    Project Settings & Mail
+                                    Settings
+                                </button>
+                                <button onClick={() => setRightPanelTab('code')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'code' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    <i className="fas fa-code mr-1"></i> Code Editor
                                 </button>
                             </div>
 
                             {/* DYNAMIC PROPERTIES VIEW */}
-                            {rightPanelTab === 'properties' ? (
+                            {rightPanelTab === 'properties' && (
                                 <div className="flex-1 overflow-y-auto p-4 space-y-5">
                                     {!selectedSection ? (
                                         <div className="text-center py-16 text-slate-500">
@@ -691,7 +781,7 @@ $csrf_token = generate_csrf_token();
 
                                             {/* DYNAMIC COMPONENT SCHEMA FIELDS GENERATION */}
                                             {(() => {
-                                                const compDef = UI_COMPONENTS.find(c => c.id === selectedSection.type);
+                                                const compDef = UI_COMPONENTS.find(c => c.id.toLowerCase() === (selectedSection.type || '').toLowerCase().trim());
                                                 if (!compDef || !compDef.schema) return null;
 
                                                 return (
@@ -758,6 +848,102 @@ $csrf_token = generate_csrf_token();
                                                 );
                                             })()}
 
+                                            {/* CUSTOM NAVIGATION/FOOTER LINKS EDITOR */}
+                                            {selectedSection && (selectedSection.type.toLowerCase() === 'navbar' || selectedSection.type.toLowerCase() === 'footer') && (() => {
+                                                const currentLinks = selectedSection.props.links || (selectedSection.type.toLowerCase() === 'navbar' ? [
+                                                    { text: 'Home', url: '#home' },
+                                                    { text: 'Features', url: '#features' },
+                                                    { text: 'Pricing', url: '#pricing' },
+                                                    { text: 'Contact', url: '#contact' }
+                                                ] : [
+                                                    { text: 'Privacy Policy', url: '#privacy' },
+                                                    { text: 'Terms of Use', url: '#terms' },
+                                                    { text: 'Support', url: '#support' }
+                                                ]);
+
+                                                const handleLinksChange = (newLinks) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: newLinks } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addLink = () => {
+                                                    handleLinksChange([...currentLinks, { text: 'New Link', url: '#home' }]);
+                                                };
+
+                                                const removeLink = (lIdx) => {
+                                                    handleLinksChange(currentLinks.filter((_, idx) => idx !== lIdx));
+                                                };
+
+                                                const updateLink = (lIdx, key, val) => {
+                                                    const updatedLinks = currentLinks.map((link, idx) => idx === lIdx ? { ...link, [key]: val } : link);
+                                                    handleLinksChange(updatedLinks);
+                                                };
+
+                                                // List of standard options
+                                                const standardOptions = [
+                                                    { value: '#home', label: 'Home Section (#home)' },
+                                                    { value: '#features', label: 'Features Section (#features)' },
+                                                    { value: '#pricing', label: 'Pricing Section (#pricing)' },
+                                                    { value: '#contact', label: 'Contact Section (#contact)' },
+                                                    { value: 'index.php', label: 'Index Page' },
+                                                    { value: 'admin.php', label: 'Admin Page' },
+                                                ];
+
+                                                // Combine with canvas sections
+                                                sections.forEach(s => {
+                                                    if (s.id !== selectedSection.id) {
+                                                        const label = s.props.heading ? `Section: ${s.props.heading.substring(0, 20)}...` : `Section: ${s.type.toUpperCase()} (${s.id})`;
+                                                        standardOptions.push({ value: '#' + s.id, label });
+                                                    }
+                                                });
+
+                                                const standardValues = standardOptions.map(o => o.value);
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-link"></i> Manage Navigation Links
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {currentLinks.map((link, lIdx) => {
+                                                                const isCustom = !standardValues.includes(link.url);
+                                                                return (
+                                                                    <div key={lIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                        <div className="flex justify-between items-center gap-2">
+                                                                            <input type="text" value={link.text} onChange={(e) => updateLink(lIdx, 'text', e.target.value)} placeholder="Link Text" className="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                            <button onClick={() => removeLink(lIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Link">
+                                                                                <i className="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div>
+                                                                            <select value={isCustom ? 'custom' : link.url} onChange={(e) => {
+                                                                                const v = e.target.value;
+                                                                                if (v === 'custom') {
+                                                                                    updateLink(lIdx, 'url', 'https://');
+                                                                                } else {
+                                                                                    updateLink(lIdx, 'url', v);
+                                                                                }
+                                                                            }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300">
+                                                                                {standardOptions.map(opt => (
+                                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                                ))}
+                                                                                <option value="custom">Custom URL...</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        {isCustom && (
+                                                                            <input type="text" value={link.url} onChange={(e) => updateLink(lIdx, 'url', e.target.value)} placeholder="Custom URL (e.g., https://google.com)" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <button onClick={addLink} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
+                                                            <i className="fas fa-plus mr-1"></i> Add New Link
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+
                                             <hr className="border-slate-800" />
 
                                             {/* REAL-TIME HTML CODE COMPILER DRAW */}
@@ -768,63 +954,22 @@ $csrf_token = generate_csrf_token();
                                         </div>
                                     )}
                                 </div>
-                            ) : (
-                                /* ADVANCED CUSTOM SETTINGS TAB (CSS/JS INJECTIONS & EMAIL CONFIGURATION MODULE) */
+                            )}
+
+                            {rightPanelTab === 'settings' && (
                                 <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                                    {/* NUVIS EMAIL CONFIGURATION MODULE */}
-                                    <div className="space-y-4 bg-slate-950/40 p-3.5 rounded-lg border border-slate-850">
-                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                                            <i className="fas fa-paper-plane"></i> Nuvis Email Module
-                                        </h4>
-                                        <p className="text-[10px] text-slate-400 leading-relaxed">Configure form-notification alerts, SMTP dispatch routes, and automatic responder templates securely.</p>
-
-                                        <div>
-                                            <label className="text-[11px] text-slate-400 block mb-1">Inquiry Notification Recipient</label>
-                                            <input type="email" value={emailRecipient} onChange={(e) => setEmailRecipient(e.target.value)} placeholder="e.g., sales@nuvis.com" className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
-                                            <span className="text-[9px] text-slate-500 mt-1 block">Recipient email for form notifications (fallback to your account email).</span>
-                                        </div>
-
-                                        <div className="flex items-center justify-between border-t border-slate-800/80 pt-2.5">
-                                            <label className="text-[11px] text-slate-400 block font-semibold">Enable Customer Auto-Responder</label>
-                                            <input type="checkbox" checked={autoResponderEnabled} onChange={(e) => setAutoResponderEnabled(e.target.checked)} className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0" />
-                                        </div>
-
-                                        {autoResponderEnabled && (
-                                            <div className="space-y-3.5 border-t border-slate-800/80 pt-2.5">
-                                                <div>
-                                                    <label className="text-[11px] text-slate-400 block mb-1">Email Template Style</label>
-                                                    <select value={emailTemplateTheme} onChange={(e) => setEmailTemplateTheme(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none">
-                                                        <option value="modern_minimalist">Modern Minimalist (Teal)</option>
-                                                        <option value="elegant">Elegant Indigo Gold (Royal)</option>
-                                                        <option value="tech_light">Tech Light (Clean Blue)</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="text-[11px] text-slate-400 block mb-1">Auto-Response Subject</label>
-                                                    <input type="text" value={autoResponderSubject} onChange={(e) => setAutoResponderSubject(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[11px] text-slate-400 block mb-1">Auto-Response Message Body</label>
-                                                    <textarea rows={4} value={autoResponderBody} onChange={(e) => setAutoResponderBody(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs font-sans text-slate-200 focus:outline-none focus:border-teal-500" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <hr className="border-slate-850" />
-
-                                    {/* STANDARD SCRIPT AND STYLE INJECTIONS */}
+                                    {/* STANDARD SCRIPT AND STYLE INJECTIONS WITH ACE */}
                                     <div className="space-y-4">
                                         <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-sliders-h"></i> Custom Script Injection</h4>
 
                                         <div>
                                             <label className="text-[11px] text-slate-400 block mb-1">Custom CSS Stylesheet</label>
-                                            <textarea rows={4} value={customCss} onChange={(e) => setCustomCss(e.target.value)} placeholder="body { background-color: #0b0f19; }" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-cyan-400 focus:outline-none focus:border-teal-500" />
+                                            <AceEditor value={customCss} mode="css" onChange={setCustomCss} className="w-full bg-slate-950 border border-slate-800 rounded p-1 text-xs font-mono" style={{ height: '150px', width: '100%' }} />
                                         </div>
 
                                         <div>
                                             <label className="text-[11px] text-slate-400 block mb-1">Custom JavaScript Logic</label>
-                                            <textarea rows={4} value={customJs} onChange={(e) => setCustomJs(e.target.value)} placeholder="console.log('Nuvis Webbuilder custom scripts active');" className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-teal-500" />
+                                            <AceEditor value={customJs} mode="javascript" onChange={setCustomJs} className="w-full bg-slate-950 border border-slate-800 rounded p-1 text-xs font-mono" style={{ height: '150px', width: '100%' }} />
                                         </div>
 
                                         <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition">
@@ -833,8 +978,158 @@ $csrf_token = generate_csrf_token();
                                     </div>
                                 </div>
                             )}
+
+                            {rightPanelTab === 'code' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col h-full overflow-hidden">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-laptop-code"></i> Code Editor
+                                        </h3>
+                                        <button onClick={() => setFullscreenEditorOpen(true)} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold px-3 py-1.5 rounded text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all">
+                                            <i className="fas fa-expand"></i> Full Mode
+                                        </button>
+                                    </div>
+
+                                    {/* Code Editor Tabs Selection */}
+                                    <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 space-x-1">
+                                        {['css', 'js', 'html_raw'].map(tab => (
+                                            <button key={tab} onClick={() => setCodeEditorTab(tab)} className={`flex-1 py-1.5 text-center text-[10px] font-bold uppercase rounded transition ${codeEditorTab === tab ? 'bg-slate-800 text-teal-400 font-extrabold' : 'text-slate-400 hover:text-white'}`}>
+                                                {tab === 'html_raw' ? 'Raw HTML' : tab.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col min-h-[300px] bg-slate-950 rounded-lg border border-slate-800 relative">
+                                        {codeEditorTab === 'css' && (
+                                            <div className="flex-1 flex flex-col p-2 h-full">
+                                                <label className="text-[10px] font-bold text-slate-400 block mb-1">Custom CSS</label>
+                                                <AceEditor value={customCss} mode="css" onChange={setCustomCss} className="flex-1 rounded" style={{ height: '300px', width: '100%' }} />
+                                            </div>
+                                        )}
+                                        {codeEditorTab === 'js' && (
+                                            <div className="flex-1 flex flex-col p-2 h-full">
+                                                <label className="text-[10px] font-bold text-slate-400 block mb-1">Custom JavaScript</label>
+                                                <AceEditor value={customJs} mode="javascript" onChange={setCustomJs} className="flex-1 rounded" style={{ height: '300px', width: '100%' }} />
+                                            </div>
+                                        )}
+                                        {codeEditorTab === 'html_raw' && (() => {
+                                            const hasHtmlRaw = selectedSection && selectedSection.type.toLowerCase() === 'html_raw';
+                                            if (!hasHtmlRaw) {
+                                                return (
+                                                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500 h-[300px]">
+                                                        <i className="fas fa-code text-xl mb-2"></i>
+                                                        <p className="text-[11px] font-bold text-slate-400">No Raw HTML Block Selected</p>
+                                                        <p className="text-[10px] mt-1 leading-relaxed">Select a "Low-Code Custom Raw HTML" block from the canvas to edit its raw code here.</p>
+                                                    </div>
+                                                );
+                                            }
+                                            const htmlVal = selectedSection.props.rawHtml || '';
+                                            const handleHtmlChange = (newHtml) => {
+                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, rawHtml: newHtml } } : s);
+                                                updateSectionsWithHistory(updated);
+                                            };
+                                            return (
+                                                <div className="flex-1 flex flex-col p-2 h-full">
+                                                    <label className="text-[10px] font-bold text-slate-400 block mb-1">Raw HTML Content</label>
+                                                    <AceEditor value={htmlVal} mode="html" onChange={handleHtmlChange} className="flex-1 rounded" style={{ height: '300px', width: '100%' }} />
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2 rounded text-xs transition uppercase tracking-wider">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            )}
                         </aside>
                     </div>
+
+                    {/* FULLSCREEN ADVANCED CODE EDITOR IDE */}
+                    {isFullscreenEditorOpen && (
+                        <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col font-sans">
+                            {/* Fullscreen Header */}
+                            <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-teal-500 text-slate-950 w-7 h-7 rounded flex items-center justify-center font-black text-xs">
+                                        <i className="fas fa-terminal"></i>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-white leading-none">Nuvis Advanced IDE Workspace</h2>
+                                        <p className="text-[10px] text-slate-400 mt-1">Editing: <span className="text-teal-400">{PROJECT_NAME}</span></p>
+                                    </div>
+                                </div>
+
+                                {/* Tab controls in Fullscreen */}
+                                <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-850 space-x-1">
+                                    {['css', 'js', 'html_raw'].map(tab => (
+                                        <button key={tab} onClick={() => setCodeEditorTab(tab)} className={`px-4 py-1.5 rounded text-xs font-bold uppercase transition ${codeEditorTab === tab ? 'bg-slate-800 text-teal-400' : 'text-slate-400 hover:text-white'}`}>
+                                            {tab === 'html_raw' ? 'Raw HTML' : tab.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => saveProject(false)} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2 rounded text-xs transition flex items-center gap-1.5 font-bold">
+                                        <i className="fas fa-save"></i> Save Changes
+                                    </button>
+                                    <button onClick={() => setFullscreenEditorOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded text-xs transition flex items-center gap-1">
+                                        <i className="fas fa-times"></i> Close Fullscreen
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Fullscreen Editor Body */}
+                            <div className="flex-1 flex min-h-0 bg-slate-900">
+                                {codeEditorTab === 'css' && (
+                                    <div className="flex-1 flex flex-col p-6 h-full">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block"><i className="fab fa-css3-alt text-cyan-400 mr-1.5"></i> Custom CSS Stylesheet</span>
+                                            <span className="text-[10px] text-slate-500 font-mono">tomorrow_night_eighties theme active</span>
+                                        </div>
+                                        <AceEditor value={customCss} mode="css" onChange={setCustomCss} className="flex-1 rounded-lg border border-slate-800" style={{ height: '100%', width: '100%' }} />
+                                    </div>
+                                )}
+                                {codeEditorTab === 'js' && (
+                                    <div className="flex-1 flex flex-col p-6 h-full">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block"><i className="fab fa-js-square text-yellow-400 mr-1.5"></i> Custom JavaScript Logic</span>
+                                            <span className="text-[10px] text-slate-500 font-mono">tomorrow_night_eighties theme active</span>
+                                        </div>
+                                        <AceEditor value={customJs} mode="javascript" onChange={setCustomJs} className="flex-1 rounded-lg border border-slate-800" style={{ height: '100%', width: '100%' }} />
+                                    </div>
+                                )}
+                                {codeEditorTab === 'html_raw' && (() => {
+                                    const hasHtmlRaw = selectedSection && selectedSection.type.toLowerCase() === 'html_raw';
+                                    if (!hasHtmlRaw) {
+                                        return (
+                                            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
+                                                <div className="w-16 h-16 bg-slate-850 rounded-full flex items-center justify-center border border-slate-800 text-slate-500 text-2xl mb-4">
+                                                    <i className="fas fa-code"></i>
+                                                </div>
+                                                <h3 className="font-bold text-slate-300">No Raw HTML Block Selected</h3>
+                                                <p className="text-slate-500 text-xs mt-1.5 max-w-sm">Please select a "Low-Code Custom Raw HTML" block on the visual builder canvas and then open the fullscreen editor to customize its raw code.</p>
+                                            </div>
+                                        );
+                                    }
+                                    const htmlVal = selectedSection.props.rawHtml || '';
+                                    const handleHtmlChange = (newHtml) => {
+                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, rawHtml: newHtml } } : s);
+                                        updateSectionsWithHistory(updated);
+                                    };
+                                    return (
+                                        <div className="flex-1 flex flex-col p-6 h-full">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block"><i className="fas fa-code text-teal-400 mr-1.5"></i> Selected Raw HTML Block Code</span>
+                                                <span className="text-[10px] text-teal-400 font-mono">Section ID: {selectedSection.id}</span>
+                                            </div>
+                                            <AceEditor value={htmlVal} mode="html" onChange={handleHtmlChange} className="flex-1 rounded-lg border border-slate-800" style={{ height: '100%', width: '100%' }} />
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}
 
                     {/* TOAST SYSTEM ALERTS */}
                     {toast && (

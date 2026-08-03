@@ -51,6 +51,32 @@ try {
         echo "ℹ Admin account already exists. Skipping seeding.\n";
     }
 
+    // 3.5 Seed email_settings table if empty
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `email_settings` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `recipient_email` VARCHAR(255) NOT NULL DEFAULT 'admin@nuvis-webbuilder.io',
+        `auto_responder_enabled` TINYINT(1) NOT NULL DEFAULT 1,
+        `auto_responder_subject` VARCHAR(255) NOT NULL DEFAULT 'Thank you for contacting us!',
+        `auto_responder_body` TEXT NOT NULL,
+        `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
+    ) ENGINE=InnoDB;");
+
+    $stmt_email = $pdo->query("SELECT COUNT(*) as email_count FROM email_settings");
+    $res_email = $stmt_email->fetch();
+
+    if ($res_email['email_count'] == 0) {
+        echo "⌛ Seeding default global email settings...\n";
+        $insert_email = $pdo->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme) VALUES (?, ?, ?, ?, ?)");
+        $insert_email->execute([
+            'admin@nuvis-webbuilder.io',
+            1,
+            'Thank you for contacting us!',
+            "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team",
+            'modern_minimalist'
+        ]);
+        echo "✔ Global email settings seeded successfully!\n";
+    }
+
     // 4. Ensure templates table has the primary default SaaS templates seeded
     $stmt_tpl = $pdo->query("SELECT COUNT(*) as tpl_count FROM templates");
     $res_tpl = $stmt_tpl->fetch();
