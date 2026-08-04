@@ -122,6 +122,20 @@ switch ($action) {
         $name = trim($input['name'] ?? '');
         $description = trim($input['description'] ?? '');
         $content_json = $input['content_json'] ?? ''; // Expecting structured layout JSON
+        $template_name = trim($input['template_name'] ?? '');
+
+        if (empty($content_json) && !empty($template_name)) {
+            try {
+                $stmt_t = $db->prepare("SELECT content_json FROM templates WHERE name = ?");
+                $stmt_t->execute([$template_name]);
+                $tpl_row = $stmt_t->fetch();
+                if ($tpl_row) {
+                    $content_json = $tpl_row['content_json'];
+                }
+            } catch (PDOException $e) {
+                error_log("Failed to resolve template name: " . $e->getMessage());
+            }
+        }
 
         if (empty($name)) {
             http_response_code(400);
