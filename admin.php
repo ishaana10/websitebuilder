@@ -465,8 +465,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $output .= "git checkout:\n" . trim($res) . "\n\n";
 
             $output .= "Syncing with remote repository...\n";
+            // Backup .env if exists to prevent overwrite
+            $envPath = rtrim($gitRepoDir, '/') . '/.env';
+            $envBackup = '';
+            if (file_exists($envPath)) {
+                $envBackup = file_get_contents($envPath);
+            }
+
             $res = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEscaped} 2>&1");
             $output .= "git reset --hard:\n" . trim($res) . "\n\n";
+
+            // Restore .env after reset
+            if ($envBackup !== '') {
+                file_put_contents($envPath, $envBackup);
+            }
 
             echo json_encode([
                 'success' => true,
@@ -488,10 +500,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
 
                 $diffOutput = (string)shell_exec($gitCmdPrefix . "diff --name-status HEAD origin/{$selectedBranchEscaped} 2>&1");
 
+                // Backup .env if exists to prevent checkout/pull overwrite
+                $envPath = rtrim($git_repo_dir, '/') . '/.env';
+                $envBackup = '';
+                if (file_exists($envPath)) {
+                    $envBackup = file_get_contents($envPath);
+                }
+
                 shell_exec($gitCmdPrefix . "checkout -f {$selectedBranchEscaped} 2>&1");
 
                 $pullOutput = (string)shell_exec($gitCmdPrefix . "pull origin {$selectedBranchEscaped} -X theirs --no-rebase 2>&1");
                 $resetOutput = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$selectedBranchEscaped} 2>&1");
+
+                // Restore .env after pull and reset operations
+                if ($envBackup !== '') {
+                    file_put_contents($envPath, $envBackup);
+                }
 
                 $output = "Git Pull:\n" . trim($pullOutput) . "\n\nGit Reset Hard:\n" . trim($resetOutput);
                 if (!empty($diffOutput) && stripos($diffOutput, 'fatal:') === false) {
