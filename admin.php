@@ -69,12 +69,41 @@ $role = $_SESSION['user_role'];
 $error_msg = $_GET['error'] ?? '';
 $success_msg = $_GET['success'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
-    $action = $_GET['action'];
-    $csrf = $_POST['csrf_token'] ?? '';
+// Parse JSON body if Content-Type is application/json
+$json_input = [];
+if (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) {
+    $json_input = json_decode(file_get_contents('php://input'), true) ?? [];
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($json_input['action']))) {
+    $action = $_GET['action'] ?? ($json_input['action'] ?? '');
+    $csrf = $_POST['csrf_token'] ?? ($json_input['csrf_token'] ?? '');
 
     if (!verify_csrf_token($csrf)) {
-        $error_msg = "CSRF Token validation failed.";
+        // Fallback check header X-CSRF-TOKEN
+        $csrf_header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_SERVER['HTTP_X_XSRF_TOKEN'] ?? '');
+        if (verify_csrf_token($csrf_header)) {
+            $csrf = $csrf_header;
+        }
+    }
+
+    // Git diagnostics status & test settings sometimes run pre-onboarding or via AJAX where CSRF is passed differently.
+    // Let's make sure AJAX actions return valid JSON errors in case CSRF is mismatched or missing.
+    if (!verify_csrf_token($csrf)) {
+        $is_ajax = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) ||
+                   (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) ||
+                   (isset($_GET['action']) && in_array($_GET['action'], ['git_status', 'test_git_settings', 'save_git_settings', 'git_init', 'git_pull']));
+
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => 'CSRF Token validation failed or session expired. Please refresh the page and try again.'
+            ]);
+            exit;
+        } else {
+            $error_msg = "CSRF Token validation failed.";
+        }
     } else {
         if ($action === 'create_project') {
             $name = trim($_POST['project_name'] ?? '');
