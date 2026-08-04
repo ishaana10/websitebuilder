@@ -326,10 +326,6 @@ const UI_COMPONENTS = [
         category: 'Advanced',
         icon: 'fas fa-folder',
         schema: [
-            { key: 'tab1Title', label: 'Tab 1 Heading', type: 'text', default: 'Platform' },
-            { key: 'tab1Text', label: 'Tab 1 Body', type: 'textarea', default: 'Fully integrated drag and drop builder.' },
-            { key: 'tab2Title', label: 'Tab 2 Heading', type: 'text', default: 'Database' },
-            { key: 'tab2Text', label: 'Tab 2 Body', type: 'textarea', default: 'MariaDB persistent storage pipelines.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'accentColor', label: 'Active Tab Border', type: 'color', default: '#14b8a6' },
             { key: 'textColor', label: 'Content Color', type: 'color', default: '#94a3b8' }
@@ -337,16 +333,12 @@ const UI_COMPONENTS = [
         html: `
 <section class="py-16 px-8 rounded-lg tabs-container" style="background-color: {{bgColor}};" data-component="interactive_tabs">
     <div class="max-w-2xl mx-auto">
-        <div class="flex border-b border-slate-800 mb-6 gap-4">
-            <button onclick="window.switchTab(this, 0)" class="tab-btn pb-3 text-xs font-bold uppercase border-b-2 tracking-wider transition-all" style="border-color: {{accentColor}}; color: {{accentColor}};" data-active-color="{{accentColor}}">
-                {{tab1Title}}
-            </button>
-            <button onclick="window.switchTab(this, 1)" class="tab-btn pb-3 text-xs font-bold uppercase border-b-2 tracking-wider transition-all" style="border-color: transparent; color: #94a3b8;" data-active-color="{{accentColor}}">
-                {{tab2Title}}
-            </button>
+        <div class="flex border-b border-slate-800 mb-6 gap-4 overflow-x-auto">
+            {{tabButtons}}
         </div>
-        <div class="tab-content" style="color: {{textColor}};">{{tab1Text}}</div>
-        <div class="tab-content hidden" style="color: {{textColor}};">{{tab2Text}}</div>
+        <div class="mt-4">
+            {{tabContents}}
+        </div>
     </div>
 </section>`
     },

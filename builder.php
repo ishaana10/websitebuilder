@@ -620,6 +620,30 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/g, linksHtml);
                 }
 
+                // Dynamic compiler for interactive_tabs component
+                if (sec.type.toLowerCase() === 'interactive_tabs') {
+                    const tabs = sec.props.tabs || [
+                        { title: 'Platform', content: 'Fully integrated drag and drop builder.' },
+                        { title: 'Database', content: 'MariaDB persistent storage pipelines.' }
+                    ];
+
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+                    const textColor = sec.props.textColor || '#94a3b8';
+
+                    const tabButtonsHtml = tabs.map((tab, idx) => `
+                        <button onclick="window.switchTab(this, ${idx})" class="tab-btn pb-3 text-xs font-bold uppercase border-b-2 tracking-wider transition-all" style="border-color: ${idx === 0 ? accentColor : 'transparent'}; color: ${idx === 0 ? accentColor : '#94a3b8'};" data-active-color="${accentColor}">
+                            ${tab.title}
+                        </button>
+                    `).join('\n');
+
+                    const tabContentsHtml = tabs.map((tab, idx) => `
+                        <div class="tab-content ${idx === 0 ? '' : 'hidden'}" style="color: ${textColor};">${tab.content}</div>
+                    `).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*tabButtons\s*}}/g, tabButtonsHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*tabContents\s*}}/g, tabContentsHtml);
+                }
+
                 // Dynamic fix for spacer_divider showLine conditional expression
                 if (sec.type.toLowerCase() === 'spacer_divider') {
                     const showLine = sec.props.showLine !== undefined ? sec.props.showLine : true;
@@ -1258,6 +1282,58 @@ $csrf_token = generate_csrf_token();
                                                         </div>
                                                         <button onClick={addLink} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
                                                             <i className="fas fa-plus mr-1"></i> Add New Link
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC TABS EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'interactive_tabs' && (() => {
+                                                const currentTabs = selectedSection.props.tabs || [
+                                                    { title: 'Platform', content: 'Fully integrated drag and drop builder.' },
+                                                    { title: 'Database', content: 'MariaDB persistent storage pipelines.' }
+                                                ];
+
+                                                const handleTabsChange = (newTabs) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, tabs: newTabs } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addTab = () => {
+                                                    handleTabsChange([...currentTabs, { title: 'New Tab', content: 'New tab content goes here...' }]);
+                                                };
+
+                                                const removeTab = (tIdx) => {
+                                                    handleTabsChange(currentTabs.filter((_, idx) => idx !== tIdx));
+                                                };
+
+                                                const updateTab = (tIdx, key, val) => {
+                                                    const updatedTabs = currentTabs.map((tab, idx) => idx === tIdx ? { ...tab, [key]: val } : tab);
+                                                    handleTabsChange(updatedTabs);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-folder-open"></i> Manage Dynamic Tabs
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {currentTabs.map((tab, tIdx) => (
+                                                                <div key={tIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                    <div className="flex justify-between items-center gap-2">
+                                                                        <input type="text" value={tab.title} onChange={(e) => updateTab(tIdx, 'title', e.target.value)} placeholder="Tab Title" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                        <button onClick={() => removeTab(tIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Tab">
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <textarea rows={3} value={tab.content} onChange={(e) => updateTab(tIdx, 'content', e.target.value)} placeholder="Tab Content" className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white" />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={addTab} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
+                                                            <i className="fas fa-plus mr-1"></i> Add New Tab
                                                         </button>
                                                     </div>
                                                 );
