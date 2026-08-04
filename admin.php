@@ -833,6 +833,9 @@ $csrf_token = generate_csrf_token();
                                 <a href="builder.php?project_id=<?php echo $p['id']; ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded text-[11px] flex-1 text-center transition flex items-center justify-center gap-1.5">
                                     <i class="fas fa-edit"></i> Edit Site
                                 </a>
+                                <button onclick="openVersionsModal(<?php echo $p['id']; ?>, '<?php echo sanitize_output($p['name']); ?>')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3 py-2 rounded text-[11px] flex-1 text-center transition flex items-center justify-center gap-1.5" title="View Version History">
+                                    <i class="fas fa-history text-teal-400"></i> Versions
+                                </button>
                                 <?php if ($p['status'] === 'published'): ?>
                                 <a href="render.php?slug=<?php echo $p['slug']; ?>&user=<?php echo $username; ?>" target="_blank" class="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 font-bold px-3 py-2 rounded text-[11px] flex-1 text-center border border-teal-500/20 transition flex items-center justify-center gap-1.5">
                                     <i class="fas fa-external-link-alt"></i> View Live
@@ -1281,6 +1284,37 @@ $csrf_token = generate_csrf_token();
         </div>
     </div>
 
+    <!-- HISTORICAL VERSIONS MODAL -->
+    <div id="versions-modal" class="hidden fixed inset-0 bg-slate-950/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-xl p-6 shadow-2xl relative flex flex-col max-h-[85vh] overflow-hidden">
+            <button onclick="closeVersionsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <h3 class="text-sm font-extrabold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fas fa-history text-teal-400"></i> Version History: <span id="modal-project-name" class="text-teal-400"></span>
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">View and track manual draft milestones, automated saves, and compiled publishes for this website.</p>
+
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[250px]">
+                <div class="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950/20">
+                    <table class="w-full text-left text-xs text-slate-300 font-sans">
+                        <thead class="bg-slate-950 text-[10px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="px-4 py-3">Type</th>
+                                <th class="px-4 py-3">Timestamp</th>
+                                <th class="px-4 py-3">Version Note</th>
+                                <th class="px-4 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="versions-table-body" class="divide-y divide-slate-800/60 font-sans">
+                            <!-- Populated on the fly -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * Switch Dashboard Layout Tabs dynamically
@@ -1322,6 +1356,69 @@ $csrf_token = generate_csrf_token();
 
         function closeCreateModal() {
             document.getElementById('create-modal').classList.add('hidden');
+        }
+
+        function openVersionsModal(projectId, projectName) {
+            document.getElementById('modal-project-name').innerText = projectName;
+            const tableBody = document.getElementById('versions-table-body');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-slate-500">
+                        <i class="fas fa-spinner animate-spin mr-1.5 text-teal-400"></i> Querying snapshots...
+                    </td>
+                </tr>
+            `;
+            document.getElementById('versions-modal').classList.remove('hidden');
+
+            fetch(`api.php?action=get_versions&project_id=${projectId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.versions && data.versions.length > 0) {
+                    tableBody.innerHTML = '';
+                    data.versions.forEach(v => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-800/20 transition";
+
+                        const badgeClass = v.version_type === 'publish' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-900 text-slate-400 border border-slate-800';
+                        const dateFormatted = new Date(v.created_at).toLocaleString();
+
+                        tr.innerHTML = `
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${badgeClass}">${v.version_type}</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-400 font-mono text-[11px]">${dateFormatted}</td>
+                            <td class="px-4 py-3 text-white font-semibold max-w-xs break-words">${v.label}</td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="builder.php?project_id=${projectId}" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-2.5 py-1 rounded text-[10px] transition inline-block">
+                                    <i class="fas fa-external-link-alt"></i> Open Builder
+                                </a>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-slate-500">
+                                No historical versions recorded yet.
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(err => {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-4 py-8 text-center text-red-400">
+                            Failed to load version history: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function closeVersionsModal() {
+            document.getElementById('versions-modal').classList.add('hidden');
         }
 
         /**
