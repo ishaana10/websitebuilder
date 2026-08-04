@@ -9,6 +9,58 @@ require_once __DIR__ . '/config.php';
 require_login();
 
 $db = get_db_connection();
+
+/**
+ * Safely fetches the Git configurations from database settings with fallbacks.
+ */
+function get_git_config($db): array {
+    // Ensure table exists
+    try {
+        $db->query("CREATE TABLE IF NOT EXISTS `nu_settings` (
+            `setting_key` VARCHAR(100) NOT NULL PRIMARY KEY,
+            `setting_value` TEXT NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    } catch (PDOException $e) {
+        error_log("Failed to create/verify nu_settings table: " . $e->getMessage());
+    }
+
+    $settings = [
+        'git_path' => 'git',
+        'git_repo_dir' => realpath(__DIR__) ?: '/app',
+        'update_branch' => 'Main',
+        'git_remote_url' => 'https://github.com/ishaana10/websitebuilder.git'
+    ];
+
+    foreach ($settings as $key => $default) {
+        try {
+            $stmt = $db->prepare("SELECT setting_value FROM nu_settings WHERE setting_key = ?");
+            $stmt->execute([$key]);
+            $row = $stmt->fetch();
+            if ($row !== false && trim((string)$row['setting_value']) !== '') {
+                $settings[$key] = trim((string)$row['setting_value']);
+            }
+        } catch (PDOException $e) {
+            // Table or column might not exist or be accessible yet
+            error_log("Failed to fetch setting $key: " . $e->getMessage());
+        }
+    }
+
+    // Double check fallbacks in case DB stored empty strings
+    if (empty($settings['git_path'])) {
+        $settings['git_path'] = 'git';
+    }
+    if (empty($settings['git_repo_dir'])) {
+        $settings['git_repo_dir'] = realpath(__DIR__) ?: '/app';
+    }
+    if (empty($settings['update_branch'])) {
+        $settings['update_branch'] = 'Main';
+    }
+    if (empty($settings['git_remote_url'])) {
+        $settings['git_remote_url'] = 'https://github.com/ishaana10/websitebuilder.git';
+    }
+
+    return $settings;
+}
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $role = $_SESSION['user_role'];
@@ -102,20 +154,292 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action'])) {
             }
         } elseif ($action === 'git_status' && is_admin()) {
             header('Content-Type: application/json');
-            $output = shell_exec("git status 2>&1");
-            if (empty($output)) {
-                $output = "Git is not installed or accessible on this system environment.";
+            try {
+                $settings = get_git_config($db);
+                $git_path = $settings['git_path'];
+                $git_repo_dir = $settings['git_repo_dir'];
+                $selectedBranch = $settings['update_branch'];
+
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+
+                $status = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
+                $branch = (string)shell_exec($gitCmdPrefix . 'rev-parse --abbrev-ref HEAD 2>&1');
+
+                // Check if .git exists to report correct git repository presence
+                $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
+
+                $branchesOutput = (string)shell_exec($gitCmdPrefix . "branch -a 2>&1");
+                $remoteBranches = [];
+                if ($branchesOutput && strpos($branchesOutput, 'fatal:') === false && strpos($branchesOutput, 'sh:') === false && strpos($branchesOutput, 'not found') === false) {
+                    $lines = explode("\n", $branchesOutput);
+                    foreach ($lines as $line) {
+                        $line = trim($line, "* \t\r\n");
+                        if (!$line) continue;
+                        if (strpos($line, 'remotes/origin/HEAD') !== false) continue;
+                        if (strpos($line, 'remotes/origin/') === 0) {
+                            $b = substr($line, 15);
+                        } elseif (strpos($line, 'origin/') === 0) {
+                            $b = substr($line, 7);
+                        } else {
+                            $b = $line;
+                        }
+                        if ($b && !preg_match('/[\s:]/', $b) && !in_array($b, $remoteBranches)) {
+                            $remoteBranches[] = $b;
+                        }
+                    }
+                }
+
+                if (empty($remoteBranches)) {
+                    $remoteBranches = [$selectedBranch];
+                }
+
+                $remoteUrl = '';
+                $remoteUrlCheck = (string)shell_exec($gitCmdPrefix . "config --get remote.origin.url 2>&1");
+                if ($remoteUrlCheck && stripos($remoteUrlCheck, 'fatal:') === false && stripos($remoteUrlCheck, 'sh:') === false) {
+                    $remoteUrl = trim($remoteUrlCheck);
+                }
+                if (empty($remoteUrl)) {
+                    $remoteUrl = $settings['git_remote_url'];
+                }
+
+                $success = $is_git_repo && (stripos($status, 'fatal:') === false);
+
+                echo json_encode([
+                    'success' => $success,
+                    'status' => trim($status),
+                    'branch' => trim($branch),
+                    'selected_branch' => $selectedBranch,
+                    'remote_branches' => $remoteBranches,
+                    'git_path' => $git_path,
+                    'git_repo_dir' => $git_repo_dir,
+                    'git_remote_url' => $remoteUrl
+                ]);
+            } catch (Throwable $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             }
-            echo json_encode(['success' => true, 'output' => nl2br(sanitize_output($output))]);
+            exit;
+        } elseif ($action === 'save_git_settings' && is_admin()) {
+            header('Content-Type: application/json');
+            $raw  = file_get_contents('php://input');
+            $body = json_decode($raw ?: '{}', true);
+            $gitPath = trim((string)($body['git_path'] ?? 'git'));
+            $gitRepoDir = trim((string)($body['git_repo_dir'] ?? ''));
+            $updateBranch = trim((string)($body['update_branch'] ?? 'Main'));
+
+            if (!$gitPath) {
+                $gitPath = 'git';
+            }
+
+            if (preg_match('/\s+/', $gitPath) || stripos($gitPath, 'clone') !== false || stripos($gitPath, 'gh ') !== false || stripos($gitPath, '.git') !== false || stripos($gitPath, '@') !== false || stripos($gitPath, 'http') !== false) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Invalid Git Executable Path: Please enter ONLY 'git' or the absolute path to the git binary on your server (e.g. '/usr/bin/git')."
+                ]);
+                exit;
+            }
+
+            if (!$gitRepoDir) {
+                $gitRepoDir = realpath(__DIR__) ?: '/app';
+            }
+            if (!$updateBranch) {
+                $updateBranch = 'Main';
+            }
+
+            try {
+                $db->query("CREATE TABLE IF NOT EXISTS `nu_settings` (
+                    `setting_key` VARCHAR(100) NOT NULL PRIMARY KEY,
+                    `setting_value` TEXT NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('git_path', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$gitPath, $gitPath]);
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('git_repo_dir', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$gitRepoDir, $gitRepoDir]);
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('update_branch', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$updateBranch, $updateBranch]);
+
+                echo json_encode(['success' => true]);
+            } catch (PDOException $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            exit;
+        } elseif ($action === 'test_git_settings' && is_admin()) {
+            header('Content-Type: application/json');
+            $raw  = file_get_contents('php://input');
+            $body = json_decode($raw ?: '{}', true);
+            $gitPath = trim((string)($body['git_path'] ?? ''));
+            $gitRepoDir = trim((string)($body['git_repo_dir'] ?? ''));
+
+            if (!$gitPath) {
+                echo json_encode(['success' => false, 'error' => 'Git Executable Path cannot be empty.']);
+                exit;
+            }
+
+            if (preg_match('/\s+/', $gitPath) || stripos($gitPath, 'clone') !== false || stripos($gitPath, 'gh ') !== false || stripos($gitPath, '.git') !== false || stripos($gitPath, '@') !== false || stripos($gitPath, 'http') !== false) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Invalid Git Executable Path: Please enter ONLY 'git' or the absolute path to the git binary on your server (e.g. '/usr/bin/git')."
+                ]);
+                exit;
+            }
+
+            if (!$gitRepoDir) {
+                echo json_encode(['success' => false, 'error' => 'Git Repository Root Directory cannot be empty.']);
+                exit;
+            }
+
+            if (!is_dir($gitRepoDir)) {
+                echo json_encode(['success' => false, 'error' => "The directory '{$gitRepoDir}' does not exist or is not accessible."]);
+                exit;
+            }
+
+            if (!is_dir(rtrim($gitRepoDir, '/') . '/.git')) {
+                echo json_encode([
+                    'success' => false,
+                    'git_missing' => true,
+                    'error' => "The directory '{$gitRepoDir}' exists, but it does not appear to be a git repository (no '.git' directory found)."
+                ]);
+                exit;
+            }
+
+            $gitEscaped = escapeshellarg($gitPath);
+            $versionOutput = (string)shell_exec("{$gitEscaped} --version 2>&1");
+            if (!$versionOutput || stripos($versionOutput, 'version') === false) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Failed to run Git with path '{$gitPath}'. Error details: " . trim($versionOutput)
+                ]);
+                exit;
+            }
+
+            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
+            $statusOutput = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
+            if (stripos($statusOutput, 'fatal:') !== false) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Git executable is working, but repository check failed. Git output: " . trim($statusOutput)
+                ]);
+                exit;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Connection successful!\nGit version: " . trim((string)$versionOutput) . "\nRepository status: OK"
+            ]);
+            exit;
+        } elseif ($action === 'git_init' && is_admin()) {
+            header('Content-Type: application/json');
+            $raw  = file_get_contents('php://input');
+            $body = json_decode($raw ?: '{}', true);
+            $gitPath = trim((string)($body['git_path'] ?? 'git'));
+            $gitRepoDir = trim((string)($body['git_repo_dir'] ?? ''));
+            $repoUrl = trim((string)($body['repo_url'] ?? ''));
+            $branch = trim((string)($body['branch'] ?? 'Main'));
+
+            if (!$gitPath) {
+                $gitPath = 'git';
+            }
+            if (!$gitRepoDir) {
+                $gitRepoDir = realpath(__DIR__) ?: '/app';
+            }
+            if (!$repoUrl) {
+                echo json_encode(['success' => false, 'error' => 'Repository URL cannot be empty.']);
+                exit;
+            }
+
+            if (!is_dir($gitRepoDir)) {
+                echo json_encode(['success' => false, 'error' => "The directory '{$gitRepoDir}' does not exist or is not accessible."]);
+                exit;
+            }
+
+            $gitEscaped = escapeshellarg($gitPath);
+            $versionOutput = (string)shell_exec("{$gitEscaped} --version 2>&1");
+            if (!$versionOutput || stripos($versionOutput, 'version') === false) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Failed to run Git with path '{$gitPath}'. Error details: " . trim($versionOutput)
+                ]);
+                exit;
+            }
+
+            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
+            $output = "Starting Git repository initialization...\n";
+
+            if (!is_dir(rtrim($gitRepoDir, '/') . '/.git')) {
+                $res = (string)shell_exec($gitCmdPrefix . "init 2>&1");
+                $output .= "git init:\n" . trim($res) . "\n\n";
+            }
+
+            try {
+                $db->query("CREATE TABLE IF NOT EXISTS `nu_settings` (
+                    `setting_key` VARCHAR(100) NOT NULL PRIMARY KEY,
+                    `setting_value` TEXT NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('git_path', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$gitPath, $gitPath]);
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('git_repo_dir', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$gitRepoDir, $gitRepoDir]);
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('update_branch', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$branch, $branch]);
+                $db->prepare("INSERT INTO nu_settings (setting_key, setting_value) VALUES ('git_remote_url', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$repoUrl, $repoUrl]);
+            } catch (PDOException $e) {
+                echo json_encode(['success' => false, 'error' => 'Database error while saving repository initialization settings: ' . $e->getMessage()]);
+                exit;
+            }
+
+            $remoteCheck = (string)shell_exec($gitCmdPrefix . "remote 2>&1");
+            if (stripos($remoteCheck, 'origin') !== false) {
+                $res = (string)shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($repoUrl) . " 2>&1");
+                $output .= "git remote set-url origin:\n" . trim($res) . "\n\n";
+            } else {
+                $res = (string)shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($repoUrl) . " 2>&1");
+                $output .= "git remote add origin:\n" . trim($res) . "\n\n";
+            }
+
+            $output .= "Fetching branches from origin...\n";
+            $res = (string)shell_exec($gitCmdPrefix . "fetch origin 2>&1");
+            $output .= "git fetch:\n" . trim($res) . "\n\n";
+
+            $branchEscaped = escapeshellarg($branch);
+            $output .= "Checking out branch '{$branch}'...\n";
+            $res = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} --track origin/{$branchEscaped} 2>&1");
+            if (stripos($res, 'fatal:') !== false) {
+                $res = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} origin/{$branchEscaped} 2>&1");
+            }
+            $output .= "git checkout:\n" . trim($res) . "\n\n";
+
+            $output .= "Syncing with remote repository...\n";
+            $res = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEscaped} 2>&1");
+            $output .= "git reset --hard:\n" . trim($res) . "\n\n";
+
+            echo json_encode([
+                'success' => true,
+                'output' => $output
+            ]);
             exit;
         } elseif ($action === 'git_pull' && is_admin()) {
             header('Content-Type: application/json');
-            $output = shell_exec("git pull 2>&1");
-            if (empty($output)) {
-                $output = "Git pull could not be executed or permission denied.";
-                echo json_encode(['success' => false, 'error' => $output]);
-            } else {
-                echo json_encode(['success' => true, 'output' => nl2br(sanitize_output($output))]);
+            try {
+                $settings = get_git_config($db);
+                $git_path = $settings['git_path'];
+                $git_repo_dir = $settings['git_repo_dir'];
+                $selectedBranch = $settings['update_branch'];
+
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+                $selectedBranchEscaped = escapeshellarg($selectedBranch);
+
+                shell_exec($gitCmdPrefix . "fetch origin {$selectedBranchEscaped} 2>&1");
+
+                $diffOutput = (string)shell_exec($gitCmdPrefix . "diff --name-status HEAD origin/{$selectedBranchEscaped} 2>&1");
+
+                shell_exec($gitCmdPrefix . "checkout -f {$selectedBranchEscaped} 2>&1");
+
+                $pullOutput = (string)shell_exec($gitCmdPrefix . "pull origin {$selectedBranchEscaped} -X theirs --no-rebase 2>&1");
+                $resetOutput = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$selectedBranchEscaped} 2>&1");
+
+                $output = "Git Pull:\n" . trim($pullOutput) . "\n\nGit Reset Hard:\n" . trim($resetOutput);
+                if (!empty($diffOutput) && stripos($diffOutput, 'fatal:') === false) {
+                    $output .= "\n\nUpdated Files:\n" . trim($diffOutput);
+                }
+
+                echo json_encode(['success' => true, 'output' => trim($output), 'pulled_branch' => $selectedBranch]);
+            } catch (Throwable $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             }
             exit;
         } elseif ($action === 'update_email_settings' && is_admin()) {
@@ -703,12 +1027,66 @@ $csrf_token = generate_csrf_token();
                             </ul>
                         </div>
                         <!-- Repository Updater Tool -->
-                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 col-span-1 md:col-span-2">
-                            <h3 class="font-extrabold text-white text-xs uppercase tracking-wider mb-4 text-teal-400 flex items-center gap-1.5">
-                                <i class="fab fa-git-alt"></i> Continuous Repository Updates
-                            </h3>
-                            <p class="text-xs text-slate-300 leading-relaxed mb-4">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official Nuvis Webbuilder git origin branch.</p>
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 col-span-1 md:col-span-2 space-y-6">
+                            <div>
+                                <h3 class="font-extrabold text-white text-xs uppercase tracking-wider mb-2 text-teal-400 flex items-center gap-1.5">
+                                    <i class="fab fa-git-alt"></i> Continuous Repository Updates
+                                </h3>
+                                <p class="text-xs text-slate-300 leading-relaxed">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official Nuvis Webbuilder git origin branch.</p>
+                            </div>
 
+                            <!-- Git Connection Configurations Form -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/40 p-4 rounded-lg border border-slate-800/80">
+                                <div class="col-span-1 md:col-span-2">
+                                    <span class="text-[10px] font-extrabold text-teal-400 uppercase tracking-widest block mb-2">Git Connection Parameters</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block">Git Executable Path</label>
+                                    <input type="text" id="git_path" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" placeholder="e.g. git">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block">Git Repository Root Directory</label>
+                                    <input type="text" id="git_repo_dir" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" placeholder="e.g. /var/www/html">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase block">Update branch</label>
+                                    <select id="updaterBranchSelect" class="w-full bg-slate-950 border border-slate-850 rounded px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                        <option value="Main">Loading branches...</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-end gap-2">
+                                    <button onclick="testGitSettings()" class="bg-slate-850 hover:bg-slate-800 border border-teal-500/15 text-teal-400 font-bold px-3 py-2 rounded text-xs transition flex-1">
+                                        ⚡ Test connection
+                                    </button>
+                                    <button onclick="saveGitSettings()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-3 py-2 rounded text-xs transition flex-1">
+                                        Save settings
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Initialize & Link Git Repository warning card -->
+                            <div id="upd-init-card" class="hidden border-2 border-dashed border-teal-500/30 bg-teal-500/5 rounded-xl p-6 space-y-4">
+                                <h4 class="font-extrabold text-teal-400 text-xs uppercase tracking-wider">Initialize & Link Git Repository</h4>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    This directory was manually uploaded and is not currently tracked by Git.<br>
+                                    You can initialize and link it to your remote repository in-place using this tool. This will download Git configuration and ensure seamless 1-click updates.
+                                </p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block">Git Remote Repository URL</label>
+                                        <input type="text" id="init_repo_url" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" placeholder="e.g. https://github.com/username/repository.git">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block">Target Update Branch</label>
+                                        <input type="text" id="init_branch" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" value="Main">
+                                    </div>
+                                </div>
+                                <button onclick="initializeGitRepository()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2.5 rounded text-xs transition">
+                                    🚀 Initialize & Sync Repository
+                                </button>
+                            </div>
+
+                            <!-- Status output log console -->
                             <div class="bg-slate-950 p-4 rounded-lg border border-slate-850 mb-4 font-mono text-[11px] text-slate-300 space-y-1">
                                 <span class="text-slate-500">// Current Branch Status Checks:</span>
                                 <div id="git-status-log">Pending diagnostic check...</div>
@@ -918,9 +1296,9 @@ $csrf_token = generate_csrf_token();
         }
 
         /**
-         * Check Local Git repository status
+         * Load all Git connection fields and refresh status console
          */
-        function checkGitStatus() {
+        function refreshGitStatus() {
             const statusLog = document.getElementById('git-status-log');
             statusLog.innerText = "Querying git repository status...";
 
@@ -933,14 +1311,192 @@ $csrf_token = generate_csrf_token();
             })
             .then(res => res.json())
             .then(data => {
+                // Populate textboxes with latest settings values
+                if (document.getElementById('git_path')) {
+                    document.getElementById('git_path').value = data.git_path || 'git';
+                }
+                if (document.getElementById('git_repo_dir')) {
+                    document.getElementById('git_repo_dir').value = data.git_repo_dir || '';
+                }
+                if (document.getElementById('init_repo_url') && data.git_remote_url) {
+                    document.getElementById('init_repo_url').value = data.git_remote_url;
+                }
+
+                // Populate update branches selection dropdown list
+                const branchSel = document.getElementById('updaterBranchSelect');
+                if (branchSel && data.remote_branches) {
+                    branchSel.innerHTML = '';
+                    data.remote_branches.forEach(b => {
+                        let opt = document.createElement('option');
+                        opt.value = b;
+                        opt.textContent = b;
+                        if (b === data.selected_branch) opt.selected = true;
+                        branchSel.appendChild(opt);
+                    });
+                }
+
                 if (data.success) {
-                    statusLog.innerHTML = `<span class="text-emerald-400">✔ Repository Verified!</span><br>${data.output}`;
+                    statusLog.innerHTML = `<span class="text-emerald-400">✔ Repository Verified!</span><br>Branch: <b>${data.branch}</b><br><br>${data.status.replace(/\n/g, '<br>')}`;
+                    document.getElementById('upd-init-card').classList.add('hidden');
                 } else {
-                    statusLog.innerHTML = `<span class="text-red-400">❌ Error:</span><br>${data.error}`;
+                    statusLog.innerHTML = `<span class="text-red-400">❌ Git Check Failed:</span><br><br>${(data.status || data.error || 'Check failed').replace(/\n/g, '<br>')}`;
+                    // Reveal the initialize panel if .git directory is completely missing
+                    if (!data.status || data.status.indexOf('not a git repository') !== -1) {
+                        document.getElementById('upd-init-card').classList.remove('hidden');
+                    }
                 }
             })
             .catch(err => {
                 statusLog.innerText = "Network connection failed: " + err.message;
+            });
+        }
+
+        // Call check status when loading page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshGitStatus();
+        });
+
+        /**
+         * Check Local Git repository status (Wrapper function for old button name compatibility)
+         */
+        function checkGitStatus() {
+            refreshGitStatus();
+        }
+
+        /**
+         * Save Git connection configuration settings
+         */
+        function saveGitSettings() {
+            const gitPath = document.getElementById('git_path').value;
+            const gitRepoDir = document.getElementById('git_repo_dir').value;
+            const branch = document.getElementById('updaterBranchSelect').value || 'Main';
+
+            fetch('admin.php?action=save_git_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    git_path: gitPath,
+                    git_repo_dir: gitRepoDir,
+                    update_branch: branch,
+                    csrf_token: '<?php echo $csrf_token; ?>'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Git connection settings saved successfully.');
+                    refreshGitStatus();
+                } else {
+                    alert('Error saving settings: ' + data.error);
+                }
+            })
+            .catch(err => {
+                alert('Connection error: ' + err.message);
+            });
+        }
+
+        /**
+         * Test Git connection settings ABSOLUTE connection diagnostic checks
+         */
+        function testGitSettings() {
+            const gitPath = document.getElementById('git_path').value;
+            const gitRepoDir = document.getElementById('git_repo_dir').value;
+            const statusLog = document.getElementById('git-status-log');
+
+            statusLog.innerText = 'Testing connection settings...\n';
+
+            fetch('admin.php?action=test_git_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    git_path: gitPath,
+                    git_repo_dir: gitRepoDir,
+                    csrf_token: '<?php echo $csrf_token; ?>'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Success!\n\n' + data.message);
+                    statusLog.innerHTML = `<span class="text-emerald-400">✔ SUCCESS:</span><br>${data.message.replace(/\n/g, '<br>')}`;
+                    document.getElementById('upd-init-card').classList.add('hidden');
+                    refreshGitStatus();
+                } else {
+                    if (data.git_missing) {
+                        alert('Connection Test Failed:\n\n' + data.error + '\n\nPlease configure the "Initialize & Link Git Repository" section below to construct the repository environment.');
+                        document.getElementById('upd-init-card').classList.remove('hidden');
+                        document.getElementById('upd-init-card').scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('Connection Test Failed:\n\n' + data.error);
+                    }
+                    statusLog.innerHTML = `<span class="text-red-400">❌ FAILED:</span><br>${(data.error || 'Unknown error').replace(/\n/g, '<br>')}`;
+                }
+            })
+            .catch(err => {
+                alert('Error during connection test: ' + err.message);
+                statusLog.innerText = 'ERROR:\n' + err.message;
+            });
+        }
+
+        /**
+         * Initialize local directory as a Git repository and bind origin remote URL
+         */
+        function initializeGitRepository() {
+            const gitPath = document.getElementById('git_path').value;
+            const gitRepoDir = document.getElementById('git_repo_dir').value;
+            const repoUrl = document.getElementById('init_repo_url').value;
+            const branch = document.getElementById('init_branch').value || 'Main';
+
+            if (!repoUrl) {
+                alert('Please specify your Git Remote Repository URL.');
+                return;
+            }
+
+            let cleanRepoUrl = repoUrl.trim();
+            if (cleanRepoUrl.startsWith('sh:')) {
+                cleanRepoUrl = cleanRepoUrl.substring(3).trim();
+            }
+            cleanRepoUrl = cleanRepoUrl.split(' ')[0];
+
+            if (!confirm(`This will initialize a Git repository in '${gitRepoDir}', set remote origin link, and fetch commits from '${cleanRepoUrl}'. Any local files will be overwritten or aligned to remote state cleanly. Would you like to proceed?`)) {
+                return;
+            }
+
+            const statusLog = document.getElementById('git-status-log');
+            statusLog.innerText = 'Initializing local repository in progress...';
+
+            fetch('admin.php?action=git_init', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    git_path: gitPath,
+                    git_repo_dir: gitRepoDir,
+                    repo_url: cleanRepoUrl,
+                    branch: branch,
+                    csrf_token: '<?php echo $csrf_token; ?>'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Git repository initialized and synchronized successfully!');
+                    statusLog.innerHTML = `<span class="text-emerald-400">✔ INITIALIZATION COMPLETED SUCCESSFUL:</span><br>${data.output.replace(/\n/g, '<br>')}`;
+                    document.getElementById('upd-init-card').classList.add('hidden');
+                    refreshGitStatus();
+                } else {
+                    alert('Git initialization error: ' + data.error);
+                    statusLog.innerHTML = `<span class="text-red-400">❌ INITIALIZATION FAILED:</span><br>${(data.error || 'Unknown error').replace(/\n/g, '<br>')}`;
+                }
+            })
+            .catch(err => {
+                alert('Connection error: ' + err.message);
+                statusLog.innerText = 'ERROR:\n' + err.message;
             });
         }
 
@@ -949,7 +1505,7 @@ $csrf_token = generate_csrf_token();
          */
         function triggerGitPull() {
             const statusLog = document.getElementById('git-status-log');
-            if (confirm("Are you sure you wish to pull direct code updates from git origin branch? This will sync local files.")) {
+            if (confirm("Are you sure you wish to pull direct code updates from git origin branch? This will automatically overwrite local files and resolve any conflict structures cleanly.")) {
                 statusLog.innerText = "Pulling latest commits from repository...";
 
                 fetch('admin.php?action=git_pull', {
@@ -962,11 +1518,11 @@ $csrf_token = generate_csrf_token();
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        statusLog.innerHTML = `<span class="text-emerald-400">✔ Pull Completed successfully!</span><br>${data.output}`;
+                        statusLog.innerHTML = `<span class="text-emerald-400">✔ Pull Completed successfully!</span><br>${data.output.replace(/\n/g, '<br>')}`;
                         alert("Repository update completed successfully!");
                         window.location.reload();
                     } else {
-                        statusLog.innerHTML = `<span class="text-red-400">❌ Pull Error:</span><br>${data.error}`;
+                        statusLog.innerHTML = `<span class="text-red-400">❌ Pull Error:</span><br>${data.error.replace(/\n/g, '<br>')}`;
                     }
                 })
                 .catch(err => {
