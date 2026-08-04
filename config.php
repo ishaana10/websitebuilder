@@ -65,6 +65,21 @@ function get_db_connection() {
         } catch (PDOException $e) {
             // Securely log errors or display a safe error message
             error_log("DB connection error: " . $e->getMessage());
+
+            // If request is an AJAX or JSON request, return a clean JSON payload rather than dying with raw text
+            $is_json_request = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) ||
+                               (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) ||
+                               (isset($_GET['action']) && in_array($_GET['action'], ['git_status', 'test_git_settings', 'save_git_settings', 'git_init', 'git_pull']));
+
+            if ($is_json_request) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => "Database connection failed. Details: " . $e->getMessage() . ". Please check your database server status."
+                ]);
+                exit;
+            }
+
             die("Database connection failed. Please check the system logs.");
         }
     }
