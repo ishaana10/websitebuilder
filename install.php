@@ -61,6 +61,18 @@ try {
         `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
     ) ENGINE=InnoDB;");
 
+    // Ensure page versioning table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `project_versions` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `project_id` INT NOT NULL,
+        `label` VARCHAR(150) NOT NULL,
+        `content_json` LONGTEXT NOT NULL,
+        `version_type` VARCHAR(50) NOT NULL DEFAULT 'manual',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+        INDEX `idx_project_version_id` (`project_id`)
+    ) ENGINE=InnoDB;");
+
     $stmt_email = $pdo->query("SELECT COUNT(*) as email_count FROM email_settings");
     $res_email = $stmt_email->fetch();
 

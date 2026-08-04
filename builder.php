@@ -218,6 +218,190 @@ $csrf_token = generate_csrf_token();
             const [history, setHistory] = useState([]);
             const [historyIndex, setHistoryIndex] = useState(-1);
 
+            // --- Page Versioning States ---
+            const [versions, setVersions] = useState([]);
+            const [previewingVersionId, setPreviewingVersionId] = useState(null);
+            const [previewingLabel, setPreviewingLabel] = useState('');
+            const [previewingSections, setPreviewingSections] = useState([]);
+            const [previewingCss, setPreviewingCss] = useState('');
+            const [previewingJs, setPreviewingJs] = useState('');
+            const [customVersionLabel, setCustomVersionLabel] = useState('');
+
+            const fetchVersions = () => {
+                fetch(`api.php?action=get_versions&project_id=${PROJECT_ID}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        setVersions(data.versions);
+                    }
+                })
+                .catch(err => console.error("Error fetching versions: ", err));
+            };
+
+            const previewVersion = (versionId, label) => {
+                fetch(`api.php?action=get_version_content&version_id=${versionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        let raw = data.content_json;
+                        if (typeof raw === 'string') raw = JSON.parse(raw);
+
+                        let previewSects = [];
+                        let previewC = '';
+                        let previewJ = '';
+
+                        if (raw && Array.isArray(raw.blocks)) {
+                            previewSects = raw.blocks.map(blockToSection);
+                            previewC = raw.custom_css || '';
+                            previewJ = raw.custom_js || '';
+                        } else if (raw && Array.isArray(raw.sections)) {
+                            previewSects = raw.sections;
+                            previewC = raw.custom_css || '';
+                            previewJ = raw.custom_js || '';
+                        } else if (raw && Array.isArray(raw)) {
+                            previewSects = raw.map(blockToSection);
+                        }
+
+                        // Map missing schema defaults in preview sections
+                        const tempCombined = [...UI_COMPONENTS, ...customComponents];
+                        previewSects = previewSects.map(s => {
+                            const compDef = tempCombined.find(c => c.id.toLowerCase() === (s.type || '').toLowerCase().trim());
+                            if (compDef && compDef.schema) {
+                                compDef.schema.forEach(field => {
+                                    if (s.props[field.key] === undefined) {
+                                        s.props[field.key] = field.default;
+                                    }
+                                });
+                            }
+                            return s;
+                        });
+
+                        setPreviewingSections(previewSects);
+                        setPreviewingCss(previewC);
+                        setPreviewingJs(previewJ);
+                        setPreviewingVersionId(versionId);
+                        setPreviewingLabel(label);
+                        setActiveSectionId(null);
+                        setActiveElementId(null);
+                        showToast("Preview Loaded", `Displaying version: "${label}". Workspace is read-only.`);
+                    } else {
+                        showToast("Error", data.error || "Failed to load preview.");
+                    }
+                })
+                .catch(err => showToast("Error", err.message));
+            };
+
+            const exitPreviewMode = () => {
+                setPreviewingVersionId(null);
+                setPreviewingSections([]);
+                setPreviewingCss('');
+                setPreviewingJs('');
+                setPreviewingLabel('');
+                showToast("Preview Exited", "Returned to working draft.");
+            };
+
+            const restoreVersionFromId = (versionId) => {
+                if (!window.confirm("Are you sure you want to restore your draft to this version? Your current unsaved draft changes will be replaced. This restore action will also create a snapshot version of your restore so you can undo it later.")) {
+                    return;
+                }
+
+                fetch('api.php?action=restore_version', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                    body: JSON.stringify({
+                        version_id: versionId,
+                        csrf_token: CSRF_TOKEN
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        let raw = data.content_json;
+                        if (typeof raw === 'string') raw = JSON.parse(raw);
+
+                        let restoredSects = [];
+                        let restoredC = '';
+                        let restoredJ = '';
+
+                        if (raw && Array.isArray(raw.blocks)) {
+                            restoredSects = raw.blocks.map(blockToSection);
+                            restoredC = raw.custom_css || '';
+                            restoredJ = raw.custom_js || '';
+                        } else if (raw && Array.isArray(raw.sections)) {
+                            restoredSects = raw.sections;
+                            restoredC = raw.custom_css || '';
+                            restoredJ = raw.custom_js || '';
+                        } else if (raw && Array.isArray(raw)) {
+                            restoredSects = raw.map(blockToSection);
+                        }
+
+                        // Populate defaults
+                        const tempCombined = [...UI_COMPONENTS, ...customComponents];
+                        restoredSects = restoredSects.map(s => {
+                            const compDef = tempCombined.find(c => c.id.toLowerCase() === (s.type || '').toLowerCase().trim());
+                            if (compDef && compDef.schema) {
+                                compDef.schema.forEach(field => {
+                                    if (s.props[field.key] === undefined) {
+                                        s.props[field.key] = field.default;
+                                    }
+                                });
+                            }
+                            return s;
+                        });
+
+                        // Update standard states
+                        setSections(restoredSects);
+                        setCustomCss(restoredC);
+                        setCustomJs(restoredJ);
+
+                        // Append to standard history stack for Ctrl+Z undo support!
+                        commitToHistory(restoredSects);
+
+                        // Exit preview mode
+                        setPreviewingVersionId(null);
+                        setPreviewingSections([]);
+                        setPreviewingCss('');
+                        setPreviewingJs('');
+                        setPreviewingLabel('');
+
+                        showToast("Draft Restored", "Draft successfully updated to selected version.", 4000);
+                        fetchVersions();
+                    } else {
+                        showToast("Error", data.error || "Failed to restore version.");
+                    }
+                })
+                .catch(err => showToast("Error", err.message));
+            };
+
+            const createCustomSnapshot = () => {
+                if (!customVersionLabel.trim()) {
+                    showToast("Validation Error", "Please provide a version label.");
+                    return;
+                }
+                const contentJson = serializeCanvas();
+                fetch('api.php?action=create_version', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                    body: JSON.stringify({
+                        project_id: PROJECT_ID,
+                        label: customVersionLabel,
+                        content_json: contentJson,
+                        csrf_token: CSRF_TOKEN
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Snapshot Created", "Version saved to the timeline.");
+                        setCustomVersionLabel('');
+                        fetchVersions();
+                    } else {
+                        showToast("Error", data.error || "Failed to create snapshot.");
+                    }
+                })
+                .catch(err => showToast("Network Error", err.message));
+            };
+
             // --- System states ---
             const [isSaving, setIsSaving] = useState(false);
             const [isPublishing, setIsPublishing] = useState(false);
@@ -356,6 +540,9 @@ $csrf_token = generate_csrf_token();
                     // Initialize history stack
                     setHistory([initialSections]);
                     setHistoryIndex(0);
+
+                    // Fetch version history timeline on startup
+                    fetchVersions();
 
                 } catch (e) {
                     console.error("Bootstrapping content JSON error: ", e);
@@ -570,6 +757,7 @@ $csrf_token = generate_csrf_token();
                 .then(data => {
                     if (data.success) {
                         if (!silent) showToast("Draft Saved", "Workspace saved successfully.");
+                        fetchVersions();
                         return data;
                     } else {
                         showToast("Error", data.error || "Save rejected.");
@@ -733,6 +921,7 @@ $csrf_token = generate_csrf_token();
                         if (data.success) {
                             setProjectStatus('published');
                             showToast("Published Successfully!", "Your website is live. Click to view.", 5000);
+                            fetchVersions();
                         } else {
                             showToast("Publish Failed", data.error || "Please try again.");
                         }
@@ -771,6 +960,7 @@ $csrf_token = generate_csrf_token();
 
             return (
                 <div className="h-full flex flex-col overflow-hidden bg-slate-950">
+                    <style dangerouslySetInnerHTML={{ __html: previewingVersionId ? previewingCss : customCss }} />
 
                     {/* TOP ACTION HEADER */}
                     <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 h-16 px-6 flex items-center justify-between shrink-0 z-40">
@@ -904,7 +1094,25 @@ $csrf_token = generate_csrf_token();
                             {/* Adaptive Screen Size Frame / Bezel simulation */}
                             <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] bg-slate-900 rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
 
-                                {sections.length === 0 && (
+                                {/* PREVIEW BANNER OVERLAY */}
+                                {previewingVersionId !== null && (
+                                    <div className="bg-amber-500 text-slate-950 px-4 py-3 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 font-bold text-xs mb-4 shadow-lg border border-amber-450 z-50">
+                                        <div className="flex items-center gap-2">
+                                            <i className="fas fa-exclamation-triangle text-base animate-bounce"></i>
+                                            <span>PREVIEWING HISTORICAL VERSION: "{previewingLabel}" (Read-Only Mode)</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => restoreVersionFromId(previewingVersionId)} className="bg-slate-950 text-white hover:bg-slate-900 px-3 py-1.5 rounded transition uppercase tracking-wider font-extrabold text-[10px]">
+                                                Restore this Version
+                                            </button>
+                                            <button onClick={exitPreviewMode} className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded transition uppercase tracking-wider font-extrabold text-[10px]">
+                                                Exit Preview
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {sections.length === 0 && !previewingVersionId && (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
                                         <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-slate-600 text-2xl mb-4 border border-slate-700">
                                             <i className="fas fa-mouse-pointer"></i>
@@ -916,10 +1124,11 @@ $csrf_token = generate_csrf_token();
 
                                 {/* RENDER CANVAS SECTIONS */}
                                 <div className="space-y-4">
-                                    {sections.map((sec, idx) => {
+                                    {(previewingVersionId ? previewingSections : sections).map((sec, idx) => {
                                         const isActive = (sec.id === activeSectionId);
                                         return (
                                             <div key={sec.id} onClick={(e) => {
+                                                if (previewingVersionId) return; // Disable selection in preview mode
                                                 e.stopPropagation();
                                                 setActiveSectionId(sec.id);
 
@@ -933,21 +1142,23 @@ $csrf_token = generate_csrf_token();
                                                     setActiveElementId(null);
                                                     setPropsSubTab('block');
                                                 }
-                                            }} className={`group relative border border-transparent hover:border-teal-500/50 rounded-lg p-2 transition-all duration-200 cursor-pointer ${isActive ? 'section-selected' : ''}`} data-section-id={sec.id} data-component-instance={sec.type}>
+                                            }} className={`group relative border border-transparent hover:border-teal-500/50 rounded-lg p-2 transition-all duration-200 cursor-pointer ${isActive && !previewingVersionId ? 'section-selected' : ''}`} data-section-id={sec.id} data-component-instance={sec.type}>
 
                                                 {/* Visual Controls Overlay */}
-                                                <div className="absolute -top-3.5 right-3 bg-teal-500 text-slate-950 font-black text-[9px] px-2.5 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 flex gap-3 items-center pointer-events-auto">
-                                                    <span className="uppercase font-extrabold">{sec.type}</span>
-                                                    <div className="flex gap-2">
-                                                        <button title="Move Up" onClick={(e) => { e.stopPropagation(); moveSectionUp(idx); }} disabled={idx === 0} className={`disabled:opacity-30`}><i className="fas fa-arrow-up"></i></button>
-                                                        <button title="Move Down" onClick={(e) => { e.stopPropagation(); moveSectionDown(idx); }} disabled={idx === sections.length - 1} className={`disabled:opacity-30`}><i className="fas fa-arrow-down"></i></button>
-                                                        <button title="Duplicate" onClick={(e) => { e.stopPropagation(); duplicateSection(idx); }}><i className="fas fa-copy"></i></button>
-                                                        <button title="Remove" className="text-slate-950 hover:text-red-900" onClick={(e) => { e.stopPropagation(); deleteSection(sec.id); }}><i className="fas fa-trash-alt"></i></button>
+                                                {!previewingVersionId && (
+                                                    <div className="absolute -top-3.5 right-3 bg-teal-500 text-slate-950 font-black text-[9px] px-2.5 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 flex gap-3 items-center pointer-events-auto">
+                                                        <span className="uppercase font-extrabold">{sec.type}</span>
+                                                        <div className="flex gap-2">
+                                                            <button title="Move Up" onClick={(e) => { e.stopPropagation(); moveSectionUp(idx); }} disabled={idx === 0} className={`disabled:opacity-30`}><i className="fas fa-arrow-up"></i></button>
+                                                            <button title="Move Down" onClick={(e) => { e.stopPropagation(); moveSectionDown(idx); }} disabled={idx === sections.length - 1} className={`disabled:opacity-30`}><i className="fas fa-arrow-down"></i></button>
+                                                            <button title="Duplicate" onClick={(e) => { e.stopPropagation(); duplicateSection(idx); }}><i className="fas fa-copy"></i></button>
+                                                            <button title="Remove" className="text-slate-950 hover:text-red-900" onClick={(e) => { e.stopPropagation(); deleteSection(sec.id); }}><i className="fas fa-trash-alt"></i></button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
 
                                                 {/* Canvas Inner Render Node (Injected React Simulation) */}
-                                                <div className="canvas-inner-html" dangerouslySetInnerHTML={{ __html: compileSectionHtml(sec) }} />
+                                                <div className="canvas-inner-html" dangerouslySetInnerHTML={{ __html: compileSectionHtml(sec, !previewingVersionId) }} />
                                             </div>
                                         );
                                     })}
@@ -971,7 +1182,10 @@ $csrf_token = generate_csrf_token();
                                     Settings
                                 </button>
                                 <button onClick={() => setRightPanelTab('code')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'code' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    <i className="fas fa-code mr-1"></i> Code Editor
+                                    <i className="fas fa-code mr-1"></i> Code
+                                </button>
+                                <button onClick={() => setRightPanelTab('versions')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'versions' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    <i className="fas fa-history mr-1"></i> Versions
                                 </button>
                             </div>
 
@@ -1719,6 +1933,80 @@ $csrf_token = generate_csrf_token();
                                     <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2 rounded text-xs transition uppercase tracking-wider">
                                         Save Changes
                                     </button>
+                                </div>
+                            )}
+
+                            {rightPanelTab === 'versions' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5 flex flex-col h-full overflow-hidden">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-save"></i> Save Manual Version
+                                        </h3>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                value={customVersionLabel}
+                                                onChange={(e) => setCustomVersionLabel(e.target.value)}
+                                                placeholder="Version note (e.g. Added features block)"
+                                                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                                            />
+                                            <button onClick={createCustomSnapshot} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2 rounded text-xs transition uppercase tracking-wider">
+                                                Create Milestone
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <hr className="border-slate-800" />
+
+                                    <div className="flex-1 overflow-y-auto space-y-4">
+                                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-history"></i> Versions Timeline ({versions.length})
+                                        </h3>
+
+                                        {versions.length === 0 ? (
+                                            <p className="text-center text-slate-500 text-xs py-8">No historical snapshots recorded yet.</p>
+                                        ) : (
+                                            <div className="relative border-l border-slate-800 pl-4 ml-2 space-y-6">
+                                                {versions.map(v => {
+                                                    const isPreviewing = (previewingVersionId === v.id);
+                                                    return (
+                                                        <div key={v.id} className="relative">
+                                                            {/* circular timeline indicator badge */}
+                                                            <span className={`absolute -left-6 top-1.5 w-3.5 h-3.5 rounded-full border-2 ${v.version_type === 'publish' ? 'bg-emerald-500 border-emerald-400' : 'bg-slate-850 border-teal-500'} flex items-center justify-center`}></span>
+
+                                                            <div className="space-y-2">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${v.version_type === 'publish' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-950 text-slate-400 border border-slate-800'}`}>
+                                                                        {v.version_type}
+                                                                    </span>
+                                                                    <span className="text-[10px] text-slate-500 font-mono">
+                                                                        {new Date(v.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                </div>
+
+                                                                <h4 className="text-xs font-bold text-white leading-relaxed break-words">{v.label}</h4>
+
+                                                                <div className="flex gap-2 pt-1">
+                                                                    <button
+                                                                        onClick={() => isPreviewing ? exitPreviewMode() : previewVersion(v.id, v.label)}
+                                                                        className={`flex-1 py-1.5 rounded text-[10px] uppercase font-bold tracking-wider transition ${isPreviewing ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-800 hover:bg-slate-750 text-teal-400'}`}
+                                                                    >
+                                                                        {isPreviewing ? 'Exit Preview' : 'Preview'}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => restoreVersionFromId(v.id)}
+                                                                        className="flex-1 py-1.5 rounded text-[10px] uppercase font-black bg-teal-500 hover:bg-teal-400 text-slate-950 tracking-wider transition"
+                                                                    >
+                                                                        Restore
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </aside>
