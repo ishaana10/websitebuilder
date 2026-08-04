@@ -527,6 +527,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             }
             exit;
+        } elseif ($action === 'git_log' && is_admin()) {
+            header('Content-Type: application/json');
+            try {
+                $settings = get_git_config($db);
+                $git_path = $settings['git_path'];
+                $git_repo_dir = $settings['git_repo_dir'];
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+
+                $limit = min(50, max(1, (int)($_GET['limit'] ?? 15)));
+                $output = shell_exec($gitCmdPrefix . "log -n $limit --pretty=format:'%h|%an|%ar|%s' 2>&1");
+                $lines = explode("\n", trim((string)$output));
+                $commits = [];
+                foreach ($lines as $line) {
+                    if (!$line) continue;
+                    $parts = explode('|', $line, 4);
+                    if (count($parts) >= 4) {
+                        $commits[] = [
+                            'hash'   => $parts[0] ?? '',
+                            'author' => $parts[1] ?? '',
+                            'date'   => $parts[2] ?? '',
+                            'msg'    => $parts[3] ?? ''
+                        ];
+                    }
+                }
+                echo json_encode(['success' => true, 'commits' => $commits]);
+            } catch (Throwable $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            exit;
         } elseif ($action === 'update_email_settings' && is_admin()) {
             $recipient_email = trim($_POST['recipient_email'] ?? '');
             $auto_responder_enabled = isset($_POST['auto_responder_enabled']) ? 1 : 0;
@@ -1182,18 +1211,36 @@ $csrf_token = generate_csrf_token();
                                 </button>
                             </div>
 
-                            <!-- Status output log console -->
-                            <div class="bg-slate-950 p-4 rounded-lg border border-slate-850 mb-4 font-mono text-[11px] text-slate-300 space-y-1">
-                                <span class="text-slate-500">// Current Branch Status Checks:</span>
-                                <div id="git-status-log">Pending diagnostic check...</div>
+                            <!-- Sub-tabs within Updates tab for cleaner separation of parameters, logs and history -->
+                            <div class="border-b border-slate-800 flex gap-2">
+                                <button onclick="switchUpdaterSubTab('upd-sub-console')" id="btn-sub-console" class="upd-sub-tab-btn px-4 py-2 text-xs font-bold text-teal-400 border-b-2 border-teal-500 transition">Console Output</button>
+                                <button onclick="switchUpdaterSubTab('upd-sub-history')" id="btn-sub-history" class="upd-sub-tab-btn px-4 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-white transition">Git Log History</button>
                             </div>
 
-                            <div class="flex gap-2">
-                                <button onclick="checkGitStatus()" class="bg-slate-850 hover:bg-slate-800 border border-teal-500/10 text-teal-400 font-bold px-4 py-2.5 rounded text-xs transition">
-                                    <i class="fas fa-search-location"></i> Check Status
-                                </button>
-                                <button onclick="triggerGitPull()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2.5 rounded text-xs transition">
-                                    <i class="fas fa-cloud-download-alt"></i> Pull Latest Updates
+                            <!-- Sub-tab 1: Status output log console -->
+                            <div id="upd-sub-console" class="upd-sub-tab-content block">
+                                <div class="bg-slate-950 p-4 rounded-lg border border-slate-850 mb-4 font-mono text-[11px] text-slate-300 space-y-1">
+                                    <span class="text-slate-500">// Current Branch Status Checks:</span>
+                                    <div id="git-status-log">Pending diagnostic check...</div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <button onclick="checkGitStatus()" class="bg-slate-850 hover:bg-slate-800 border border-teal-500/10 text-teal-400 font-bold px-4 py-2.5 rounded text-xs transition">
+                                        <i class="fas fa-search-location"></i> Check Status
+                                    </button>
+                                    <button onclick="triggerGitPull()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2.5 rounded text-xs transition">
+                                        <i class="fas fa-cloud-download-alt"></i> Pull Latest Updates
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 2: Commit log history panel -->
+                            <div id="upd-sub-history" class="upd-sub-tab-content hidden space-y-4">
+                                <div class="overflow-x-auto bg-slate-950/60 rounded-lg border border-slate-850 p-4">
+                                    <div id="git-history-list" class="text-xs text-slate-300 space-y-2">Loading commits...</div>
+                                </div>
+                                <button onclick="loadGitHistoryList()" class="bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-4 py-2 rounded text-xs transition">
+                                    &#x21BB; Refresh History List
                                 </button>
                             </div>
                         </div>
@@ -1625,6 +1672,75 @@ $csrf_token = generate_csrf_token();
                     statusLog.innerText = "Network connection failed: " + err.message;
                 });
             }
+        }
+
+        /**
+         * Switch between sub-tabs within Continuous Updates console (Console vs Git History list)
+         */
+        function switchUpdaterSubTab(subTabId) {
+            document.querySelectorAll('.upd-sub-tab-content').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.upd-sub-tab-content').forEach(p => p.classList.remove('block'));
+            const targetContent = document.getElementById(subTabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('block');
+            }
+
+            document.querySelectorAll('.upd-sub-tab-btn').forEach(btn => {
+                btn.className = 'upd-sub-tab-btn px-4 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent hover:text-white transition';
+            });
+            if (subTabId === 'upd-sub-console') {
+                document.getElementById('btn-sub-console').className = 'upd-sub-tab-btn px-4 py-2 text-xs font-bold text-teal-400 border-b-2 border-teal-500 transition';
+            } else if (subTabId === 'upd-sub-history') {
+                document.getElementById('btn-sub-history').className = 'upd-sub-tab-btn px-4 py-2 text-xs font-bold text-teal-400 border-b-2 border-teal-500 transition';
+                loadGitHistoryList();
+            }
+        }
+
+        /**
+         * Fetch commits dynamically from Git log backend and render list
+         */
+        function loadGitHistoryList() {
+            const listContainer = document.getElementById('git-history-list');
+            listContainer.innerText = 'Loading recent commits...';
+
+            fetch('admin.php?action=git_log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'csrf_token=' + encodeURIComponent('<?php echo $csrf_token; ?>')
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.commits && data.commits.length > 0) {
+                    let html = `<table class="w-full text-left font-mono text-[11px] text-slate-300 divide-y divide-slate-800">
+                        <thead>
+                            <tr class="text-slate-500 text-[9px] uppercase tracking-wider">
+                                <th class="pb-2">Hash</th>
+                                <th class="pb-2">Author</th>
+                                <th class="pb-2">Date</th>
+                                <th class="pb-2">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60">`;
+                    data.commits.forEach(c => {
+                        html += `<tr class="hover:bg-slate-900/40 transition">
+                            <td class="py-2.5 pr-4 text-teal-400 font-bold">${c.hash}</td>
+                            <td class="py-2.5 pr-4 text-slate-400">${c.author}</td>
+                            <td class="py-2.5 pr-4 text-slate-500 whitespace-nowrap">${c.date}</td>
+                            <td class="py-2.5 text-white max-w-sm truncate" title="${c.msg}">${c.msg}</td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    listContainer.innerHTML = html;
+                } else {
+                    listContainer.innerHTML = `<span class="text-red-400">❌ Error loading history: ${data.error || 'No history entries found.'}</span>`;
+                }
+            })
+            .catch(err => {
+                listContainer.innerHTML = `<span class="text-red-400">❌ Connection Error: ${err.message}</span>`;
+            });
         }
 
         /**
