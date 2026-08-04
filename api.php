@@ -137,6 +137,10 @@ switch ($action) {
             }
         }
 
+        if (is_array($content_json) || is_object($content_json)) {
+            $content_json = json_encode($content_json);
+        }
+
         if (empty($name)) {
             http_response_code(400);
             echo json_encode(['error' => 'Project name is required.']);
@@ -169,6 +173,16 @@ switch ($action) {
             $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ? WHERE id = ?");
             try {
                 $stmt_update->execute([$name, $slug, $description, $content_json, $project_id]);
+
+                // Create a page version snapshot
+                $version_label = trim($input['version_label'] ?? '');
+                if (empty($version_label)) {
+                    $version_label = 'Manual Save - ' . date('Y-m-d H:i');
+                }
+                $version_type = trim($input['version_type'] ?? 'manual');
+                $stmt_version = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, ?)");
+                $stmt_version->execute([$project_id, $version_label, $content_json, $version_type]);
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'Project saved successfully.',
@@ -192,6 +206,11 @@ switch ($action) {
             try {
                 $stmt_insert->execute([$user_id, $name, $slug, $description, $content_json]);
                 $new_id = $db->lastInsertId();
+
+                // Create initial page version snapshot
+                $stmt_version = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, 'manual')");
+                $stmt_version->execute([$new_id, 'Initial Project Setup', $content_json]);
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'Project created successfully.',
@@ -242,6 +261,15 @@ switch ($action) {
         $stmt = $db->prepare("UPDATE projects SET published_html = ?, status = 'published' WHERE id = ?");
         try {
             $stmt->execute([$purified_html, $project_id]);
+
+            // Create a page version snapshot specifically for the publish action
+            $pub_label = trim($input['version_label'] ?? '');
+            if (empty($pub_label)) {
+                $pub_label = 'Published Site - ' . date('Y-m-d H:i');
+            }
+            $stmt_pub_version = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, 'publish')");
+            $stmt_pub_version->execute([$project_id, $pub_label, $project['content_json']]);
+
             echo json_encode([
                 'success' => true,
                 'message' => 'Project published successfully! Clean, responsive views compiled.',
@@ -250,6 +278,159 @@ switch ($action) {
         } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Database error during publish: ' . $e->getMessage()]);
+        }
+        break;
+
+    case 'get_versions':
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+        $project_id = $_GET['project_id'] ?? null;
+        if (!$project_id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing project ID.']);
+            exit;
+        }
+        $project = check_project_ownership($db, $project_id, $user_id);
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Project not found or unauthorized.']);
+            exit;
+        }
+        $stmt = $db->prepare("SELECT id, label, version_type, created_at FROM project_versions WHERE project_id = ? ORDER BY created_at DESC");
+        $stmt->execute([$project_id]);
+        $versions = $stmt->fetchAll();
+        echo json_encode([
+            'success' => true,
+            'versions' => $versions
+        ]);
+        break;
+
+    case 'get_version_content':
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+        $version_id = $_GET['version_id'] ?? null;
+        if (!$version_id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing version ID.']);
+            exit;
+        }
+        $stmt = $db->prepare("
+            SELECT pv.* FROM project_versions pv
+            JOIN projects p ON pv.project_id = p.id
+            WHERE pv.id = ? AND p.user_id = ?
+        ");
+        $stmt->execute([$version_id, $user_id]);
+        $version = $stmt->fetch();
+        if (!$version) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Version not found or unauthorized.']);
+            exit;
+        }
+        echo json_encode([
+            'success' => true,
+            'content_json' => $version['content_json']
+        ]);
+        break;
+
+    case 'restore_version':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($input['csrf_token'] ?? '');
+        if (!verify_csrf_token($csrf)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Invalid CSRF security token.']);
+            exit;
+        }
+        $version_id = $input['version_id'] ?? null;
+        if (!$version_id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing version ID.']);
+            exit;
+        }
+        $stmt = $db->prepare("
+            SELECT pv.* FROM project_versions pv
+            JOIN projects p ON pv.project_id = p.id
+            WHERE pv.id = ? AND p.user_id = ?
+        ");
+        $stmt->execute([$version_id, $user_id]);
+        $version = $stmt->fetch();
+        if (!$version) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Version not found or unauthorized.']);
+            exit;
+        }
+
+        $stmt_upd = $db->prepare("UPDATE projects SET content_json = ? WHERE id = ?");
+        try {
+            $stmt_upd->execute([$version['content_json'], $version['project_id']]);
+
+            $restore_label = "Restored to version: " . $version['label'];
+            $stmt_snapshot = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, 'manual')");
+            $stmt_snapshot->execute([$version['project_id'], $restore_label, $version['content_json']]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Project draft restored to historical snapshot successfully.',
+                'content_json' => $version['content_json']
+            ]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error during restore: ' . $e->getMessage()]);
+        }
+        break;
+
+    case 'create_version':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+        $csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($input['csrf_token'] ?? '');
+        if (!verify_csrf_token($csrf)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Invalid CSRF security token.']);
+            exit;
+        }
+        $project_id = $input['project_id'] ?? null;
+        $label = trim($input['label'] ?? '');
+        $content_json = $input['content_json'] ?? '';
+
+        if (!$project_id || empty($label)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing project ID or version label.']);
+            exit;
+        }
+
+        $project = check_project_ownership($db, $project_id, $user_id);
+        if (!$project) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Project not found or unauthorized.']);
+            exit;
+        }
+
+        if (empty($content_json)) {
+            $content_json = $project['content_json'];
+        }
+
+        $stmt_ins = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, 'manual')");
+        try {
+            $stmt_ins->execute([$project_id, $label, $content_json]);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Version snapshot created successfully.'
+            ]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error during snapshot creation: ' . $e->getMessage()]);
         }
         break;
 

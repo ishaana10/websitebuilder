@@ -77,3 +77,15 @@ CREATE TABLE IF NOT EXISTS `email_settings` (
     `auto_responder_body` TEXT NOT NULL,
     `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
 ) ENGINE=InnoDB;
+
+-- Page Versioning / Snapshot History Timeline
+CREATE TABLE IF NOT EXISTS `project_versions` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `project_id` INT NOT NULL,
+    `label` VARCHAR(150) NOT NULL,
+    `content_json` LONGTEXT NOT NULL,
+    `version_type` VARCHAR(50) NOT NULL DEFAULT 'manual', -- 'manual', 'publish', 'auto'
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+    INDEX `idx_project_version_id` (`project_id`)
+) ENGINE=InnoDB;
