@@ -188,13 +188,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $git_path = $settings['git_path'];
                 $git_repo_dir = $settings['git_repo_dir'];
                 $selectedBranch = $settings['update_branch'];
+                $git_remote_url = $settings['git_remote_url'];
 
                 $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+
+                // Check if .git exists; if NOT, force create/initialize it automatically
+                $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
+                if (!$is_git_repo) {
+                    if (is_dir($git_repo_dir)) {
+                        // Force git init
+                        shell_exec($gitCmdPrefix . "init 2>&1");
+                        // Set remote url
+                        shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($git_remote_url) . " 2>&1");
+                        shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($git_remote_url) . " 2>&1");
+                        // Fetch origin
+                        shell_exec($gitCmdPrefix . "fetch origin 2>&1");
+                        // Checkout and track branch
+                        $branchEsc = escapeshellarg($selectedBranch);
+                        shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
+                        // Sync hard reset
+                        shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
+                    }
+                }
 
                 $status = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
                 $branch = (string)shell_exec($gitCmdPrefix . 'rev-parse --abbrev-ref HEAD 2>&1');
 
-                // Check if .git exists to report correct git repository presence
+                // Re-verify if .git exists
                 $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
 
                 $branchesOutput = (string)shell_exec($gitCmdPrefix . "branch -a 2>&1");
@@ -319,13 +339,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
+            // Force create / initialize .git if missing during test settings connection check too
             if (!is_dir(rtrim($gitRepoDir, '/') . '/.git')) {
-                echo json_encode([
-                    'success' => false,
-                    'git_missing' => true,
-                    'error' => "The directory '{$gitRepoDir}' exists, but it does not appear to be a git repository (no '.git' directory found)."
-                ]);
-                exit;
+                try {
+                    $settings = get_git_config($db);
+                    $git_remote_url = $settings['git_remote_url'];
+                    $selectedBranch = $settings['update_branch'];
+                    $gitEsc = escapeshellarg($gitPath);
+                    $gitCmdPrefix = $gitEsc . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
+
+                    shell_exec($gitCmdPrefix . "init 2>&1");
+                    shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($git_remote_url) . " 2>&1");
+                    shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($git_remote_url) . " 2>&1");
+                    shell_exec($gitCmdPrefix . "fetch origin 2>&1");
+                    $branchEsc = escapeshellarg($selectedBranch);
+                    shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
+                    shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
+                } catch (Throwable $e) {
+                    error_log("Failed to force initialize .git during test connection: " . $e->getMessage());
+                }
             }
 
             $gitEscaped = escapeshellarg($gitPath);
