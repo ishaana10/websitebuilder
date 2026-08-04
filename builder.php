@@ -201,6 +201,7 @@ $csrf_token = generate_csrf_token();
             const [customCss, setCustomCss] = useState('');
             const [customJs, setCustomJs] = useState('');
             const [projectStatus, setProjectStatus] = useState(PROJECT_STATUS);
+            const [componentSearchQuery, setComponentSearchQuery] = useState('');
 
             // --- Code Editor Tab States ---
             const [isFullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
@@ -807,6 +808,16 @@ $csrf_token = generate_csrf_token();
 
                         {/* SYSTEM SAVE & PUBLISH ACTION TRIGGERS */}
                         <div className="flex items-center gap-2">
+                            <button onClick={() => {
+                                if (window.confirm("Are you absolutely sure you want to clear the entire canvas? This action is undoable using Ctrl+Z.")) {
+                                    updateSectionsWithHistory([]);
+                                    setActiveSectionId(null);
+                                    setActiveElementId(null);
+                                    showToast("Canvas Cleared", "All sections removed. Press Ctrl+Z to undo.");
+                                }
+                            }} className="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 font-bold px-3 py-2 rounded text-xs flex items-center gap-1.5 transition border border-rose-900/30" title="Clear entire canvas">
+                                <i className="fas fa-trash-alt"></i> Clear Canvas
+                            </button>
                             <button onClick={() => saveProject(false)} disabled={isSaving} className="bg-slate-850 hover:bg-slate-800 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition border border-slate-800">
                                 {isSaving ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-save text-teal-400"></i>}
                                 Save Draft
@@ -826,19 +837,49 @@ $csrf_token = generate_csrf_token();
 
                         {/* LEFT COLUMN - COMPONENTS LIBRARY */}
                         <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2">
+                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2 shrink-0">
                                 <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
                                 <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
+
+                                {/* SEARCH / FILTER COMPONENT BAR */}
+                                <div className="relative mt-2">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 text-xs">
+                                        <i className="fas fa-search"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={componentSearchQuery}
+                                        onChange={(e) => setComponentSearchQuery(e.target.value)}
+                                        placeholder="Search widgets (e.g. Hero, Alert)..."
+                                        className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+                                    />
+                                    {componentSearchQuery && (
+                                        <button
+                                            onClick={() => setComponentSearchQuery('')}
+                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">
+                                            <i className="fas fa-times-circle"></i>
+                                        </button>
+                                    )}
+                                </div>
+
                                 <button
                                     onClick={() => setIsCustomCompModalOpen(true)}
-                                    className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow">
+                                    className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow mt-2">
                                     <i className="fas fa-plus-circle"></i> Create Custom Component
                                 </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                                 {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
-                                    const items = ACTIVE_COMPONENTS.filter(comp => comp.category === cat);
+                                    // Filter components inside category using case-insensitive search matching against name, category or tag id
+                                    const items = ACTIVE_COMPONENTS.filter(comp => {
+                                        if (comp.category !== cat) return false;
+                                        if (!componentSearchQuery.trim()) return true;
+                                        const query = componentSearchQuery.toLowerCase().trim();
+                                        return comp.name.toLowerCase().includes(query) ||
+                                               comp.id.toLowerCase().includes(query) ||
+                                               comp.category.toLowerCase().includes(query);
+                                    });
                                     if (items.length === 0) return null;
                                     return (
                                         <div key={cat} className="space-y-2">

@@ -745,6 +745,168 @@ const UI_COMPONENTS = [
         </div>
     </div>
 </section>`
+    },
+
+    // === ELEMENTOR EXTRA EXTRACTED WIDGETS ===
+    {
+        id: 'alert_block',
+        name: 'Alert Notification Block',
+        category: 'Features',
+        icon: 'fas fa-exclamation-circle',
+        schema: [
+            { key: 'heading', label: 'Alert Heading', type: 'text', default: 'Attention Required' },
+            { key: 'text', label: 'Alert Message', type: 'textarea', default: 'This is a beautifully styled dynamic alert banner designed to capture user focus.' },
+            { key: 'alertType', label: 'Alert Status Type', type: 'select', default: 'info', options: [
+                { value: 'info', label: 'Info (Teal)' },
+                { value: 'warning', label: 'Warning (Amber)' },
+                { value: 'success', label: 'Success (Green)' },
+                { value: 'error', label: 'Error (Red)' }
+            ]},
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' }
+        ],
+        html: `
+<div class="p-5 rounded-lg border flex items-start gap-4 shadow-md relative alert-box-el" style="background-color: {{bgColor}}; color: {{textColor}}; border-color: {{alertType === 'info' ? '#14b8a6' : alertType === 'warning' ? '#f59e0b' : alertType === 'success' ? '#10b981' : '#ef4444'}}" data-component="alert_block">
+    <div class="text-lg shrink-0 mt-0.5" style="color: {{alertType === 'info' ? '#14b8a6' : alertType === 'warning' ? '#f59e0b' : alertType === 'success' ? '#10b981' : '#ef4444'}}">
+        <i class="fas {{alertType === 'info' ? 'fa-info-circle' : alertType === 'warning' ? 'fa-exclamation-triangle' : alertType === 'success' ? 'fa-check-circle' : 'fa-times-circle'}}"></i>
+    </div>
+    <div class="flex-1 space-y-1">
+        <h4 class="font-bold text-sm text-white">{{heading}}</h4>
+        <p class="text-xs leading-relaxed opacity-90">{{text}}</p>
+    </div>
+    <button onclick="window.dismissAlertBlock(this)" class="text-slate-500 hover:text-white transition text-xs focus:outline-none" title="Dismiss Alert">
+        <i class="fas fa-times"></i>
+    </button>
+</div>`
+    },
+    {
+        id: 'icon_image_box',
+        name: 'Icon / Image Box Box',
+        category: 'Features',
+        icon: 'fas fa-box-open',
+        schema: [
+            { key: 'heading', label: 'Box Title', type: 'text', default: 'High Density Architecture' },
+            { key: 'text', label: 'Box Description', type: 'textarea', default: 'Combine beautiful icons or direct image uploads into clean card containers that match your theme perfectly.' },
+            { key: 'iconClass', label: 'FontAwesome Icon', type: 'text', default: 'fas fa-cubes' },
+            { key: 'imageUrl', label: 'Image URL (Optional)', type: 'text', default: '' },
+            { key: 'bgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
+            { key: 'accentColor', label: 'Icon Accent Color', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' }
+        ],
+        html: `
+<div class="p-6 rounded-xl border border-slate-800 text-center flex flex-col items-center gap-4 hover:border-slate-700 transition duration-300 shadow-xl max-w-sm mx-auto" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="icon_image_box">
+    {{imageUrl ? '<img src="' + imageUrl + '" class="w-16 h-16 object-cover rounded-lg shadow-md" />' : '<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg" style="background-color: rgba(20, 184, 166, 0.1); color: ' + accentColor + '"><i class="' + iconClass + '"></i></div>'}}
+    <div class="space-y-2">
+        <h4 class="text-base font-bold text-white">{{heading}}</h4>
+        <p class="text-xs leading-relaxed opacity-85">{{text}}</p>
+    </div>
+</div>`
+    },
+    {
+        id: 'countdown_timer',
+        name: 'Countdown Timer Clock',
+        category: 'Advanced',
+        icon: 'fas fa-clock',
+        schema: [
+            { key: 'heading', label: 'Timer Heading', type: 'text', default: 'Our Launching Event Begins In' },
+            { key: 'targetDate', label: 'Target Date (YYYY-MM-DD HH:MM)', type: 'text', default: '2026-12-31 23:59' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
+            { key: 'cardBg', label: 'Metrics Card Background', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Highlight Accent Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-12 px-6 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="countdown_timer" data-target="{{targetDate}}">
+    <div class="max-w-2xl mx-auto space-y-6">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400">{{heading}}</h3>
+        <div class="flex justify-center items-center gap-4">
+            <div class="p-4 rounded-xl shadow-lg border border-slate-800/80 w-20 flex flex-col items-center" style="background-color: {{cardBg}};">
+                <span class="days-val text-2xl md:text-3xl font-black" style="color: {{accentColor}};">00</span>
+                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest mt-1">Days</span>
+            </div>
+            <span class="text-xl text-slate-600 font-black">:</span>
+            <div class="p-4 rounded-xl shadow-lg border border-slate-800/80 w-20 flex flex-col items-center" style="background-color: {{cardBg}};">
+                <span class="hours-val text-2xl md:text-3xl font-black" style="color: {{accentColor}};">00</span>
+                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest mt-1">Hours</span>
+            </div>
+            <span class="text-xl text-slate-600 font-black">:</span>
+            <div class="p-4 rounded-xl shadow-lg border border-slate-800/80 w-20 flex flex-col items-center" style="background-color: {{cardBg}};">
+                <span class="minutes-val text-2xl md:text-3xl font-black" style="color: {{accentColor}};">00</span>
+                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest mt-1">Min</span>
+            </div>
+            <span class="text-xl text-slate-600 font-black">:</span>
+            <div class="p-4 rounded-xl shadow-lg border border-slate-800/80 w-20 flex flex-col items-center" style="background-color: {{cardBg}};">
+                <span class="seconds-val text-2xl md:text-3xl font-black" style="color: {{accentColor}};">00</span>
+                <span class="text-[9px] text-slate-400 uppercase font-bold tracking-widest mt-1">Sec</span>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'social_icons',
+        name: 'Social Share Buttons',
+        category: 'Advanced',
+        icon: 'fas fa-share-alt',
+        schema: [
+            { key: 'heading', label: 'Heading Label', type: 'text', default: 'Follow our digital accounts' },
+            { key: 'twitterUrl', label: 'Twitter/X URL', type: 'text', default: 'https://twitter.com' },
+            { key: 'githubUrl', label: 'GitHub URL', type: 'text', default: 'https://github.com' },
+            { key: 'linkedinUrl', label: 'LinkedIn URL', type: 'text', default: 'https://linkedin.com' },
+            { key: 'bgColor', label: 'Wrapper Background', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Button Hover Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-8 px-6 rounded-lg text-center" style="background-color: {{bgColor}};" data-component="social_icons">
+    <div class="max-w-md mx-auto space-y-4">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">{{heading}}</h4>
+        <div class="flex justify-center items-center gap-4">
+            <a href="{{twitterUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="{{githubUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="{{linkedinUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'progress_bar',
+        name: 'Progress Meter Bar',
+        category: 'Features',
+        icon: 'fas fa-spinner',
+        schema: [
+            { key: 'heading', label: 'Progress Goal Description', type: 'text', default: 'Server Performance Rate' },
+            { key: 'percentage', label: 'Progress Percentage', type: 'select', default: '85', options: [
+                { value: '10', label: '10%' },
+                { value: '25', label: '25%' },
+                { value: '40', label: '40%' },
+                { value: '50', label: '50%' },
+                { value: '65', label: '65%' },
+                { value: '75', label: '75%' },
+                { value: '85', label: '85%' },
+                { value: '95', label: '95%' },
+                { value: '100', label: '100%' }
+            ]},
+            { key: 'bgColor', label: 'Container Background', type: 'color', default: '#0f172a' },
+            { key: 'trackColor', label: 'Track Bar Background', type: 'color', default: '#1e293b' },
+            { key: 'fillColor', label: 'Fill Bar Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-10 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="progress_bar">
+    <div class="max-w-xl mx-auto space-y-3">
+        <div class="flex justify-between items-center text-xs font-bold">
+            <span class="text-white">{{heading}}</span>
+            <span style="color: {{fillColor}};">{{percentage}}%</span>
+        </div>
+        <div class="w-full h-3 rounded-full overflow-hidden" style="background-color: {{trackColor}};">
+            <div class="h-full rounded-full transition-all duration-1000 ease-out" style="background-color: {{fillColor}}; width: {{percentage}}%;"></div>
+        </div>
+    </div>
+</section>`
     }
 ];
 
@@ -903,8 +1065,66 @@ if (typeof window !== 'undefined') {
         }
     };
 
-    // Auto-sync cart on DOM load
+    // Dismiss Alert Block
+    window.dismissAlertBlock = function(btn) {
+        const box = btn.closest('.alert-box-el');
+        if (box) {
+            box.style.opacity = '0';
+            setTimeout(() => box.remove(), 300);
+        }
+    };
+
+    // Countdown Timer dynamic clock logic initializer
+    window.initNuvisCountdownClocks = function() {
+        const timers = document.querySelectorAll('[data-component="countdown_timer"]');
+        timers.forEach(timer => {
+            if (timer.dataset.hasTimerInitialized) return;
+            timer.dataset.hasTimerInitialized = "true";
+
+            const targetStr = timer.getAttribute('data-target') || '2026-12-31 23:59';
+            const daysEl = timer.querySelector('.days-val');
+            const hoursEl = timer.querySelector('.hours-val');
+            const minsEl = timer.querySelector('.minutes-val');
+            const secsEl = timer.querySelector('.seconds-val');
+
+            const updateClock = () => {
+                const target = new Date(targetStr.replace(' ', 'T')).getTime();
+                const now = new Date().getTime();
+                const diff = target - now;
+
+                if (isNaN(target) || diff <= 0) {
+                    if (daysEl) daysEl.innerText = "00";
+                    if (hoursEl) hoursEl.innerText = "00";
+                    if (minsEl) minsEl.innerText = "00";
+                    if (secsEl) secsEl.innerText = "00";
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                if (daysEl) daysEl.innerText = String(days).padStart(2, '0');
+                if (hoursEl) hoursEl.innerText = String(hours).padStart(2, '0');
+                if (minsEl) minsEl.innerText = String(mins).padStart(2, '0');
+                if (secsEl) secsEl.innerText = String(secs).padStart(2, '0');
+            };
+
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+    };
+
+    // Auto-sync cart and initialize dynamic clocks on DOM load
     document.addEventListener('DOMContentLoaded', () => {
         window.updateMiniCartCount();
+        window.initNuvisCountdownClocks();
     });
+
+    // Handle React re-render visual hook to trigger clock setup
+    const observer = new MutationObserver((mutations) => {
+        window.initNuvisCountdownClocks();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 }
