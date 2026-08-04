@@ -940,6 +940,17 @@ $csrf_token = generate_csrf_token();
                                 <button onclick="createNewSiteFromTemplate('E-Commerce Gadget Landing Page')" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition">Use Template Theme</button>
                             </div>
                         </div>
+                        <!-- PestKit Pest Control Demo -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-teal-500/50 transition duration-300 flex flex-col justify-between">
+                            <div class="p-6">
+                                <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-lg mb-4"><i class="fas fa-shield-virus"></i></div>
+                                <h3 class="font-bold text-white text-sm">PestKit Pest Control Demo</h3>
+                                <p class="text-slate-400 text-xs mt-2 leading-relaxed">Authentic, high-fidelity responsive clone of the PestKit website builder demo featuring custom topbars, services grids, pricing cards, completed project galleries, and contact callback forms.</p>
+                            </div>
+                            <div class="p-4 bg-slate-950/40 border-t border-slate-800">
+                                <button onclick="createNewSiteFromTemplate('PestKit Pest Control Demo')" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded-lg text-xs transition">Use Template Theme</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1697,7 +1708,8 @@ $csrf_token = generate_csrf_token();
                 body: JSON.stringify({
                     name: templateName + ' ' + Math.floor(Math.random() * 100),
                     description: 'Instantiated from premium ' + templateName + ' starter package.',
-                    content_json: layoutJson,
+                    content_json: templateName === 'PestKit Pest Control Demo' ? '' : layoutJson,
+                    template_name: templateName,
                     csrf_token: '<?php echo $csrf_token; ?>'
                 })
             })

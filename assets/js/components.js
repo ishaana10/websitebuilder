@@ -505,6 +505,16 @@ const UI_COMPONENTS = [
 </div>`
     },
     {
+        id: 'fullwidth_raw_html',
+        name: 'Full-Width Raw HTML Block',
+        category: 'Advanced',
+        icon: 'fas fa-code',
+        schema: [
+            { key: 'rawHtml', label: 'Custom HTML Code', type: 'textarea', default: '<div class="p-6 bg-slate-950 text-center text-xs text-teal-400 font-mono">Clean Raw HTML</div>' }
+        ],
+        html: `{{rawHtml}}`
+    },
+    {
         id: 'chatbot',
         name: 'Interactive AI Chatbot',
         category: 'Advanced',
