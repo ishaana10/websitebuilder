@@ -61,6 +61,34 @@ function get_git_config($db): array {
 
     return $settings;
 }
+
+/**
+ * Robustly checks if a path exists and is a directory, with shell-based fallbacks.
+ */
+function is_dir_robust($path): bool {
+    if (empty($path)) {
+        return false;
+    }
+    if (is_dir($path)) {
+        return true;
+    }
+    // Shell execution fallback in case PHP open_basedir or statcache is playing tricks
+    $output = shell_exec("test -d " . escapeshellarg($path) . " && echo 'yes'");
+    return trim((string)$output) === 'yes';
+}
+
+/**
+ * Canonical git-native repository detector using git rev-parse.
+ */
+function is_git_repo_robust($git_path, $git_repo_dir): bool {
+    if (!is_dir_robust($git_repo_dir)) {
+        return false;
+    }
+    $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+    $res = shell_exec($gitCmdPrefix . "rev-parse --is-inside-work-tree 2>&1");
+    return trim((string)$res) === 'true';
+}
+
 $user_id = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 $role = $_SESSION['user_role'];
@@ -192,75 +220,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
 
                 $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
 
-                // Check if .git exists; if NOT, force create/initialize it automatically
-                $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
-                if (!$is_git_repo) {
-                    if (is_dir($git_repo_dir)) {
-                        // Backup .env
-                        $envPath = rtrim($git_repo_dir, '/') . '/.env';
-                        $envBackup = '';
-                        if (file_exists($envPath)) {
-                            $envBackup = file_get_contents($envPath);
-                        }
+                $is_git_repo = is_git_repo_robust($git_path, $git_repo_dir);
 
-                        // Force git init
-                        shell_exec($gitCmdPrefix . "init 2>&1");
-                        // Set remote url
-                        shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($git_remote_url) . " 2>&1");
-                        shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($git_remote_url) . " 2>&1");
-                        // Fetch origin
-                        shell_exec($gitCmdPrefix . "fetch origin 2>&1");
-                        // Checkout and track branch
-                        $branchEsc = escapeshellarg($selectedBranch);
-                        shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
-                        // Sync hard reset
-                        shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
-
-                        // Restore .env
-                        if ($envBackup !== '') {
-                            file_put_contents($envPath, $envBackup);
-                        }
-                    }
-                }
-
-                $status = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
-                $branch = (string)shell_exec($gitCmdPrefix . 'rev-parse --abbrev-ref HEAD 2>&1');
-
-                // Re-verify if .git exists
-                $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
-
-                $branchesOutput = (string)shell_exec($gitCmdPrefix . "branch -a 2>&1");
+                $status = '';
+                $branch = '';
                 $remoteBranches = [];
-                if ($branchesOutput && strpos($branchesOutput, 'fatal:') === false && strpos($branchesOutput, 'sh:') === false && strpos($branchesOutput, 'not found') === false) {
-                    $lines = explode("\n", $branchesOutput);
-                    foreach ($lines as $line) {
-                        $line = trim($line, "* \t\r\n");
-                        if (!$line) continue;
-                        if (strpos($line, 'remotes/origin/HEAD') !== false) continue;
-                        if (strpos($line, 'remotes/origin/') === 0) {
-                            $b = substr($line, 15);
-                        } elseif (strpos($line, 'origin/') === 0) {
-                            $b = substr($line, 7);
-                        } else {
-                            $b = $line;
-                        }
-                        if ($b && !preg_match('/[\s:]/', $b) && !in_array($b, $remoteBranches)) {
-                            $remoteBranches[] = $b;
+                $remoteUrl = $git_remote_url;
+
+                if ($is_git_repo) {
+                    $status = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
+                    $branch = (string)shell_exec($gitCmdPrefix . 'rev-parse --abbrev-ref HEAD 2>&1');
+                    $branchesOutput = (string)shell_exec($gitCmdPrefix . "branch -a 2>&1");
+                    if ($branchesOutput && strpos($branchesOutput, 'fatal:') === false && strpos($branchesOutput, 'sh:') === false && strpos($branchesOutput, 'not found') === false) {
+                        $lines = explode("\n", $branchesOutput);
+                        foreach ($lines as $line) {
+                            $line = trim($line, "* \t\r\n");
+                            if (!$line) continue;
+                            if (strpos($line, 'remotes/origin/HEAD') !== false) continue;
+                            if (strpos($line, 'remotes/origin/') === 0) {
+                                $b = substr($line, 15);
+                            } elseif (strpos($line, 'origin/') === 0) {
+                                $b = substr($line, 7);
+                            } else {
+                                $b = $line;
+                            }
+                            if ($b && !preg_match('/[\s:]/', $b) && !in_array($b, $remoteBranches)) {
+                                $remoteBranches[] = $b;
+                            }
                         }
                     }
+                    $remoteUrlCheck = (string)shell_exec($gitCmdPrefix . "config --get remote.origin.url 2>&1");
+                    if ($remoteUrlCheck && stripos($remoteUrlCheck, 'fatal:') === false && stripos($remoteUrlCheck, 'sh:') === false) {
+                        $remoteUrl = trim($remoteUrlCheck);
+                    }
+                } else {
+                    $status = "fatal: not a git repository (or any of the parent directories): .git";
+                    $branch = "None";
                 }
 
                 if (empty($remoteBranches)) {
                     $remoteBranches = [$selectedBranch];
-                }
-
-                $remoteUrl = '';
-                $remoteUrlCheck = (string)shell_exec($gitCmdPrefix . "config --get remote.origin.url 2>&1");
-                if ($remoteUrlCheck && stripos($remoteUrlCheck, 'fatal:') === false && stripos($remoteUrlCheck, 'sh:') === false) {
-                    $remoteUrl = trim($remoteUrlCheck);
-                }
-                if (empty($remoteUrl)) {
-                    $remoteUrl = $settings['git_remote_url'];
                 }
 
                 $success = $is_git_repo && (stripos($status, 'fatal:') === false);
@@ -346,42 +345,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            if (!is_dir($gitRepoDir)) {
+            if (!is_dir_robust($gitRepoDir)) {
                 echo json_encode(['success' => false, 'error' => "The directory '{$gitRepoDir}' does not exist or is not accessible."]);
                 exit;
-            }
-
-            // Force create / initialize .git if missing during test settings connection check too
-            if (!is_dir(rtrim($gitRepoDir, '/') . '/.git')) {
-                try {
-                    $settings = get_git_config($db);
-                    $git_remote_url = $settings['git_remote_url'];
-                    $selectedBranch = $settings['update_branch'];
-                    $gitEsc = escapeshellarg($gitPath);
-                    $gitCmdPrefix = $gitEsc . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
-
-                    // Backup .env
-                    $envPath = rtrim($gitRepoDir, '/') . '/.env';
-                    $envBackup = '';
-                    if (file_exists($envPath)) {
-                        $envBackup = file_get_contents($envPath);
-                    }
-
-                    shell_exec($gitCmdPrefix . "init 2>&1");
-                    shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($git_remote_url) . " 2>&1");
-                    shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($git_remote_url) . " 2>&1");
-                    shell_exec($gitCmdPrefix . "fetch origin 2>&1");
-                    $branchEsc = escapeshellarg($selectedBranch);
-                    shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
-                    shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
-
-                    // Restore .env
-                    if ($envBackup !== '') {
-                        file_put_contents($envPath, $envBackup);
-                    }
-                } catch (Throwable $e) {
-                    error_log("Failed to force initialize .git during test connection: " . $e->getMessage());
-                }
             }
 
             $gitEscaped = escapeshellarg($gitPath);
@@ -390,6 +356,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 echo json_encode([
                     'success' => false,
                     'error' => "Failed to run Git with path '{$gitPath}'. Error details: " . trim($versionOutput)
+                ]);
+                exit;
+            }
+
+            // Check if it is a git repository
+            $is_git_repo = is_git_repo_robust($gitPath, $gitRepoDir);
+            if (!$is_git_repo) {
+                echo json_encode([
+                    'success' => false,
+                    'git_missing' => true,
+                    'error' => "Git is working perfectly on your server (version: " . trim($versionOutput) . ")!\n\nHowever, this directory is not tracked by Git yet. This is completely normal before initialization.\n\nPlease configure the remote repository details in the panel below and click 'Initialize & Sync Repository'."
                 ]);
                 exit;
             }
@@ -429,7 +406,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            if (!is_dir($gitRepoDir)) {
+            if (!is_dir_robust($gitRepoDir)) {
                 echo json_encode(['success' => false, 'error' => "The directory '{$gitRepoDir}' does not exist or is not accessible."]);
                 exit;
             }
@@ -447,9 +424,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
             $output = "Starting Git repository initialization...\n";
 
-            if (!is_dir(rtrim($gitRepoDir, '/') . '/.git')) {
+            // Run git init if .git is missing
+            if (!is_git_repo_robust($gitPath, $gitRepoDir)) {
                 $res = (string)shell_exec($gitCmdPrefix . "init 2>&1");
                 $output .= "git init:\n" . trim($res) . "\n\n";
+                if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
+                    echo json_encode(['success' => false, 'error' => "Git init failed:\n" . trim($res)]);
+                    exit;
+                }
             }
 
             try {
@@ -479,12 +461,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $output .= "Fetching branches from origin...\n";
             $res = (string)shell_exec($gitCmdPrefix . "fetch origin 2>&1");
             $output .= "git fetch:\n" . trim($res) . "\n\n";
+            if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
+                echo json_encode(['success' => false, 'error' => "Git fetch failed:\n" . trim($res)]);
+                exit;
+            }
 
             $branchEscaped = escapeshellarg($branch);
             $output .= "Checking out branch '{$branch}'...\n";
-            $res = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} --track origin/{$branchEscaped} 2>&1");
-            if (stripos($res, 'fatal:') !== false) {
-                $res = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} origin/{$branchEscaped} 2>&1");
+            $res = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} origin/{$branchEscaped} 2>&1");
+            if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
+                $res2 = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} --track origin/{$branchEscaped} 2>&1");
+                if (stripos($res2, 'fatal:') !== false || stripos($res2, 'error:') !== false) {
+                    echo json_encode(['success' => false, 'error' => "Git checkout failed:\n" . trim($res) . "\n" . trim($res2)]);
+                    exit;
+                }
+                $res = $res2;
             }
             $output .= "git checkout:\n" . trim($res) . "\n\n";
 
@@ -498,6 +489,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
 
             $res = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEscaped} 2>&1");
             $output .= "git reset --hard:\n" . trim($res) . "\n\n";
+            if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
+                if ($envBackup !== '') {
+                    file_put_contents($envPath, $envBackup);
+                }
+                echo json_encode(['success' => false, 'error' => "Git hard reset failed:\n" . trim($res)]);
+                exit;
+            }
 
             // Restore .env after reset
             if ($envBackup !== '') {
@@ -520,8 +518,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
                 $selectedBranchEscaped = escapeshellarg($selectedBranch);
 
-                shell_exec($gitCmdPrefix . "fetch origin {$selectedBranchEscaped} 2>&1");
+                // Verify directory exists robustly
+                if (!is_dir_robust($git_repo_dir)) {
+                    throw new Exception("The repository directory '{$git_repo_dir}' does not exist or is not accessible.");
+                }
 
+                // Verify .git exists robustly
+                if (!is_git_repo_robust($git_path, $git_repo_dir)) {
+                    throw new Exception("Git repository is not initialized at '{$git_repo_dir}'. Please use the 'Initialize & Link Git Repository' section below to initialize and link it first.");
+                }
+
+                // Fetch latest commits
+                $fetchOutput = (string)shell_exec($gitCmdPrefix . "fetch origin {$selectedBranchEscaped} 2>&1");
+                if (stripos($fetchOutput, 'fatal:') !== false || stripos($fetchOutput, 'error:') !== false) {
+                    throw new Exception("Git fetch failed:\n" . trim($fetchOutput));
+                }
+
+                // Get diff
                 $diffOutput = (string)shell_exec($gitCmdPrefix . "diff --name-status HEAD origin/{$selectedBranchEscaped} 2>&1");
 
                 // Backup .env if exists to prevent checkout/pull overwrite
@@ -531,23 +544,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     $envBackup = file_get_contents($envPath);
                 }
 
-                shell_exec($gitCmdPrefix . "checkout -f {$selectedBranchEscaped} 2>&1");
+                // Checkout correct branch robustly
+                $checkoutOutput = (string)shell_exec($gitCmdPrefix . "checkout -f {$selectedBranchEscaped} 2>&1");
+                if (stripos($checkoutOutput, 'fatal:') !== false || stripos($checkoutOutput, 'error:') !== false) {
+                    // Try to checkout and track remote branch
+                    $checkoutOutput2 = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$selectedBranchEscaped} origin/{$selectedBranchEscaped} 2>&1");
+                    if (stripos($checkoutOutput2, 'fatal:') !== false || stripos($checkoutOutput2, 'error:') !== false) {
+                        $checkoutOutput3 = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$selectedBranchEscaped} --track origin/{$selectedBranchEscaped} 2>&1");
+                        $checkoutOutput = $checkoutOutput . "\n" . $checkoutOutput2 . "\n" . $checkoutOutput3;
+                    } else {
+                        $checkoutOutput = $checkoutOutput . "\n" . $checkoutOutput2;
+                    }
+                }
 
+                // Verify branch checkout succeeded
+                $currentBranch = trim((string)shell_exec($gitCmdPrefix . "rev-parse --abbrev-ref HEAD 2>&1"));
+                if (stripos($currentBranch, 'fatal:') !== false || stripos($currentBranch, 'error:') !== false || $currentBranch !== $selectedBranch) {
+                    throw new Exception("Failed to checkout branch '{$selectedBranch}'. Checkout output:\n" . trim($checkoutOutput));
+                }
+
+                // Run pull
                 $pullOutput = (string)shell_exec($gitCmdPrefix . "pull origin {$selectedBranchEscaped} -X theirs --no-rebase 2>&1");
+
+                // Run reset hard to force sync index and files with remote
                 $resetOutput = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$selectedBranchEscaped} 2>&1");
+                if (stripos($resetOutput, 'fatal:') !== false || stripos($resetOutput, 'error:') !== false) {
+                    throw new Exception("Git reset hard failed:\n" . trim($resetOutput) . "\n\nPull output:\n" . trim($pullOutput));
+                }
 
                 // Restore .env after pull and reset operations
                 if ($envBackup !== '') {
                     file_put_contents($envPath, $envBackup);
                 }
 
-                $output = "Git Pull:\n" . trim($pullOutput) . "\n\nGit Reset Hard:\n" . trim($resetOutput);
+                $output = "Git Fetch:\n" . trim($fetchOutput) . "\n\nGit Checkout:\n" . trim($checkoutOutput) . "\n\nGit Pull:\n" . trim($pullOutput) . "\n\nGit Reset Hard:\n" . trim($resetOutput);
                 if (!empty($diffOutput) && stripos($diffOutput, 'fatal:') === false) {
                     $output .= "\n\nUpdated Files:\n" . trim($diffOutput);
                 }
 
                 echo json_encode(['success' => true, 'output' => trim($output), 'pulled_branch' => $selectedBranch]);
             } catch (Throwable $e) {
+                // Always try to restore .env if backup exists
+                if (isset($envPath) && isset($envBackup) && $envBackup !== '' && file_exists($envPath)) {
+                    file_put_contents($envPath, $envBackup);
+                }
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
             }
             exit;
