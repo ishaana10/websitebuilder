@@ -44,6 +44,19 @@ if (!empty($project['content_json'])) {
 $body_content = $project['published_html'];
 $is_published = ($project['status'] === 'published');
 
+if ($is_published && !empty($body_content)) {
+    // Check if body content is JSON representing multiple pages
+    $decoded_pages = json_decode($body_content, true);
+    if ($decoded_pages !== null && is_array($decoded_pages)) {
+        $req_page = $_GET['page'] ?? 'index';
+        if (isset($decoded_pages[$req_page])) {
+            $body_content = $decoded_pages[$req_page];
+        } else {
+            $body_content = $decoded_pages['index'] ?? "<h1>Page Not Found</h1><p>The page '" . sanitize_output($req_page) . "' was not found inside this website project.</p>";
+        }
+    }
+}
+
 if (!$is_published || empty($body_content)) {
     // If it's the owner visiting, we show a nice notice, otherwise a generic error
     if (is_logged_in() && $_SESSION['user_id'] === $project['user_id']) {

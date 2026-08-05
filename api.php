@@ -530,9 +530,6 @@ switch ($action) {
             exit;
         }
 
-        // Generate compiled index.html
-        $html_content = $project['published_html'] ?? '';
-
         $custom_css = '';
         $custom_js = '';
         if (!empty($project['content_json'])) {
@@ -543,95 +540,39 @@ switch ($action) {
             }
         }
 
-        if (empty($html_content)) {
-            // Fallback: If not published, decode draft JSON
-            $content_arr = json_decode($project['content_json'] ?? '', true);
-            if ($content_arr && is_array($content_arr) && isset($content_arr['blocks'])) {
-                // If it is our structured format, compile HTML blocks
-                $html_content = '';
-                foreach ($content_arr['blocks'] as $block) {
-                    if ($block['componentId'] === 'html_raw') {
-                        $html_content .= $block['raw_html'] ?? '';
-                    } elseif ($block['componentId'] === 'navbar') {
-                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER';
-                        $logoHtml = '';
-                        if (!empty($block['logoImg'])) {
-                            $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
-                        } else {
-                            $logoHtml = '<span class="text-xl font-extrabold tracking-wider text-teal-400">' . sanitize_output($bText) . '</span>';
-                        }
+        // Load content of assets/js/components.js to bundle inside zip
+        $components_js_path = __DIR__ . '/assets/js/components.js';
+        $components_js = file_exists($components_js_path) ? file_get_contents($components_js_path) : '';
 
-                        $linksHtml = '';
-                        $navLinks = $block['links'] ?? [
-                            ['text' => 'Home', 'url' => '#home'],
-                            ['text' => 'Features', 'url' => '#features'],
-                            ['text' => 'Pricing', 'url' => '#pricing'],
-                            ['text' => 'Contact', 'url' => '#contact']
-                        ];
-                        foreach ($navLinks as $lnk) {
-                            $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-teal-300 transition duration-300">' . sanitize_output($lnk['text']) . '</a>';
-                        }
+        // Create Zip Archive
+        $zip = new ZipArchive();
+        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webbuilder_export_') . '.zip';
 
-                        $html_content .= '
-<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar">
-    <div class="text-xl font-extrabold tracking-wider text-teal-400">' . $logoHtml . '</div>
-    <div class="hidden md:flex space-x-6">' . $linksHtml . '</div>
-    <div>
-        <a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a>
-    </div>
-</nav>';
-                    } elseif ($block['componentId'] === 'footer') {
-                        $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER BUILDER';
-                        $logoHtml = '';
-                        if (!empty($block['logoImg'])) {
-                            $logoHtml = '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">';
-                        } else {
-                            $logoHtml = '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
-                        }
-
-                        $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webbuilder. All rights reserved.';
-
-                        $linksHtml = '';
-                        $footLinks = $block['links'] ?? [
-                            ['text' => 'Privacy Policy', 'url' => '#'],
-                            ['text' => 'Terms of Use', 'url' => '#'],
-                            ['text' => 'Support', 'url' => '#']
-                        ];
-                        foreach ($footLinks as $lnk) {
-                            $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-white transition">' . sanitize_output($lnk['text']) . '</a>';
-                        }
-
-                        $html_content .= '
-<footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div>' . $logoHtml . '</div>
-        <div class="flex space-x-6 text-sm">' . $linksHtml . '</div>
-        <div class="text-xs text-slate-600">' . $copyText . '</div>
-    </div>
-</footer>';
-                    } else {
-                        // Predefined basic components fallback
-                        $html_content .= '<!-- block: ' . sanitize_output($block['componentId']) . ' -->';
-                    }
-                }
-            } else {
-                $html_content = $content_arr['html'] ?? '<div class="py-20 text-center">Empty project structure</div>';
-            }
+        if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Could not generate zip archive on server.']);
+            exit;
         }
 
-        // Include wrapper headers/assets similar to render.php
-        $full_html = '<!DOCTYPE html>
+        $published_data = $project['published_html'] ?? '';
+        $decoded_pages = json_decode($published_data, true);
+
+        if ($decoded_pages !== null && is_array($decoded_pages)) {
+            // Multi-page export!
+            foreach ($decoded_pages as $pageKey => $html_content) {
+                // Compile full document wrapper
+                $full_html = '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>' . sanitize_output($project['name']) . '</title>
+    <title>' . sanitize_output($project['name']) . ' - ' . sanitize_output($pageKey) . '</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: "Inter", sans-serif; }
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
         ' . $custom_css . '
     </style>
 </head>
@@ -648,22 +589,84 @@ switch ($action) {
 </body>
 </html>';
 
-        // Load content of assets/js/components.js to bundle inside zip
-        $components_js_path = __DIR__ . '/assets/js/components.js';
-        $components_js = file_exists($components_js_path) ? file_get_contents($components_js_path) : '';
+                // Post-process links: convert ?page=PAGENAME to PAGENAME.html (e.g. href="?page=aboutus" -> href="aboutus.html")
+                $full_html = preg_replace_callback('/href=(["\'])\?page=([a-zA-Z0-9_-]+)\\1/', function($matches) {
+                    $pageName = $matches[2];
+                    return 'href=' . $matches[1] . $pageName . '.html' . $matches[1];
+                }, $full_html);
 
-        // Create Zip Archive
-        $zip = new ZipArchive();
-        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webbuilder_export_') . '.zip';
+                $zip->addFromString($pageKey . '.html', $full_html);
+            }
+        } else {
+            // Single page fallback (or legacy fallback)
+            $html_content = $published_data;
+            if (empty($html_content)) {
+                // If not published, compile from draft JSON blocks
+                $content_arr = json_decode($project['content_json'] ?? '', true);
+                if ($content_arr && is_array($content_arr) && isset($content_arr['blocks'])) {
+                    $html_content = '';
+                    foreach ($content_arr['blocks'] as $block) {
+                        if ($block['componentId'] === 'html_raw') {
+                            $html_content .= $block['raw_html'] ?? '';
+                        } elseif ($block['componentId'] === 'navbar') {
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER';
+                            $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<span class="text-xl font-extrabold tracking-wider text-teal-400">' . sanitize_output($bText) . '</span>';
+                            $linksHtml = '';
+                            $navLinks = $block['links'] ?? [['text' => 'Home', 'url' => '#home'], ['text' => 'Features', 'url' => '#features'], ['text' => 'Pricing', 'url' => '#pricing'], ['text' => 'Contact', 'url' => '#contact']];
+                            foreach ($navLinks as $lnk) {
+                                $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-teal-300 transition duration-300">' . sanitize_output($lnk['text']) . '</a>';
+                            }
+                            $html_content .= '<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar"><div class="text-xl font-extrabold tracking-wider text-teal-400">' . $logoHtml . '</div><div class="hidden md:flex space-x-6">' . $linksHtml . '</div><div><a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a></div></nav>';
+                        } elseif ($block['componentId'] === 'footer') {
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER BUILDER';
+                            $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
+                            $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webbuilder. All rights reserved.';
+                            $linksHtml = '';
+                            $footLinks = $block['links'] ?? [['text' => 'Privacy Policy', 'url' => '#'], ['text' => 'Terms of Use', 'url' => '#'], ['text' => 'Support', 'url' => '#']];
+                            foreach ($footLinks as $lnk) {
+                                $linksHtml .= '<a href="' . sanitize_output($lnk['url']) . '" class="hover:text-white transition">' . sanitize_output($lnk['text']) . '</a>';
+                            }
+                            $html_content .= '<footer class="bg-slate-950 text-slate-400 py-12 px-8 rounded-lg text-center" data-component="footer"><div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6"><div>' . $logoHtml . '</div><div class="flex space-x-6 text-sm">' . $linksHtml . '</div><div class="text-xs text-slate-600">' . $copyText . '</div></div></footer>';
+                        } else {
+                            $html_content .= '<!-- block: ' . sanitize_output($block['componentId']) . ' -->';
+                        }
+                    }
+                } else {
+                    $html_content = $content_arr['html'] ?? '<div class="py-20 text-center">Empty project structure</div>';
+                }
+            }
 
-        if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Could not generate zip archive on server.']);
-            exit;
+            $full_html = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . sanitize_output($project['name']) . '</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+        ' . $custom_css . '
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    ' . $html_content . '
+
+    <!-- Environment parameters for widgets -->
+    <script>
+        const PROJECT_ID = ' . intval($project['id']) . ';
+    </script>
+    <!-- Components JS (dynamic chat & forms integration) -->
+    <script src="assets/js/components.js"></script>
+    ' . (!empty($custom_js) ? '<script>' . $custom_js . '</script>' : '') . '
+</body>
+</html>';
+
+            $zip->addFromString('index.html', $full_html);
         }
 
-        // Add index.html, components.js
-        $zip->addFromString('index.html', $full_html);
         if (!empty($components_js)) {
             $zip->addFromString('assets/js/components.js', $components_js);
         }
