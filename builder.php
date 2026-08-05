@@ -190,7 +190,9 @@ $csrf_token = generate_csrf_token();
 
         function App() {
             // --- Core States ---
-            const [sections, setSections] = useState([]);
+            const [pages, setPages] = useState({ index: [] });
+            const [activePage, setActivePage] = useState("index");
+            const sections = pages[activePage] || [];
             const [activeSectionId, setActiveSectionId] = useState(null);
             const [activeElementId, setActiveElementId] = useState(null); // active element path e.g. 'el-0'
             const [propsSubTab, setPropsSubTab] = useState('block'); // 'block' or 'element'
@@ -350,12 +352,19 @@ $csrf_token = generate_csrf_token();
                         });
 
                         // Update standard states
-                        setSections(restoredSects);
+                        let restoredPages = { index: [] };
+                        if (raw && raw.pages) {
+                            restoredPages = raw.pages;
+                        } else {
+                            restoredPages = { index: restoredSects };
+                        }
+                        setPages(restoredPages);
+                        setActivePage(raw.activePage || "index");
                         setCustomCss(restoredC);
                         setCustomJs(restoredJ);
 
                         // Append to standard history stack for Ctrl+Z undo support!
-                        commitToHistory(restoredSects);
+                        commitToHistory(restoredPages);
 
                         // Exit preview mode
                         setPreviewingVersionId(null);
@@ -428,6 +437,68 @@ $csrf_token = generate_csrf_token();
 
             const removeNewCompField = (idx) => {
                 setNewCompFields(newCompFields.filter((_, i) => idx !== i));
+            };
+
+            const createPage = () => {
+                const name = prompt("Enter new page name (lowercase, no spaces, e.g., 'aboutus'):");
+                if (!name) return;
+                const safeName = name.toLowerCase().trim().replace(/[^a-z0-9_]+/g, '');
+                if (!safeName) {
+                    showToast("Error", "Invalid page name.");
+                    return;
+                }
+                if (pages[safeName]) {
+                    showToast("Error", "Page already exists!");
+                    return;
+                }
+
+                // Try to copy existing index navbar & footer if they exist
+                const indexSects = pages["index"] || [];
+                const indexNavbar = indexSects.find(s => s.type === 'navbar');
+                const indexFooter = indexSects.find(s => s.type === 'footer');
+
+                const newNavbar = indexNavbar ? JSON.parse(JSON.stringify(indexNavbar)) : {
+                    id: 'sec-navbar-' + Date.now(),
+                    type: 'navbar',
+                    props: { brandText: 'NUVIS WEBBUILDER', logoUrl: '', links: [], bgColor: '#0f172a', textColor: '#ffffff', accentColor: '#14b8a6' },
+                    style: { classes: [] }
+                };
+                newNavbar.id = 'sec-navbar-' + Date.now();
+
+                const newFooter = indexFooter ? JSON.parse(JSON.stringify(indexFooter)) : {
+                    id: 'sec-footer-' + Date.now(),
+                    type: 'footer',
+                    props: { brandText: 'NUVIS WEBBUILDER', logoUrl: '', copyright: 'Nuvis Webbuilder. All rights reserved.', links: [], bgColor: '#020617', textColor: '#94a3b8', accentColor: '#14b8a6' },
+                    style: { classes: [] }
+                };
+                newFooter.id = 'sec-footer-' + Date.now();
+
+                const updatedPages = {
+                    ...pages,
+                    [safeName]: [newNavbar, newFooter]
+                };
+
+                setPages(updatedPages);
+                setActivePage(safeName);
+                commitToHistory(updatedPages);
+                showToast("Page Created", `Created and switched to page "${safeName}".`);
+            };
+
+            const deletePage = (pageName) => {
+                if (pageName === 'index') {
+                    showToast("Error", "The main 'index' page cannot be deleted.");
+                    return;
+                }
+                if (!confirm(`Are you sure you want to delete the page "${pageName}"? This action cannot be undone.`)) {
+                    return;
+                }
+                const updatedPages = { ...pages };
+                delete updatedPages[pageName];
+
+                setPages(updatedPages);
+                setActivePage("index");
+                commitToHistory(updatedPages);
+                showToast("Page Deleted", `Page "${pageName}" has been deleted.`);
             };
 
             const handleCreateCustomComponentSubmit = (e) => {
@@ -528,7 +599,14 @@ $csrf_token = generate_csrf_token();
                     });
 
                     setCustomComponents(initialCustomComponents);
-                    setSections(initialSections);
+                    let initialPages = { index: [] };
+                    if (raw && raw.pages) {
+                        initialPages = raw.pages;
+                    } else {
+                        initialPages = { index: initialSections };
+                    }
+                    setPages(initialPages);
+                    setActivePage(raw.activePage || "index");
                     setCustomCss(initialCss);
                     setCustomJs(initialJs);
                     setEmailRecipient(rec);
@@ -538,7 +616,7 @@ $csrf_token = generate_csrf_token();
                     setAutoResponderBody(autoBody);
 
                     // Initialize history stack
-                    setHistory([initialSections]);
+                    setHistory([initialPages]);
                     setHistoryIndex(0);
 
                     // Fetch version history timeline on startup
@@ -553,22 +631,23 @@ $csrf_token = generate_csrf_token();
             const ACTIVE_COMPONENTS = [...UI_COMPONENTS, ...customComponents];
 
             // --- History Stack Helpers ---
-            const commitToHistory = (newSections) => {
+            const commitToHistory = (newPages) => {
                 const updatedHistory = history.slice(0, historyIndex + 1);
-                setHistory([...updatedHistory, newSections]);
+                setHistory([...updatedHistory, newPages]);
                 setHistoryIndex(updatedHistory.length);
             };
 
             const updateSectionsWithHistory = (newSections) => {
-                setSections(newSections);
-                commitToHistory(newSections);
+                const updatedPages = { ...pages, [activePage]: newSections };
+                setPages(updatedPages);
+                commitToHistory(updatedPages);
             };
 
             const undo = () => {
                 if (historyIndex > 0) {
                     const prevIdx = historyIndex - 1;
                     setHistoryIndex(prevIdx);
-                    setSections(history[prevIdx]);
+                    setPages(history[prevIdx]);
                     showToast("Undo", "Action reverted.");
                 }
             };
@@ -577,7 +656,7 @@ $csrf_token = generate_csrf_token();
                 if (historyIndex < history.length - 1) {
                     const nextIdx = historyIndex + 1;
                     setHistoryIndex(nextIdx);
-                    setSections(history[nextIdx]);
+                    setPages(history[nextIdx]);
                     showToast("Redo", "Action re-applied.");
                 }
             };
@@ -706,23 +785,30 @@ $csrf_token = generate_csrf_token();
 
             // --- Serializing layout data for Save ---
             const serializeCanvas = () => {
-                const blocks = sections.map(sec => ({
-                    id:            sec.id,
-                    componentId:   sec.type,
-                    headingText:   sec.props.heading   || '',
-                    paragraphText: sec.props.text      || '',
-                    classes:       sec.style.classes   || [],
-                    raw_html:      sec.props.rawHtml   || '',
-                    brandText:     sec.props.brandText || '',
-                    logoImg:       sec.props.logoUrl   || '',
-                    copyright:     sec.props.copyright || '',
-                    links:         sec.props.links     || [],
-                    props:         sec.props,
-                }));
+                const compileBlocksForPage = (pageSects) => {
+                    return (pageSects || []).map(sec => ({
+                        id:            sec.id,
+                        componentId:   sec.type,
+                        headingText:   sec.props.heading   || '',
+                        paragraphText: sec.props.text      || '',
+                        classes:       sec.style.classes   || [],
+                        raw_html:      sec.props.rawHtml   || '',
+                        brandText:     sec.props.brandText || '',
+                        logoImg:       sec.props.logoUrl   || '',
+                        copyright:     sec.props.copyright || '',
+                        links:         sec.props.links     || [],
+                        props:         sec.props,
+                    }));
+                };
+
+                const indexSections = pages["index"] || [];
+                const blocks = compileBlocksForPage(indexSections);
 
                 return JSON.stringify({
-                    sections:   sections,
-                    blocks:     blocks,
+                    pages:      pages,
+                    activePage: activePage,
+                    sections:   indexSections,   // index fallback
+                    blocks:     blocks,          // index fallback
                     custom_css: customCss,
                     custom_js:  customJs,
                     custom_components: customComponents,
@@ -788,24 +874,85 @@ $csrf_token = generate_csrf_token();
                 // Dynamic custom compilers for links in Navigation bar and Footer
                 if (sec.type.toLowerCase() === 'navbar' || sec.type.toLowerCase() === 'footer') {
                     const links = sec.props.links || (sec.type.toLowerCase() === 'navbar' ? [
-                        { text: 'Home', url: '#home' },
-                        { text: 'Features', url: '#features' },
-                        { text: 'Pricing', url: '#pricing' },
-                        { text: 'Contact', url: '#contact' }
+                        { text: 'Home', type: 'link', url: '#home' },
+                        { text: 'Features', type: 'link', url: '#features' },
+                        { text: 'Pricing', type: 'link', url: '#pricing' },
+                        { text: 'Contact', type: 'link', url: '#contact' }
                     ] : [
-                        { text: 'Privacy Policy', url: '#privacy' },
-                        { text: 'Terms of Use', url: '#terms' },
-                        { text: 'Support', url: '#support' }
+                        { text: 'Privacy Policy', type: 'link', url: '#privacy' },
+                        { text: 'Terms of Use', type: 'link', url: '#terms' },
+                        { text: 'Support', type: 'link', url: '#support' }
                     ]);
 
                     const textColor = sec.props.textColor || '#94a3b8';
                     const accentColor = sec.props.accentColor || '#14b8a6';
 
-                    const linksHtml = links.map(link => `
-                        <a href="${link.url}" class="transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${link.text}</a>
-                    `).join('\n');
+                    const compileLinksHtml = (linksList, isDesktop = true) => {
+                        return linksList.map((link, lIdx) => {
+                            const linkType = link.type || 'link';
+                            let url = '#';
+                            if (linkType === 'link') {
+                                url = link.url || '#';
+                            } else if (linkType === 'page') {
+                                url = `?page=${link.pageName || 'index'}`;
+                            }
 
-                    compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/g, linksHtml);
+                            if (linkType === 'dropdown') {
+                                const children = link.children || [];
+                                if (isDesktop) {
+                                    return `
+                                    <div class="relative group dropdown-item inline-block text-left">
+                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">
+                                            <span>${link.text}</span>
+                                            <i class="fas fa-chevron-down text-[9px] opacity-70 transition-transform duration-200 group-hover:rotate-180"></i>
+                                        </button>
+                                        <!-- Absolute Dropdown Panel with modern sliding transitions -->
+                                        <div class="absolute top-full left-0 mt-2 w-48 rounded-lg shadow-xl py-2 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50 border border-slate-800/80" style="background-color: ${sec.props.bgColor || '#0f172a'};">
+                                            ${children.map(child => {
+                                                let cUrl = child.url || '#';
+                                                if (child.type === 'page') {
+                                                    cUrl = `?page=${child.pageName || 'index'}`;
+                                                }
+                                                return `
+                                                <a href="${cUrl}" class="block px-4 py-2 text-xs transition duration-200 hover:bg-slate-800/60" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
+                                                `;
+                                            }).join('\n')}
+                                        </div>
+                                    </div>
+                                    `;
+                                } else {
+                                    // Mobile dropdown
+                                    return `
+                                    <div class="w-full">
+                                        <button onclick="const sub = this.nextElementSibling; sub.classList.toggle('hidden'); const icon = this.querySelector('.fa-chevron-down'); icon.classList.toggle('rotate-180');" class="flex justify-between items-center w-full font-bold py-1.5 transition text-left" style="color: ${textColor};">
+                                            <span>${link.text}</span>
+                                            <i class="fas fa-chevron-down text-[10px] opacity-70 transition-transform duration-200"></i>
+                                        </button>
+                                        <div class="hidden flex flex-col space-y-2 pl-4 border-l border-slate-800/80 mt-1 pb-2">
+                                            ${children.map(child => {
+                                                let cUrl = child.url || '#';
+                                                if (child.type === 'page') {
+                                                    cUrl = `?page=${child.pageName || 'index'}`;
+                                                }
+                                                return `
+                                                <a href="${cUrl}" class="block text-xs py-1 transition duration-200" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
+                                                `;
+                                            }).join('\n')}
+                                        </div>
+                                    </div>
+                                    `;
+                                }
+                            } else {
+                                return `<a href="${url}" class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${link.text}</a>`;
+                            }
+                        }).join('\n');
+                    };
+
+                    const linksHtml = compileLinksHtml(links, true);
+                    const mobileLinksHtml = compileLinksHtml(links, false);
+
+                    compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/, linksHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/, mobileLinksHtml);
                 }
 
                 // Dynamic compiler for interactive_tabs component
@@ -928,10 +1075,15 @@ $csrf_token = generate_csrf_token();
             const publishProject = () => {
                 setIsPublishing(true);
                 saveProject(true).then(() => {
-                    const fullHtml = sections.map(sec => compileSectionHtml(sec, false)).join('\n');
+                    const publishedPages = {};
+                    Object.keys(pages).forEach(pageKey => {
+                        const pageSects = pages[pageKey] || [];
+                        publishedPages[pageKey] = pageSects.map(sec => compileSectionHtml(sec, false)).join('\n');
+                    });
+
                     const payload = {
                         project_id: PROJECT_ID,
-                        published_html: fullHtml,
+                        published_html: JSON.stringify(publishedPages),
                         csrf_token: CSRF_TOKEN,
                     };
 
@@ -1008,6 +1160,42 @@ $csrf_token = generate_csrf_token();
                                 <i className="fas fa-redo"></i>
                             </button>
                             <span className="text-[10px] text-slate-500 font-mono px-1">Hist: {historyIndex + 1}/{history.length}</span>
+                        </div>
+
+                        {/* PAGE SWITCHER / MANAGER */}
+                        <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
+                            <span className="text-[10px] text-slate-500 uppercase font-black px-1">Page:</span>
+                            <select
+                                value={activePage}
+                                onChange={(e) => {
+                                    setActivePage(e.target.value);
+                                    setActiveSectionId(null);
+                                    setActiveElementId(null);
+                                    setPropsSubTab('block');
+                                    showToast("Page Switched", `Editing page: "${e.target.value}"`);
+                                }}
+                                className="bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-bold"
+                            >
+                                {Object.keys(pages).map(pName => (
+                                    <option key={pName} value={pName}>{pName}</option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={createPage}
+                                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 font-bold rounded text-xs transition border border-slate-750"
+                                title="Create New Page"
+                            >
+                                <i className="fas fa-plus"></i>
+                            </button>
+                            {activePage !== 'index' && (
+                                <button
+                                    onClick={() => deletePage(activePage)}
+                                    className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold rounded text-xs transition border border-slate-750"
+                                    title="Delete Current Page"
+                                >
+                                    <i className="fas fa-trash-alt"></i>
+                                </button>
+                            )}
                         </div>
 
                         {/* RESPONSIVE PREVIEW CONTROLS */}
@@ -1463,32 +1651,129 @@ $csrf_token = generate_csrf_token();
                                                         </h4>
                                                         <div className="space-y-3">
                                                             {currentLinks.map((link, lIdx) => {
-                                                                const isCustom = !standardValues.includes(link.url);
+                                                                const linkType = link.type || 'link';
+                                                                const isCustom = linkType === 'link' && !standardValues.includes(link.url);
+                                                                const children = link.children || [];
+
                                                                 return (
                                                                     <div key={lIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                        {/* Row header: text input + type select + delete link */}
                                                                         <div className="flex justify-between items-center gap-2">
-                                                                            <input type="text" value={link.text} onChange={(e) => updateLink(lIdx, 'text', e.target.value)} placeholder="Link Text" className="w-1/2 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                            <input type="text" value={link.text} onChange={(e) => updateLink(lIdx, 'text', e.target.value)} placeholder="Link Text" className="w-1/3 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+
+                                                                            <select value={linkType} onChange={(e) => updateLink(lIdx, 'type', e.target.value)} className="w-1/3 bg-slate-900 border border-slate-800 rounded px-1 py-1 text-xs text-slate-300">
+                                                                                <option value="link">Link</option>
+                                                                                <option value="page">Page</option>
+                                                                                <option value="dropdown">Dropdown</option>
+                                                                            </select>
+
                                                                             <button onClick={() => removeLink(lIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Link">
                                                                                 <i className="fas fa-trash"></i>
                                                                             </button>
                                                                         </div>
-                                                                        <div>
-                                                                            <select value={isCustom ? 'custom' : link.url} onChange={(e) => {
-                                                                                const v = e.target.value;
-                                                                                if (v === 'custom') {
-                                                                                    updateLink(lIdx, 'url', 'https://');
-                                                                                } else {
-                                                                                    updateLink(lIdx, 'url', v);
-                                                                                }
-                                                                            }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300">
-                                                                                {standardOptions.map(opt => (
-                                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                                                ))}
-                                                                                <option value="custom">Custom URL...</option>
-                                                                            </select>
-                                                                        </div>
-                                                                        {isCustom && (
-                                                                            <input type="text" value={link.url} onChange={(e) => updateLink(lIdx, 'url', e.target.value)} placeholder="Custom URL (e.g., https://google.com)" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+
+                                                                        {/* Link Type specific customizers */}
+                                                                        {linkType === 'link' && (
+                                                                            <div className="space-y-1.5">
+                                                                                <select value={isCustom ? 'custom' : link.url} onChange={(e) => {
+                                                                                    const v = e.target.value;
+                                                                                    if (v === 'custom') {
+                                                                                        updateLink(lIdx, 'url', 'https://');
+                                                                                    } else {
+                                                                                        updateLink(lIdx, 'url', v);
+                                                                                    }
+                                                                                }} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300">
+                                                                                    {standardOptions.map(opt => (
+                                                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                                    ))}
+                                                                                    <option value="custom">Custom URL...</option>
+                                                                                </select>
+                                                                                {isCustom && (
+                                                                                    <input type="text" value={link.url} onChange={(e) => updateLink(lIdx, 'url', e.target.value)} placeholder="Custom URL (e.g., https://google.com)" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {linkType === 'page' && (
+                                                                            <div className="space-y-1">
+                                                                                <label className="text-[10px] text-slate-500 uppercase block font-bold">Select Project Page</label>
+                                                                                <select value={link.pageName || 'index'} onChange={(e) => updateLink(lIdx, 'pageName', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300">
+                                                                                    {Object.keys(pages).map(pName => (
+                                                                                        <option key={pName} value={pName}>{pName}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {linkType === 'dropdown' && (
+                                                                            <div className="pl-3 border-l-2 border-teal-500/30 space-y-2 mt-2">
+                                                                                <span className="text-[9px] font-bold text-teal-400 uppercase tracking-wider block">Dropdown Nested Items ({children.length})</span>
+
+                                                                                {children.map((child, cIdx) => {
+                                                                                    const isChildCustom = child.type === 'link' && !standardValues.includes(child.url);
+                                                                                    const updateChild = (childKey, childVal) => {
+                                                                                        const updatedChildren = children.map((c, idx) => idx === cIdx ? { ...c, [childKey]: childVal } : c);
+                                                                                        updateLink(lIdx, 'children', updatedChildren);
+                                                                                    };
+                                                                                    const removeChild = () => {
+                                                                                        const updatedChildren = children.filter((_, idx) => idx !== cIdx);
+                                                                                        updateLink(lIdx, 'children', updatedChildren);
+                                                                                    };
+
+                                                                                    return (
+                                                                                        <div key={cIdx} className="bg-slate-900/60 p-2 rounded border border-slate-850 space-y-1.5 text-xs">
+                                                                                            <div className="flex justify-between items-center gap-1.5">
+                                                                                                <input type="text" value={child.text} onChange={(e) => updateChild('text', e.target.value)} placeholder="Sub Link text" className="flex-1 bg-slate-950 border border-slate-850 rounded px-2 py-1 text-[11px] text-white" />
+
+                                                                                                <select value={child.type || 'link'} onChange={(e) => updateChild('type', e.target.value)} className="bg-slate-950 border border-slate-850 rounded px-1.5 py-1 text-[11px] text-slate-300">
+                                                                                                    <option value="link">Link</option>
+                                                                                                    <option value="page">Page</option>
+                                                                                                </select>
+
+                                                                                                <button onClick={removeChild} className="text-red-400 hover:text-red-300 text-[10px] px-1" title="Remove Sub Link">
+                                                                                                    <i className="fas fa-times"></i>
+                                                                                                </button>
+                                                                                            </div>
+
+                                                                                            {(child.type || 'link') === 'link' && (
+                                                                                                <div className="space-y-1">
+                                                                                                    <select value={isChildCustom ? 'custom' : child.url} onChange={(e) => {
+                                                                                                        const v = e.target.value;
+                                                                                                        if (v === 'custom') {
+                                                                                                            updateChild('url', 'https://');
+                                                                                                        } else {
+                                                                                                            updateChild('url', v);
+                                                                                                        }
+                                                                                                    }} className="w-full bg-slate-950 border border-slate-850 rounded px-2 py-1 text-[10px] text-slate-300">
+                                                                                                        {standardOptions.map(opt => (
+                                                                                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                                                        ))}
+                                                                                                        <option value="custom">Custom URL...</option>
+                                                                                                    </select>
+                                                                                                    {isChildCustom && (
+                                                                                                        <input type="text" value={child.url} onChange={(e) => updateChild('url', e.target.value)} placeholder="Custom URL" className="w-full bg-slate-950 border border-slate-850 rounded px-2 py-1 text-[10px] text-white" />
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {child.type === 'page' && (
+                                                                                                <select value={child.pageName || 'index'} onChange={(e) => updateChild('pageName', e.target.value)} className="w-full bg-slate-950 border border-slate-850 rounded px-2 py-1 text-[10px] text-slate-300">
+                                                                                                    {Object.keys(pages).map(pName => (
+                                                                                                        <option key={pName} value={pName}>{pName}</option>
+                                                                                                    ))}
+                                                                                                </select>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+
+                                                                                <button onClick={() => {
+                                                                                    const updatedChildren = [...children, { text: 'New Sub Link', type: 'link', url: '#home' }];
+                                                                                    updateLink(lIdx, 'children', updatedChildren);
+                                                                                }} className="w-full bg-slate-900 hover:bg-slate-850 border border-slate-800 text-[10px] font-bold py-1.5 rounded transition text-teal-400">
+                                                                                    <i className="fas fa-plus mr-1"></i> Add Dropdown Sub Link
+                                                                                </button>
+                                                                            </div>
                                                                         )}
                                                                     </div>
                                                                 );
