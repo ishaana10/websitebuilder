@@ -196,6 +196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $is_git_repo = is_dir(rtrim($git_repo_dir, '/') . '/.git');
                 if (!$is_git_repo) {
                     if (is_dir($git_repo_dir)) {
+                        // Backup .env
+                        $envPath = rtrim($git_repo_dir, '/') . '/.env';
+                        $envBackup = '';
+                        if (file_exists($envPath)) {
+                            $envBackup = file_get_contents($envPath);
+                        }
+
                         // Force git init
                         shell_exec($gitCmdPrefix . "init 2>&1");
                         // Set remote url
@@ -208,6 +215,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                         shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
                         // Sync hard reset
                         shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
+
+                        // Restore .env
+                        if ($envBackup !== '') {
+                            file_put_contents($envPath, $envBackup);
+                        }
                     }
                 }
 
@@ -348,6 +360,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     $gitEsc = escapeshellarg($gitPath);
                     $gitCmdPrefix = $gitEsc . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
 
+                    // Backup .env
+                    $envPath = rtrim($gitRepoDir, '/') . '/.env';
+                    $envBackup = '';
+                    if (file_exists($envPath)) {
+                        $envBackup = file_get_contents($envPath);
+                    }
+
                     shell_exec($gitCmdPrefix . "init 2>&1");
                     shell_exec($gitCmdPrefix . "remote add origin " . escapeshellarg($git_remote_url) . " 2>&1");
                     shell_exec($gitCmdPrefix . "remote set-url origin " . escapeshellarg($git_remote_url) . " 2>&1");
@@ -355,6 +374,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     $branchEsc = escapeshellarg($selectedBranch);
                     shell_exec($gitCmdPrefix . "checkout -f -B {$branchEsc} origin/{$branchEsc} 2>&1");
                     shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEsc} 2>&1");
+
+                    // Restore .env
+                    if ($envBackup !== '') {
+                        file_put_contents($envPath, $envBackup);
+                    }
                 } catch (Throwable $e) {
                     error_log("Failed to force initialize .git during test connection: " . $e->getMessage());
                 }
@@ -1225,8 +1249,11 @@ $csrf_token = generate_csrf_token();
 
                             <!-- Sub-tab 2: Commit log history panel -->
                             <div id="upd-sub-history" class="upd-sub-tab-content hidden space-y-4">
-                                <div class="overflow-x-auto bg-slate-950/60 rounded-lg border border-slate-850 p-4">
-                                    <div id="git-history-list" class="text-xs text-slate-300 space-y-2">Loading commits...</div>
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 text-slate-900">
+                                    <h3 class="font-bold text-slate-900 text-sm mb-4">Commit History</h3>
+                                    <div class="overflow-x-auto">
+                                        <div id="git-history-list" class="text-xs text-slate-700">Loading commits...</div>
+                                    </div>
                                 </div>
                                 <button onclick="loadGitHistoryList()" class="bg-slate-850 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-4 py-2 rounded text-xs transition">
                                     &#x21BB; Refresh History List
@@ -1691,7 +1718,7 @@ $csrf_token = generate_csrf_token();
          */
         function loadGitHistoryList() {
             const listContainer = document.getElementById('git-history-list');
-            listContainer.innerText = 'Loading recent commits...';
+            listContainer.innerHTML = '<span class="text-slate-500">Loading recent commits...</span>';
 
             fetch('admin.php?action=git_log', {
                 method: 'POST',
@@ -1703,32 +1730,36 @@ $csrf_token = generate_csrf_token();
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.commits && data.commits.length > 0) {
-                    let html = `<table class="w-full text-left font-mono text-[11px] text-slate-300 divide-y divide-slate-800">
+                    let html = `<table class="w-full text-left font-sans text-xs text-slate-700 divide-y divide-slate-100">
                         <thead>
-                            <tr class="text-slate-500 text-[9px] uppercase tracking-wider">
-                                <th class="pb-2">Hash</th>
-                                <th class="pb-2">Author</th>
-                                <th class="pb-2">Date</th>
-                                <th class="pb-2">Message</th>
+                            <tr class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="pb-3 pr-4 font-extrabold">Hash</th>
+                                <th class="pb-3 pr-4 font-extrabold">Author</th>
+                                <th class="pb-3 pr-4 font-extrabold">Date</th>
+                                <th class="pb-3 font-extrabold">Message</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60">`;
+                        <tbody class="divide-y divide-slate-100">`;
                     data.commits.forEach(c => {
-                        html += `<tr class="hover:bg-slate-900/40 transition">
-                            <td class="py-2.5 pr-4 text-teal-400 font-bold">${c.hash}</td>
-                            <td class="py-2.5 pr-4 text-slate-400">${c.author}</td>
-                            <td class="py-2.5 pr-4 text-slate-500 whitespace-nowrap">${c.date}</td>
-                            <td class="py-2.5 text-white max-w-sm truncate" title="${c.msg}">${c.msg}</td>
+                        html += `<tr class="hover:bg-slate-50/50 transition">
+                            <td class="py-3 pr-4 align-middle">
+                                <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md font-mono text-[11px] border border-slate-200/60 font-semibold shadow-xs">
+                                    ${c.hash}
+                                </span>
+                            </td>
+                            <td class="py-3 pr-4 text-slate-600 font-medium align-middle">${c.author}</td>
+                            <td class="py-3 pr-4 text-slate-500 whitespace-nowrap align-middle">${c.date}</td>
+                            <td class="py-3 text-slate-800 text-xs font-normal max-w-md truncate align-middle" title="${c.msg}">${c.msg}</td>
                         </tr>`;
                     });
                     html += `</tbody></table>`;
                     listContainer.innerHTML = html;
                 } else {
-                    listContainer.innerHTML = `<span class="text-red-400">❌ Error loading history: ${data.error || 'No history entries found.'}</span>`;
+                    listContainer.innerHTML = `<span class="text-red-500 font-semibold">❌ Error loading history: ${data.error || 'No history entries found.'}</span>`;
                 }
             })
             .catch(err => {
-                listContainer.innerHTML = `<span class="text-red-400">❌ Connection Error: ${err.message}</span>`;
+                listContainer.innerHTML = `<span class="text-red-500 font-semibold">❌ Connection Error: ${err.message}</span>`;
             });
         }
 
