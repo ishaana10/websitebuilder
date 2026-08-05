@@ -78,15 +78,13 @@ function is_dir_robust($path): bool {
 }
 
 /**
- * Canonical git-native repository detector using git rev-parse.
+ * Checks if the repository directory contains a .git subdirectory, with robust fallbacks.
  */
 function is_git_repo_robust($git_path, $git_repo_dir): bool {
     if (!is_dir_robust($git_repo_dir)) {
         return false;
     }
-    $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
-    $res = shell_exec($gitCmdPrefix . "rev-parse --is-inside-work-tree 2>&1");
-    return trim((string)$res) === 'true';
+    return is_dir_robust(rtrim($git_repo_dir, '/') . '/.git');
 }
 
 $user_id = $_SESSION['user_id'];
@@ -218,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $selectedBranch = $settings['update_branch'];
                 $git_remote_url = $settings['git_remote_url'];
 
-                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
 
                 $is_git_repo = is_git_repo_robust($git_path, $git_repo_dir);
 
@@ -371,7 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            $gitCmdPrefix = "cd " . escapeshellarg($gitRepoDir) . " && " . $gitEscaped . " -c safe.directory=* ";
+            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
             $statusOutput = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
             if (stripos($statusOutput, 'fatal:') !== false) {
                 echo json_encode([
@@ -421,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            $gitCmdPrefix = "cd " . escapeshellarg($gitRepoDir) . " && " . $gitEscaped . " -c safe.directory=* ";
+            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
             $output = "Starting Git repository initialization...\n";
 
             // Run git init if .git is missing
@@ -509,13 +507,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             exit;
         } elseif ($action === 'git_pull' && is_admin()) {
             header('Content-Type: application/json');
+            $envPath = '';
+            $envBackup = '';
             try {
                 $settings = get_git_config($db);
                 $git_path = $settings['git_path'];
                 $git_repo_dir = $settings['git_repo_dir'];
                 $selectedBranch = $settings['update_branch'];
 
-                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
                 $selectedBranchEscaped = escapeshellarg($selectedBranch);
 
                 // Verify directory exists robustly
@@ -528,6 +528,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     throw new Exception("Git repository is not initialized at '{$git_repo_dir}'. Please use the 'Initialize & Link Git Repository' section below to initialize and link it first.");
                 }
 
+                // Backup .env if exists to prevent checkout/pull overwrite
+                $envPath = rtrim($git_repo_dir, '/') . '/.env';
+                if (file_exists($envPath)) {
+                    $envBackup = file_get_contents($envPath);
+                }
+
                 // Fetch latest commits
                 $fetchOutput = (string)shell_exec($gitCmdPrefix . "fetch origin {$selectedBranchEscaped} 2>&1");
                 if (stripos($fetchOutput, 'fatal:') !== false || stripos($fetchOutput, 'error:') !== false) {
@@ -536,13 +542,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
 
                 // Get diff
                 $diffOutput = (string)shell_exec($gitCmdPrefix . "diff --name-status HEAD origin/{$selectedBranchEscaped} 2>&1");
-
-                // Backup .env if exists to prevent checkout/pull overwrite
-                $envPath = rtrim($git_repo_dir, '/') . '/.env';
-                $envBackup = '';
-                if (file_exists($envPath)) {
-                    $envBackup = file_get_contents($envPath);
-                }
 
                 // Checkout correct branch robustly
                 $checkoutOutput = (string)shell_exec($gitCmdPrefix . "checkout -f {$selectedBranchEscaped} 2>&1");
@@ -572,6 +571,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     throw new Exception("Git reset hard failed:\n" . trim($resetOutput) . "\n\nPull output:\n" . trim($pullOutput));
                 }
 
+                // Tell git to skip worktree modifications for .env so it never complains or overwrites
+                shell_exec($gitCmdPrefix . "update-index --skip-worktree " . escapeshellarg($envPath) . " 2>&1");
+
                 // Restore .env after pull and reset operations
                 if ($envBackup !== '') {
                     file_put_contents($envPath, $envBackup);
@@ -585,7 +587,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 echo json_encode(['success' => true, 'output' => trim($output), 'pulled_branch' => $selectedBranch]);
             } catch (Throwable $e) {
                 // Always try to restore .env if backup exists
-                if (isset($envPath) && isset($envBackup) && $envBackup !== '' && file_exists($envPath)) {
+                if (!empty($envPath) && $envBackup !== '') {
                     file_put_contents($envPath, $envBackup);
                 }
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -597,7 +599,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $settings = get_git_config($db);
                 $git_path = $settings['git_path'];
                 $git_repo_dir = $settings['git_repo_dir'];
-                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
+                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
 
                 $limit = min(50, max(1, (int)($_GET['limit'] ?? 15)));
                 $output = shell_exec($gitCmdPrefix . "log -n $limit --pretty=format:'%h|%an|%ar|%s' 2>&1");
@@ -1499,6 +1501,7 @@ $csrf_token = generate_csrf_token();
          */
         function refreshGitStatus() {
             const statusLog = document.getElementById('git-status-log');
+            if (!statusLog) return;
             statusLog.innerText = "Querying git repository status...";
 
             fetch('admin.php?action=git_status', {
@@ -1536,12 +1539,14 @@ $csrf_token = generate_csrf_token();
 
                 if (data.success) {
                     statusLog.innerHTML = `<span class="text-emerald-400">✔ Repository Verified!</span><br>Branch: <b>${data.branch}</b><br><br>${data.status.replace(/\n/g, '<br>')}`;
-                    document.getElementById('upd-init-card').classList.add('hidden');
+                    const initCard = document.getElementById('upd-init-card');
+                    if (initCard) initCard.classList.add('hidden');
                 } else {
                     statusLog.innerHTML = `<span class="text-red-400">❌ Git Check Failed:</span><br><br>${(data.status || data.error || 'Check failed').replace(/\n/g, '<br>')}`;
                     // Reveal the initialize panel if .git directory is completely missing
                     if (!data.status || data.status.indexOf('not a git repository') !== -1) {
-                        document.getElementById('upd-init-card').classList.remove('hidden');
+                        const initCard = document.getElementById('upd-init-card');
+                        if (initCard) initCard.classList.remove('hidden');
                     }
                 }
             })
