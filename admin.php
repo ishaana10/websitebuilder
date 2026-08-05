@@ -27,7 +27,7 @@ function get_git_config($db): array {
     $settings = [
         'git_path' => 'git',
         'git_repo_dir' => realpath(__DIR__) ?: '/app',
-        'update_branch' => 'Main',
+        'update_branch' => 'main',
         'git_remote_url' => 'https://github.com/ishaana10/websitebuilder.git'
     ];
 
@@ -53,7 +53,7 @@ function get_git_config($db): array {
         $settings['git_repo_dir'] = realpath(__DIR__) ?: '/app';
     }
     if (empty($settings['update_branch'])) {
-        $settings['update_branch'] = 'Main';
+        $settings['update_branch'] = 'main';
     }
     if (empty($settings['git_remote_url'])) {
         $settings['git_remote_url'] = 'https://github.com/ishaana10/websitebuilder.git';
@@ -84,7 +84,7 @@ function is_git_repo_robust($git_path, $git_repo_dir): bool {
     if (!is_dir_robust($git_repo_dir)) {
         return false;
     }
-    $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+    $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
     $res = shell_exec($gitCmdPrefix . "rev-parse --is-inside-work-tree 2>&1");
     return trim((string)$res) === 'true';
 }
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $selectedBranch = $settings['update_branch'];
                 $git_remote_url = $settings['git_remote_url'];
 
-                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
 
                 $is_git_repo = is_git_repo_robust($git_path, $git_repo_dir);
 
@@ -284,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $body = json_decode($raw ?: '{}', true);
             $gitPath = trim((string)($body['git_path'] ?? 'git'));
             $gitRepoDir = trim((string)($body['git_repo_dir'] ?? ''));
-            $updateBranch = trim((string)($body['update_branch'] ?? 'Main'));
+            $updateBranch = trim((string)($body['update_branch'] ?? 'main'));
 
             if (!$gitPath) {
                 $gitPath = 'git';
@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $gitRepoDir = realpath(__DIR__) ?: '/app';
             }
             if (!$updateBranch) {
-                $updateBranch = 'Main';
+                $updateBranch = 'main';
             }
 
             try {
@@ -371,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
+            $gitCmdPrefix = "cd " . escapeshellarg($gitRepoDir) . " && " . $gitEscaped . " -c safe.directory=* ";
             $statusOutput = (string)shell_exec($gitCmdPrefix . 'status 2>&1');
             if (stripos($statusOutput, 'fatal:') !== false) {
                 echo json_encode([
@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $gitPath = trim((string)($body['git_path'] ?? 'git'));
             $gitRepoDir = trim((string)($body['git_repo_dir'] ?? ''));
             $repoUrl = trim((string)($body['repo_url'] ?? ''));
-            $branch = trim((string)($body['branch'] ?? 'Main'));
+            $branch = trim((string)($body['branch'] ?? 'main'));
 
             if (!$gitPath) {
                 $gitPath = 'git';
@@ -421,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
-            $gitCmdPrefix = $gitEscaped . " -C " . escapeshellarg($gitRepoDir) . " -c safe.directory=* ";
+            $gitCmdPrefix = "cd " . escapeshellarg($gitRepoDir) . " && " . $gitEscaped . " -c safe.directory=* ";
             $output = "Starting Git repository initialization...\n";
 
             // Run git init if .git is missing
@@ -515,7 +515,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $git_repo_dir = $settings['git_repo_dir'];
                 $selectedBranch = $settings['update_branch'];
 
-                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
                 $selectedBranchEscaped = escapeshellarg($selectedBranch);
 
                 // Verify directory exists robustly
@@ -597,7 +597,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $settings = get_git_config($db);
                 $git_path = $settings['git_path'];
                 $git_repo_dir = $settings['git_repo_dir'];
-                $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+                $gitCmdPrefix = "cd " . escapeshellarg($git_repo_dir) . " && " . escapeshellarg($git_path) . " -c safe.directory=* ";
 
                 $limit = min(50, max(1, (int)($_GET['limit'] ?? 15)));
                 $output = shell_exec($gitCmdPrefix . "log -n $limit --pretty=format:'%h|%an|%ar|%s' 2>&1");
@@ -1243,7 +1243,7 @@ $csrf_token = generate_csrf_token();
                                 <div class="space-y-1">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase block">Update branch</label>
                                     <select id="updaterBranchSelect" class="w-full bg-slate-950 border border-slate-850 rounded px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
-                                        <option value="Main">Loading branches...</option>
+                                        <option value="main">Loading branches...</option>
                                     </select>
                                 </div>
                                 <div class="flex items-end gap-2">
@@ -1270,7 +1270,7 @@ $csrf_token = generate_csrf_token();
                                     </div>
                                     <div class="space-y-1">
                                         <label class="text-[10px] font-bold text-slate-400 uppercase block">Target Update Branch</label>
-                                        <input type="text" id="init_branch" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" value="Main">
+                                        <input type="text" id="init_branch" class="w-full bg-slate-950 border border-slate-850 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500" value="main">
                                     </div>
                                 </div>
                                 <button onclick="initializeGitRepository()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2.5 rounded text-xs transition">
@@ -1676,7 +1676,7 @@ $csrf_token = generate_csrf_token();
         function saveGitSettings() {
             const gitPath = document.getElementById('git_path').value;
             const gitRepoDir = document.getElementById('git_repo_dir').value;
-            const branch = document.getElementById('updaterBranchSelect').value || 'Main';
+            const branch = document.getElementById('updaterBranchSelect').value || 'main';
 
             fetch('admin.php?action=save_git_settings', {
                 method: 'POST',
@@ -1756,7 +1756,7 @@ $csrf_token = generate_csrf_token();
             const gitPath = document.getElementById('git_path').value;
             const gitRepoDir = document.getElementById('git_repo_dir').value;
             const repoUrl = document.getElementById('init_repo_url').value;
-            const branch = document.getElementById('init_branch').value || 'Main';
+            const branch = document.getElementById('init_branch').value || 'main';
 
             if (!repoUrl) {
                 alert('Please specify your Git Remote Repository URL.');
