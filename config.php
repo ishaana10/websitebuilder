@@ -66,10 +66,10 @@ function get_db_connection() {
             // Securely log errors or display a safe error message
             error_log("DB connection error: " . $e->getMessage());
 
-            // If the request specifically expects HTML and has no action query, output user-friendly raw text.
-            // Otherwise, return a clean, valid JSON payload to prevent front-end alert parsing crashes.
-            $expects_html = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'text/html') !== false);
-            if ($expects_html && !isset($_GET['action'])) {
+            // If the request is a standard GET page load without any action query, output user-friendly raw text.
+            // Otherwise (AJAX, POST, or action API queries), return a clean, valid JSON payload to prevent front-end alert parsing crashes.
+            $is_page_load = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !isset($_GET['action']));
+            if ($is_page_load) {
                 die("Database connection failed. Please check the system logs.");
             } else {
                 header('Content-Type: application/json');
