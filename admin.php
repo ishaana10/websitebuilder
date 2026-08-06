@@ -78,13 +78,15 @@ function is_dir_robust($path): bool {
 }
 
 /**
- * Checks if the repository directory contains a .git subdirectory, with robust fallbacks.
+ * Canonical git-native repository detector using git rev-parse.
  */
 function is_git_repo_robust($git_path, $git_repo_dir): bool {
     if (!is_dir_robust($git_repo_dir)) {
         return false;
     }
-    return is_dir_robust(rtrim($git_repo_dir, '/') . '/.git');
+    $gitCmdPrefix = escapeshellarg($git_path) . " -C " . escapeshellarg($git_repo_dir) . " -c safe.directory=* ";
+    $res = shell_exec($gitCmdPrefix . "rev-parse --is-inside-work-tree 2>&1");
+    return trim((string)$res) === 'true';
 }
 
 $user_id = $_SESSION['user_id'];
