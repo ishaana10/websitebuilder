@@ -66,12 +66,12 @@ function get_db_connection() {
             // Securely log errors or display a safe error message
             error_log("DB connection error: " . $e->getMessage());
 
-            // If request is an AJAX or JSON request, return a clean JSON payload rather than dying with raw text
-            $is_json_request = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) ||
-                               (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false) ||
-                               (isset($_GET['action']) && in_array($_GET['action'], ['git_status', 'test_git_settings', 'save_git_settings', 'git_init', 'git_pull']));
-
-            if ($is_json_request) {
+            // If the request specifically expects HTML and has no action query, output user-friendly raw text.
+            // Otherwise, return a clean, valid JSON payload to prevent front-end alert parsing crashes.
+            $expects_html = (stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'text/html') !== false);
+            if ($expects_html && !isset($_GET['action'])) {
+                die("Database connection failed. Please check the system logs.");
+            } else {
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => false,
@@ -79,8 +79,6 @@ function get_db_connection() {
                 ]);
                 exit;
             }
-
-            die("Database connection failed. Please check the system logs.");
         }
     }
     return $pdo;
