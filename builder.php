@@ -873,6 +873,45 @@ $csrf_token = generate_csrf_token();
 
                 // Dynamic custom compilers for links in Navigation bar and Footer
                 if (sec.type.toLowerCase() === 'navbar' || sec.type.toLowerCase() === 'footer') {
+                    // Compile Brand and Logo Area
+                    const showLogo = sec.props.showLogo !== undefined ? sec.props.showLogo : true;
+                    const showBrandText = sec.props.showBrandText !== undefined ? sec.props.showBrandText : true;
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+
+                    let brandTextHtml = '';
+                    if (showBrandText) {
+                        const isNavbar = sec.type.toLowerCase() === 'navbar';
+                        const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black text-white";
+                        brandTextHtml = `<div class="${brandClass}" style="color: ${accentColor};">${sec.props.brandText || 'NUVIS WEBBUILDER'}</div>`;
+                    }
+
+                    let logoHtml = '';
+                    if (showLogo && sec.props.logoUrl) {
+                        const widthStyle = sec.props.logoWidth ? `width: ${sec.props.logoWidth};` : 'width: auto;';
+                        const heightStyle = sec.props.logoHeight ? `height: ${sec.props.logoHeight};` : 'height: 32px;';
+                        let radiusStyle = '';
+                        if (sec.props.logoShape === 'rounded') {
+                            radiusStyle = 'border-radius: 8px;';
+                        } else if (sec.props.logoShape === 'circle') {
+                            radiusStyle = 'border-radius: 9999px;';
+                        } else {
+                            radiusStyle = 'border-radius: 0;';
+                        }
+                        logoHtml = `<img src="${sec.props.logoUrl}" style="${widthStyle} ${heightStyle} ${radiusStyle} object-fit: contain;" alt="Logo" />`;
+                    }
+
+                    const isRight = sec.props.logoPosition === 'right-of-text';
+                    const flexDirClass = isRight ? "flex-row-reverse" : "flex-row";
+
+                    const brandLogoAreaHtml = `
+                    <div class="flex items-center gap-3 ${flexDirClass}">
+                        ${logoHtml}
+                        ${brandTextHtml}
+                    </div>
+                    `;
+
+                    compiledHtml = compiledHtml.replace(/{{\s*brandLogoArea\s*}}/g, brandLogoAreaHtml);
+
                     const links = sec.props.links || (sec.type.toLowerCase() === 'navbar' ? [
                         { text: 'Home', type: 'link', url: '#home' },
                         { text: 'Features', type: 'link', url: '#features' },
@@ -885,7 +924,6 @@ $csrf_token = generate_csrf_token();
                     ]);
 
                     const textColor = sec.props.textColor || '#94a3b8';
-                    const accentColor = sec.props.accentColor || '#14b8a6';
 
                     const compileLinksHtml = (linksList, isDesktop = true) => {
                         return linksList.map((link, lIdx) => {
@@ -1442,10 +1480,54 @@ $csrf_token = generate_csrf_token();
 
                                                             if (field.type === 'text') {
                                                                 const inputId = field.key === 'heading' ? 'prop-heading-text' : `prop-${field.key}`;
+                                                                const isLogoUrl = field.key.toLowerCase().includes('logo');
+
+                                                                const handleLogoUpload = (e) => {
+                                                                    const file = e.target.files[0];
+                                                                    if (!file) return;
+
+                                                                    const formData = new FormData();
+                                                                    formData.append('image', file);
+                                                                    formData.append('csrf_token', CSRF_TOKEN);
+
+                                                                    showToast("Uploading logo...", "Transmitting image resource to server.");
+
+                                                                    fetch('api.php?action=upload_image', {
+                                                                        method: 'POST',
+                                                                        headers: {
+                                                                            'X-CSRF-TOKEN': CSRF_TOKEN
+                                                                        },
+                                                                        body: formData
+                                                                    })
+                                                                    .then(res => res.json())
+                                                                    .then(data => {
+                                                                        if (data.success) {
+                                                                            handleFieldChange(data.url);
+                                                                            showToast("Success", "Logo uploaded successfully!");
+                                                                        } else {
+                                                                            showToast("Upload Error", data.error || "Failed to upload logo.");
+                                                                        }
+                                                                    })
+                                                                    .catch(err => showToast("Network Error", err.message));
+                                                                };
+
                                                                 return (
-                                                                    <div key={field.key}>
+                                                                    <div key={field.key} className="space-y-1.5">
                                                                         <label className="text-[11px] text-slate-400 block mb-1">{field.label}</label>
-                                                                        <input id={inputId} type="text" value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                                        <div className="flex gap-2">
+                                                                            <input id={inputId} type="text" value={val} onChange={(e) => handleFieldChange(e.target.value)} className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" placeholder={isLogoUrl ? "https://example.com/logo.png" : ""} />
+                                                                            {isLogoUrl && (
+                                                                                <label className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-750 text-xs font-bold py-2 px-3 rounded cursor-pointer transition flex items-center justify-center shrink-0">
+                                                                                    <i className="fas fa-upload"></i>
+                                                                                    <input
+                                                                                        type="file"
+                                                                                        accept="image/*"
+                                                                                        onChange={handleLogoUpload}
+                                                                                        className="hidden"
+                                                                                    />
+                                                                                </label>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             } else if (field.type === 'textarea') {

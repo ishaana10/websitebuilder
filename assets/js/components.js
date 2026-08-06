@@ -12,7 +12,20 @@ const UI_COMPONENTS = [
         icon: 'fas fa-bars',
         schema: [
             { key: 'brandText', label: 'Brand Name', type: 'text', default: 'NUVIS WEBBUILDER' },
-            { key: 'logoUrl', label: 'Logo Image URL', type: 'text', default: '' },
+            { key: 'logoUrl', label: 'Logo Image URL/Upload', type: 'text', default: '' },
+            { key: 'showLogo', label: 'Show Logo', type: 'checkbox', default: true },
+            { key: 'showBrandText', label: 'Show Brand Name', type: 'checkbox', default: true },
+            { key: 'logoWidth', label: 'Logo Width (e.g. 120px or auto)', type: 'text', default: 'auto' },
+            { key: 'logoHeight', label: 'Logo Height (e.g. 32px or auto)', type: 'text', default: '32px' },
+            { key: 'logoShape', label: 'Logo Shape', type: 'select', default: 'square', options: [
+                { value: 'square', label: 'Square/Rectangle' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'circle', label: 'Circular' }
+            ]},
+            { key: 'logoPosition', label: 'Logo Position (relative to Text)', type: 'select', default: 'left-of-text', options: [
+                { value: 'left-of-text', label: 'Left of Text' },
+                { value: 'right-of-text', label: 'Right of Text' }
+            ]},
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
             { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#14b8a6' }
@@ -20,7 +33,7 @@ const UI_COMPONENTS = [
         html: `
 <nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
     <div class="flex justify-between items-center">
-        <div class="text-xl font-extrabold tracking-wider" style="color: {{accentColor}};">{{brandText}}</div>
+        {{brandLogoArea}}
 
         <!-- Desktop Links -->
         <div class="hidden md:flex space-x-6">
@@ -51,7 +64,20 @@ const UI_COMPONENTS = [
         icon: 'fas fa-shoe-prints',
         schema: [
             { key: 'brandText', label: 'Brand Name', type: 'text', default: 'NUVIS WEBBUILDER' },
-            { key: 'logoUrl', label: 'Logo Image URL', type: 'text', default: '' },
+            { key: 'logoUrl', label: 'Logo Image URL/Upload', type: 'text', default: '' },
+            { key: 'showLogo', label: 'Show Logo', type: 'checkbox', default: true },
+            { key: 'showBrandText', label: 'Show Brand Name', type: 'checkbox', default: true },
+            { key: 'logoWidth', label: 'Logo Width (e.g. 120px or auto)', type: 'text', default: 'auto' },
+            { key: 'logoHeight', label: 'Logo Height (e.g. 32px or auto)', type: 'text', default: '32px' },
+            { key: 'logoShape', label: 'Logo Shape', type: 'select', default: 'square', options: [
+                { value: 'square', label: 'Square/Rectangle' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'circle', label: 'Circular' }
+            ]},
+            { key: 'logoPosition', label: 'Logo Position (relative to Text)', type: 'select', default: 'left-of-text', options: [
+                { value: 'left-of-text', label: 'Left of Text' },
+                { value: 'right-of-text', label: 'Right of Text' }
+            ]},
             { key: 'copyright', label: 'Copyright Note', type: 'text', default: 'Nuvis Webbuilder. All rights reserved.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' },
@@ -60,7 +86,7 @@ const UI_COMPONENTS = [
         html: `
 <footer class="py-12 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="footer">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div class="text-lg font-black text-white" style="color: {{accentColor}};">{{brandText}}</div>
+        {{brandLogoArea}}
         <div class="flex space-x-6 text-sm">
             {{links}}
         </div>
