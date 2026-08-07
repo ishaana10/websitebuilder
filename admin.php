@@ -350,6 +350,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 exit;
             }
 
+            // BACKUP THE .env FILE FIRST BEFORE ANYTHING ELSE SO THAT IT IS NOT WIPED BY CHECKOUT OR RESET!
+            $envPath = rtrim($gitRepoDir, '/') . '/.env';
+            $envBackup = '';
+            if (file_exists($envPath)) {
+                $envBackup = file_get_contents($envPath);
+            }
+
             $gitEscaped = escapeshellarg($gitPath);
             $versionOutput = (string)shell_exec("{$gitEscaped} --version 2>&1");
             if (!$versionOutput || stripos($versionOutput, 'version') === false) {
@@ -429,6 +436,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $res = (string)shell_exec($gitCmdPrefix . "init 2>&1");
                 $output .= "git init:\n" . trim($res) . "\n\n";
                 if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
+                    if ($envBackup !== '') {
+                        file_put_contents($envPath, $envBackup);
+                    }
                     echo json_encode(['success' => false, 'error' => "Git init failed:\n" . trim($res)]);
                     exit;
                 }
@@ -472,6 +482,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             if (stripos($res, 'fatal:') !== false || stripos($res, 'error:') !== false) {
                 $res2 = (string)shell_exec($gitCmdPrefix . "checkout -f -B {$branchEscaped} --track origin/{$branchEscaped} 2>&1");
                 if (stripos($res2, 'fatal:') !== false || stripos($res2, 'error:') !== false) {
+                    if ($envBackup !== '') {
+                        file_put_contents($envPath, $envBackup);
+                    }
                     echo json_encode(['success' => false, 'error' => "Git checkout failed:\n" . trim($res) . "\n" . trim($res2)]);
                     exit;
                 }
@@ -480,12 +493,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $output .= "git checkout:\n" . trim($res) . "\n\n";
 
             $output .= "Syncing with remote repository...\n";
-            // Backup .env if exists to prevent overwrite
-            $envPath = rtrim($gitRepoDir, '/') . '/.env';
-            $envBackup = '';
-            if (file_exists($envPath)) {
-                $envBackup = file_get_contents($envPath);
-            }
 
             $res = (string)shell_exec($gitCmdPrefix . "reset --hard origin/{$branchEscaped} 2>&1");
             $output .= "git reset --hard:\n" . trim($res) . "\n\n";
@@ -496,6 +503,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 echo json_encode(['success' => false, 'error' => "Git hard reset failed:\n" . trim($res)]);
                 exit;
             }
+
+            // Tell git to skip worktree modifications for .env so it never complains or overwrites
+            shell_exec($gitCmdPrefix . "update-index --skip-worktree " . escapeshellarg($envPath) . " 2>&1");
 
             // Restore .env after reset
             if ($envBackup !== '') {
