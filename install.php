@@ -230,6 +230,26 @@ try {
 
 } catch (Exception $e) {
     echo "\n❌ INSTALLATION FAILED!\n";
-    echo "Error: " . $e->getMessage() . "\n";
+    $error_msg = $e->getMessage();
+    echo "Error: " . $error_msg . "\n\n";
+
+    // Detect 1044 / Access denied / site_builder defaults
+    if (stripos($error_msg, '1044') !== false || stripos($error_msg, 'site_builder') !== false || stripos($error_msg, 'Access denied') !== false) {
+        echo "💡 DIAGNOSTIC SUGGESTION & HOW TO FIX:\n";
+        echo "---------------------------------------\n";
+        echo "It looks like a database connection or privilege error has occurred.\n";
+        echo "On shared hosting environments (such as cPanel), you cannot use the default database name 'site_builder'.\n";
+        echo "Database names and users must be prefixed with your hosting username (e.g., 'ictfjcom_site_builder').\n\n";
+        echo "Please follow these steps to resolve this:\n";
+        echo "1. Log into your hosting control panel (cPanel) and create a MySQL database (e.g., 'ictfjcom_site_builder').\n";
+        echo "2. Create a MySQL user (e.g., 'ictfjcom_webdev') and assign it to the database with ALL PRIVILEGES.\n";
+        echo "3. Open the '.env' file in your web builder root directory.\n";
+        echo "   (If '.env' does not exist, copy '.env.example' to '.env')\n";
+        echo "4. Update the '.env' file with your correct database details:\n";
+        echo "   DB_NAME=yourprefix_yourdbname\n";
+        echo "   DB_USER=yourprefix_yourdbuser\n";
+        echo "   DB_PASS=yourpassword\n\n";
+        echo "Once configured, re-run this installer page to complete the setup successfully!\n";
+    }
     exit(1);
 }
