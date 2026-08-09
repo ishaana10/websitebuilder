@@ -4,26 +4,31 @@
  */
 require_once __DIR__ . '/config.php';
 
-header('Content-Type: text/plain; charset=utf-8');
+$is_cli = (php_sapi_name() === 'cli');
 
-echo "=== Nuvis Webbuilder Automated System Installer ===\n\n";
+/**
+ * Executes the database schema creation and default seeding.
+ *
+ * @param PDO $pdo Active database connection
+ * @param callable|null $output_callback Callback to log output status
+ * @return void
+ */
+function run_installation_process($pdo, $output_callback = null) {
+    $log = function($msg, $type = 'info') use ($output_callback) {
+        if ($output_callback) {
+            $output_callback($msg, $type);
+        }
+    };
 
-try {
-    // 1. Establish initial DB connection using credentials in config.php
-    $pdo = get_db_connection();
-    echo "✔ Connected to Database Server successfully!\n";
-
-    // 2. Load and parse schema.sql to execute queries
+    $log("Initializing and creating tables from schema.sql...", 'pending');
     $schema_file = __DIR__ . '/schema.sql';
     if (!file_exists($schema_file)) {
         throw new Exception("Schema file (schema.sql) not found in root directory.");
     }
 
-    echo "⌛ Initializing and creating tables from schema.sql...\n";
     $schema_sql = file_get_contents($schema_file);
 
     // Split schema into individual queries safely
-    // Note: This matches standard SQL formatting.
     $queries = preg_split("/;[\r\n]+/", $schema_sql);
 
     foreach ($queries as $query) {
@@ -32,23 +37,23 @@ try {
             $pdo->exec($query);
         }
     }
-    echo "✔ Database schema imported and verified successfully!\n";
+    $log("Database schema imported and verified successfully!", 'success');
 
     // 3. Seed initial admin user if not already present
     $stmt = $pdo->query("SELECT COUNT(*) as admin_count FROM users WHERE username = 'admin' OR role = 'admin'");
     $res = $stmt->fetch();
 
     if ($res['admin_count'] == 0) {
-        echo "⌛ Seeding default admin credentials ('admin' / 'admin123')...\n";
+        $log("Seeding default admin credentials ('admin' / 'admin123')...", 'pending');
         $admin_user = 'admin';
         $admin_email = 'admin@nuvis-webbuilder.io';
         $admin_pass_hash = password_hash('admin123', PASSWORD_BCRYPT);
 
         $insert_admin = $pdo->prepare("INSERT INTO users (username, email, password_hash, role, status) VALUES (?, ?, ?, 'admin', 'active')");
         $insert_admin->execute([$admin_user, $admin_email, $admin_pass_hash]);
-        echo "✔ Administrator account created successfully!\n";
+        $log("Administrator account created successfully!", 'success');
     } else {
-        echo "ℹ Admin account already exists. Skipping seeding.\n";
+        $log("Admin account already exists. Skipping seeding.", 'info');
     }
 
     // 3.5 Seed email_settings table if empty
@@ -73,11 +78,21 @@ try {
         INDEX `idx_project_version_id` (`project_id`)
     ) ENGINE=InnoDB;");
 
+    // Ensure system_logs table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS `system_logs` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `log_level` VARCHAR(20) NOT NULL DEFAULT 'info',
+        `message` TEXT NOT NULL,
+        `context` TEXT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_log_level` (`log_level`)
+    ) ENGINE=InnoDB;");
+
     $stmt_email = $pdo->query("SELECT COUNT(*) as email_count FROM email_settings");
     $res_email = $stmt_email->fetch();
 
     if ($res_email['email_count'] == 0) {
-        echo "⌛ Seeding default global email settings...\n";
+        $log("Seeding default global email settings...", 'pending');
         $insert_email = $pdo->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme) VALUES (?, ?, ?, ?, ?)");
         $insert_email->execute([
             'admin@nuvis-webbuilder.io',
@@ -86,7 +101,7 @@ try {
             "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team",
             'modern_minimalist'
         ]);
-        echo "✔ Global email settings seeded successfully!\n";
+        $log("Global email settings seeded successfully!", 'success');
     }
 
     // 4. Ensure templates table has the primary default SaaS templates seeded
@@ -94,7 +109,7 @@ try {
     $res_tpl = $stmt_tpl->fetch();
 
     if ($res_tpl['tpl_count'] == 0) {
-        echo "⌛ Seeding standard responsive templates...\n";
+        $log("Seeding standard responsive templates...", 'pending');
 
         // Seed Template 1 (SaaS Product Landing Page)
         $html_content_1 = '
@@ -930,35 +945,421 @@ HTML;
             $pest_layout_json
         ]);
 
-        echo "✔ Templates library loaded successfully!\n";
+        $log("Templates library loaded successfully!", 'success');
     } else {
-        echo "ℹ Template themes already loaded. Skipping seeding.\n";
+        $log("Template themes already loaded. Skipping seeding.", 'info');
+    }
+}
+
+if ($is_cli) {
+    // CLI Guided Mode
+    header_remove('Content-Type');
+    echo "=== Nuvis Webbuilder Automated System Installer ===\n\n";
+
+    try {
+        // Establish initial DB connection using credentials in config.php
+        $pdo = get_db_connection();
+        echo "✔ Connected to Database Server successfully!\n";
+
+        run_installation_process($pdo, function($msg, $type) {
+            if ($type === 'success') {
+                echo "✔ {$msg}\n";
+            } elseif ($type === 'pending') {
+                echo "⌛ {$msg}\n";
+            } else {
+                echo "ℹ {$msg}\n";
+            }
+        });
+
+        if (function_exists('write_system_log')) {
+            write_system_log('info', 'Nuvis Webbuilder installation successfully completed via CLI.');
+        }
+
+        echo "\n=== Nuvis Webbuilder System Successfully Installed! ===\n";
+        exit(0);
+    } catch (Exception $e) {
+        echo "\n❌ INSTALLATION FAILED!\n";
+        $error_msg = $e->getMessage();
+        echo "Error: " . $error_msg . "\n\n";
+
+        if (stripos($error_msg, '1044') !== false || stripos($error_msg, 'site_builder') !== false || stripos($error_msg, 'Access denied') !== false) {
+            echo "💡 DIAGNOSTIC SUGGESTION & HOW TO FIX:\n";
+            echo "---------------------------------------\n";
+            echo "It looks like a database connection or privilege error has occurred.\n";
+            echo "On shared hosting environments (such as cPanel), you cannot use the default database name 'site_builder'.\n";
+            echo "Database names and users must be prefixed with your hosting username (e.g., 'ictfjcom_site_builder').\n\n";
+            echo "Please follow these steps to resolve this:\n";
+            echo "1. Log into your hosting control panel (cPanel) and create a MySQL database (e.g., 'ictfjcom_site_builder').\n";
+            echo "2. Create a MySQL user (e.g., 'ictfjcom_webdev') and assign it to the database with ALL PRIVILEGES.\n";
+            echo "3. Open the '.env' file in your web builder root directory.\n";
+            echo "   (If '.env' does not exist, copy '.env.example' to '.env')\n";
+            echo "4. Update the '.env' file with your correct database details:\n";
+            echo "   DB_NAME=yourprefix_yourdbname\n";
+            echo "   DB_USER=yourprefix_yourdbuser\n";
+            echo "   DB_PASS=yourpassword\n\n";
+            echo "Once configured, re-run this installer page to complete the setup successfully!\n";
+        }
+        exit(1);
+    }
+} else {
+    // Web Guided Interactive Mode
+    $error_msg = '';
+    $success_msg = '';
+    $db_host = '127.0.0.1';
+    $db_port = '3306';
+    $db_name = 'site_builder';
+    $db_user = 'builder_user';
+    $db_pass = 'builder_pass';
+    $install_logs = [];
+
+    // Parse existing .env if any
+    if (file_exists(__DIR__ . '/.env')) {
+        $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos(trim($line), '#') === 0) continue;
+            $parts = explode('=', $line, 2);
+            if (count($parts) === 2) {
+                $key = trim($parts[0]);
+                $val = trim($parts[1]);
+                if ($key === 'DB_HOST') $db_host = $val;
+                if ($key === 'DB_PORT') $db_port = $val;
+                if ($key === 'DB_NAME') $db_name = $val;
+                if ($key === 'DB_USER') $db_user = $val;
+                if ($key === 'DB_PASS') $db_pass = $val;
+            }
+        }
     }
 
-    echo "\n=== Nuvis Webbuilder System Successfully Installed! ===\n";
-
-} catch (Exception $e) {
-    echo "\n❌ INSTALLATION FAILED!\n";
-    $error_msg = $e->getMessage();
-    echo "Error: " . $error_msg . "\n\n";
-
-    // Detect 1044 / Access denied / site_builder defaults
-    if (stripos($error_msg, '1044') !== false || stripos($error_msg, 'site_builder') !== false || stripos($error_msg, 'Access denied') !== false) {
-        echo "💡 DIAGNOSTIC SUGGESTION & HOW TO FIX:\n";
-        echo "---------------------------------------\n";
-        echo "It looks like a database connection or privilege error has occurred.\n";
-        echo "On shared hosting environments (such as cPanel), you cannot use the default database name 'site_builder'.\n";
-        echo "Database names and users must be prefixed with your hosting username (e.g., 'ictfjcom_site_builder').\n\n";
-        echo "Please follow these steps to resolve this:\n";
-        echo "1. Log into your hosting control panel (cPanel) and create a MySQL database (e.g., 'ictfjcom_site_builder').\n";
-        echo "2. Create a MySQL user (e.g., 'ictfjcom_webdev') and assign it to the database with ALL PRIVILEGES.\n";
-        echo "3. Open the '.env' file in your web builder root directory.\n";
-        echo "   (If '.env' does not exist, copy '.env.example' to '.env')\n";
-        echo "4. Update the '.env' file with your correct database details:\n";
-        echo "   DB_NAME=yourprefix_yourdbname\n";
-        echo "   DB_USER=yourprefix_yourdbuser\n";
-        echo "   DB_PASS=yourpassword\n\n";
-        echo "Once configured, re-run this installer page to complete the setup successfully!\n";
+    // Check if database is already working and installed
+    $already_installed = false;
+    try {
+        $test_dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+        $test_pdo = new PDO($test_dsn, DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 2
+        ]);
+        $stmt = $test_pdo->query("SHOW TABLES LIKE 'users'");
+        if ($stmt->rowCount() > 0) {
+            $already_installed = true;
+        }
+    } catch (Throwable $e) {
+        // Not installed yet
     }
-    exit(1);
+
+    // Handle form POST
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $db_host = $_POST['db_host'] ?? '127.0.0.1';
+        $db_port = $_POST['db_port'] ?? '3306';
+        $db_name = $_POST['db_name'] ?? 'site_builder';
+        $db_user = $_POST['db_user'] ?? '';
+        $db_pass = $_POST['db_pass'] ?? '';
+
+        try {
+            $dsn = "mysql:host=" . $db_host . ";port=" . $db_port . ";dbname=" . $db_name . ";charset=utf8mb4";
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::ATTR_TIMEOUT            => 5
+            ];
+
+            // 1. Test database connection
+            $pdo = null;
+            try {
+                $pdo = new PDO($dsn, $db_user, $db_pass, $options);
+            } catch (Throwable $conn_err) {
+                // If database is unknown, attempt to connect without database name and create it
+                if (stripos($conn_err->getMessage(), 'Unknown database') !== false || stripos($conn_err->getMessage(), '1049') !== false) {
+                    $server_dsn = "mysql:host=" . $db_host . ";port=" . $db_port . ";charset=utf8mb4";
+                    $server_pdo = new PDO($server_dsn, $db_user, $db_pass, $options);
+                    $server_pdo->exec("CREATE DATABASE IF NOT EXISTS `" . str_replace("`", "``", $db_name) . "`");
+                    // Reconnect now that the DB exists
+                    $pdo = new PDO($dsn, $db_user, $db_pass, $options);
+                } else {
+                    throw $conn_err;
+                }
+            }
+
+            // 2. Write to .env file
+            $env_content = "DB_HOST=" . $db_host . "\n" .
+                           "DB_PORT=" . $db_port . "\n" .
+                           "DB_NAME=" . $db_name . "\n" .
+                           "DB_USER=" . $db_user . "\n" .
+                           "DB_PASS=" . $db_pass . "\n";
+
+            if (file_put_contents(__DIR__ . '/.env', $env_content) === false) {
+                throw new Exception("Unable to write `.env` file. Please check folder permissions.");
+            }
+
+            // Dynamically override for current process context so logging helper works
+            putenv("DB_HOST=" . $db_host);
+            putenv("DB_PORT=" . $db_port);
+            putenv("DB_NAME=" . $db_name);
+            putenv("DB_USER=" . $db_user);
+            putenv("DB_PASS=" . $db_pass);
+            $_ENV['DB_HOST'] = $db_host;
+            $_ENV['DB_PORT'] = $db_port;
+            $_ENV['DB_NAME'] = $db_name;
+            $_ENV['DB_USER'] = $db_user;
+            $_ENV['DB_PASS'] = $db_pass;
+
+            // 3. Run installation
+            run_installation_process($pdo, function($msg, $type) use (&$install_logs) {
+                $install_logs[] = ['message' => $msg, 'type' => $type];
+            });
+
+            // 4. Log to database system_logs
+            if (function_exists('write_system_log')) {
+                write_system_log('info', 'Nuvis Webbuilder installation started via guided web installer.');
+                write_system_log('info', 'Database tables imported from schema.sql successfully.');
+                write_system_log('info', 'Default templates loaded successfully.');
+                write_system_log('info', 'Nuvis Webbuilder installation completed successfully.');
+            }
+
+            $success_msg = "Installation completed successfully!";
+        } catch (Throwable $e) {
+            $error_msg = $e->getMessage();
+        }
+    }
+
+    // Check pre-installation checklist
+    $req_php = (version_compare(PHP_VERSION, '8.1.0') >= 0);
+    $req_pdo = extension_loaded('pdo_mysql');
+    $req_write = is_writable(__DIR__) || (file_exists(__DIR__ . '/.env') && is_writable(__DIR__ . '/.env'));
+
+    // Show beautiful Tailwind UI HTML
+    ?>
+    <!DOCTYPE html>
+    <html lang="en" class="h-full bg-slate-900">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nuvis Webbuilder - Guided Interactive Setup</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+    <body class="h-full flex flex-col justify-between text-slate-100">
+        <!-- Header -->
+        <header class="bg-slate-950 border-b border-slate-800 py-5 px-6">
+            <div class="max-w-5xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-emerald-500 rounded-lg text-slate-950 shadow-md font-extrabold text-xl"><i class="fas fa-cubes"></i></span>
+                    <span class="text-2xl font-black tracking-tight text-white">Nuvis <span class="text-emerald-400">Webbuilder</span></span>
+                </div>
+                <div class="text-xs text-slate-400 font-medium bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 inline-block bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span> Open-Source Installer
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 py-12 px-4 max-w-5xl mx-auto w-full">
+            <?php if ($already_installed && empty($success_msg)): ?>
+                <div class="bg-slate-950 border border-slate-800 p-8 rounded-2xl shadow-2xl text-center space-y-6">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/30">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-white">Nuvis Webbuilder is Already Installed!</h2>
+                    <p class="text-slate-400 text-sm max-w-lg mx-auto">
+                        Your system is already set up and connected to the database successfully. You can safely proceed to the Admin Panel or view the site builder dashboard.
+                    </p>
+                    <div class="pt-4 flex justify-center gap-4">
+                        <a href="admin.php" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 px-8 rounded-xl transition shadow-lg shadow-emerald-500/10 flex items-center gap-2">
+                            <i class="fas fa-tachometer-alt"></i> Go to Admin Dashboard
+                        </a>
+                        <a href="index.php" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-8 rounded-xl border border-slate-700 transition">
+                            <i class="fas fa-home"></i> View Main Portal
+                        </a>
+                    </div>
+                </div>
+            <?php elseif (!empty($success_msg)): ?>
+                <!-- Success State -->
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl p-8 space-y-8">
+                    <div class="text-center space-y-3">
+                        <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/30">
+                            <i class="fas fa-circle-check"></i>
+                        </div>
+                        <h2 class="text-3xl font-black text-white">Installation Successful!</h2>
+                        <p class="text-emerald-400 text-sm font-semibold">Nuvis Webbuilder is fully configured and ready for production.</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+                        <h3 class="text-white font-bold text-sm uppercase tracking-wider text-slate-300 border-b border-slate-800 pb-2 flex items-center gap-2">
+                            <i class="fas fa-receipt text-emerald-400"></i> Setup Summary Log
+                        </h3>
+                        <ul class="space-y-2 text-xs font-mono text-slate-400">
+                            <?php foreach ($install_logs as $log_item): ?>
+                                <li class="flex items-start gap-2">
+                                    <?php if ($log_item['type'] === 'success'): ?>
+                                        <span class="text-emerald-400 font-bold">✔</span>
+                                    <?php elseif ($log_item['type'] === 'pending'): ?>
+                                        <span class="text-amber-400 font-bold">⌛</span>
+                                    <?php else: ?>
+                                        <span class="text-slate-500 font-bold">ℹ</span>
+                                    <?php endif; ?>
+                                    <span><?php echo htmlspecialchars($log_item['message']); ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div class="space-y-2">
+                            <span class="text-xs uppercase font-extrabold text-amber-400 tracking-wider flex items-center gap-1">
+                                <i class="fas fa-shield-halved"></i> Default Credentials
+                            </span>
+                            <h4 class="text-white font-black text-lg">Administrator Account</h4>
+                            <p class="text-xs text-slate-400">Please use these default seeded credentials to log in, and make sure to change your password immediately after entry.</p>
+                        </div>
+                        <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 space-y-3 font-mono text-sm">
+                            <div class="flex justify-between border-b border-slate-900 pb-2">
+                                <span class="text-slate-500 font-semibold">Username:</span>
+                                <span class="text-emerald-400 font-bold">admin</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500 font-semibold">Password:</span>
+                                <span class="text-emerald-400 font-bold">admin123</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-center">
+                        <a href="admin.php" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 px-10 rounded-xl shadow-lg shadow-emerald-500/20 text-center transition flex items-center gap-2">
+                            <i class="fas fa-right-to-bracket"></i> Login to Admin Dashboard
+                        </a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <!-- Configuration Wizard Form -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Requirements Checklist -->
+                    <div class="lg:col-span-4 bg-slate-950 border border-slate-800 rounded-2xl p-6 h-fit space-y-6">
+                        <h3 class="text-white font-extrabold text-md flex items-center gap-2">
+                            <i class="fas fa-circle-info text-emerald-400"></i> Pre-install Checks
+                        </h3>
+                        <ul class="space-y-4">
+                            <!-- PHP -->
+                            <li class="flex items-start gap-3">
+                                <span class="<?php echo $req_php ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'; ?> p-1.5 rounded-md text-xs">
+                                    <i class="fas <?php echo $req_php ? 'fa-check' : 'fa-times'; ?>"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">PHP Version 8.1+</h4>
+                                    <p class="text-[11px] text-slate-400">Current version: <?php echo phpversion(); ?></p>
+                                </div>
+                            </li>
+                            <!-- PDO -->
+                            <li class="flex items-start gap-3">
+                                <span class="<?php echo $req_pdo ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'; ?> p-1.5 rounded-md text-xs">
+                                    <i class="fas <?php echo $req_pdo ? 'fa-check' : 'fa-times'; ?>"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">PDO MySQL Driver</h4>
+                                    <p class="text-[11px] text-slate-400"><?php echo $req_pdo ? 'Loaded and available' : 'Driver not loaded'; ?></p>
+                                </div>
+                            </li>
+                            <!-- Writable -->
+                            <li class="flex items-start gap-3">
+                                <span class="<?php echo $req_write ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'; ?> p-1.5 rounded-md text-xs">
+                                    <i class="fas <?php echo $req_write ? 'fa-check' : 'fa-times'; ?>"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">`.env` Config Writable</h4>
+                                    <p class="text-[11px] text-slate-400"><?php echo $req_write ? 'Root directory is writable' : 'Write access denied'; ?></p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Setup Form -->
+                    <div class="lg:col-span-8 bg-slate-950 border border-slate-800 rounded-2xl p-8 space-y-6">
+                        <div class="space-y-1">
+                            <h2 class="text-2xl font-black text-white">Database Setup Guide</h2>
+                            <p class="text-slate-400 text-sm">Please fill in your database details below to connect and run the guided installer.</p>
+                        </div>
+
+                        <?php if (!empty($error_msg)): ?>
+                            <div class="bg-rose-500/10 border-l-4 border-rose-500 p-4 rounded-r-xl space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-rose-400 text-lg"><i class="fas fa-triangle-exclamation"></i></span>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm">Database Connection Failed</h4>
+                                        <p class="text-xs text-rose-300 font-mono mt-1"><?php echo htmlspecialchars($error_msg); ?></p>
+                                    </div>
+                                </div>
+                                <?php if (stripos($error_msg, '1044') !== false || stripos($error_msg, 'Access denied') !== false || stripos($db_name, 'site_builder') !== false): ?>
+                                    <div class="bg-slate-950 border border-rose-500/30 p-3.5 rounded-lg text-xs space-y-2 text-slate-300">
+                                        <p class="font-bold text-amber-400 flex items-center gap-1">
+                                            <i class="fas fa-lightbulb"></i> cPanel / Shared Hosting Tip:
+                                        </p>
+                                        <p class="leading-relaxed">
+                                            It looks like you are trying to install on a shared hosting environment (or using a restricted database user).
+                                            On shared hosting, you <strong>cannot</strong> use the default database name <strong>'site_builder'</strong>.
+                                        </p>
+                                        <ol class="list-decimal list-inside space-y-1 text-slate-400 pl-1">
+                                            <li>Go to your cPanel -> MySQL Database Wizard.</li>
+                                            <li>Create a prefixed database (e.g. <code>ictfjcom_site_builder</code>).</li>
+                                            <li>Create a prefixed user (e.g. <code>ictfjcom_webdev</code>).</li>
+                                            <li>Add user to database and grant <strong>ALL PRIVILEGES</strong>.</li>
+                                            <li>Update the fields below with the full prefixed names.</li>
+                                        </ol>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="" class="space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <!-- DB Host -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Host</label>
+                                    <input type="text" name="db_host" required value="<?php echo htmlspecialchars($db_host); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+                                    <span class="text-[10px] text-slate-500 mt-1 block">Usually 127.0.0.1 or localhost</span>
+                                </div>
+                                <!-- DB Port -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Port</label>
+                                    <input type="text" name="db_port" required value="<?php echo htmlspecialchars($db_port); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+                                    <span class="text-[10px] text-slate-500 mt-1 block">Default: 3306</span>
+                                </div>
+                                <!-- DB Name -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Name</label>
+                                    <input type="text" name="db_name" required value="<?php echo htmlspecialchars($db_name); ?>" placeholder="e.g. ictfjcom_site_builder" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+                                    <span class="text-[10px] text-slate-500 mt-1 block">Prefixed for shared hosts</span>
+                                </div>
+                                <!-- DB User -->
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database User</label>
+                                    <input type="text" name="db_user" required value="<?php echo htmlspecialchars($db_user); ?>" placeholder="e.g. ictfjcom_webdev" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+                                    <span class="text-[10px] text-slate-500 mt-1 block">Prefixed for shared hosts</span>
+                                </div>
+                            </div>
+                            <!-- DB Pass -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Password</label>
+                                <input type="password" name="db_pass" value="<?php echo htmlspecialchars($db_pass); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
+                                <span class="text-[10px] text-slate-500 mt-1 block">Leave empty if no password is set</span>
+                            </div>
+
+                            <div class="pt-4">
+                                <button type="submit" <?php echo ($req_php && $req_pdo && $req_write) ? '' : 'disabled'; ?> class="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg hover:shadow-emerald-500/15 transition flex items-center justify-center gap-2">
+                                    <i class="fas fa-play"></i> Test Connection & Run Installer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-950 border-t border-slate-800 py-6 px-6 text-center text-xs text-slate-500">
+            <div class="max-w-5xl mx-auto">
+                <p>Nuvis Webbuilder Installer &copy; <?php echo date('Y'); ?>. All rights reserved.</p>
+            </div>
+        </footer>
+    </body>
+    </html>
+    <?php
 }

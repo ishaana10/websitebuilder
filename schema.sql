@@ -89,3 +89,13 @@ CREATE TABLE IF NOT EXISTS `project_versions` (
     FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
     INDEX `idx_project_version_id` (`project_id`)
 ) ENGINE=InnoDB;
+
+-- System Debug Logs Table
+CREATE TABLE IF NOT EXISTS `system_logs` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `log_level` VARCHAR(20) NOT NULL DEFAULT 'info', -- 'info', 'warning', 'error', 'debug'
+    `message` TEXT NOT NULL,
+    `context` TEXT NULL, -- Additional JSON or context details
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_log_level` (`log_level`)
+) ENGINE=InnoDB;
