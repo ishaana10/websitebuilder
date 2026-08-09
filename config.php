@@ -126,6 +126,47 @@ function require_login() {
     }
 }
 
+/**
+ * Write a debug or system log message to the system_logs database table safely.
+ *
+ * @param string $level Log level (e.g., info, warning, error, debug)
+ * @param string $message The log message description
+ * @param mixed $context Optional context array or string
+ * @return bool True if successfully logged to database, false otherwise.
+ */
+function write_system_log($level, $message, $context = null) {
+    try {
+        $host = getenv('DB_HOST') ?: 'localhost';
+        $port = getenv('DB_PORT') ?: '3306';
+        $dbname = getenv('DB_NAME') ?: 'site_builder';
+        $user = getenv('DB_USER') ?: 'builder_user';
+        $pass = getenv('DB_PASS') ?: 'builder_pass';
+
+        $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+        $options = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ];
+
+        // Quietly instantiate PDO
+        $pdo = new PDO($dsn, $user, $pass, $options);
+
+        // Prepare context
+        $context_str = null;
+        if ($context !== null) {
+            $context_str = is_string($context) ? $context : json_encode($context);
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO `system_logs` (`log_level`, `message`, `context`) VALUES (?, ?, ?)");
+        return $stmt->execute([strtolower($level), $message, $context_str]);
+    } catch (Throwable $e) {
+        // Fallback to PHP system error_log to ensure we never crash
+        error_log("Failed to write system log to DB: " . $e->getMessage() . " | Message was: " . $message);
+        return false;
+    }
+}
+
 function require_admin() {
     require_login();
     if (!is_admin()) {
