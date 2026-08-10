@@ -192,7 +192,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                     $error_msg = "Current password is incorrect.";
                 }
             }
-        } elseif ($action === 'update_user_role' && is_admin()) {
+        } elseif ($action === 'saas_onboard_tenant' && is_admin()) {
+            $tenant_name = trim($_POST['tenant_name'] ?? '');
+            $subdomain = trim($_POST['subdomain'] ?? '');
+            $custom_domain = trim($_POST['custom_domain'] ?? '');
+            $plan = $_POST['plan_tier'] ?? 'free';
+            $master_username = trim($_POST['master_username'] ?? '');
+            $master_email = trim($_POST['master_email'] ?? '');
+            $master_password = $_POST['master_password'] ?? '';
+            $template_id = (int)($_POST['template_id'] ?? 0);
+
+            if (empty($tenant_name) || empty($subdomain) || empty($master_username) || empty($master_password)) {
+                $error_msg = "Please fill in all required onboarding parameters.";
+            } else {
+                try {
+                    $db->beginTransaction();
+
+                    // Create Tenant
+                    $stmt_t = $db->prepare("INSERT INTO tenants (name, subdomain, custom_domain, subscription_plan) VALUES (?, ?, ?, ?)");
+                    $stmt_t->execute([$tenant_name, $subdomain, empty($custom_domain) ? null : $custom_domain, $plan]);
+                    $tenant_id = $db->lastInsertId();
+
+                    // Create Usage meter
+                    $stmt_u = $db->prepare("INSERT INTO usage_meters (tenant_id, sites_count, storage_used_bytes, bandwidth_used_bytes, ai_calls_count) VALUES (?, 1, 10485760, 52428800, 1)");
+                    $stmt_u->execute([$tenant_id]);
+
+                    // Create Master site owner user
+                    $stmt_user = $db->prepare("INSERT INTO users (tenant_id, username, email, password_hash, role, status) VALUES (?, ?, ?, ?, 'Owner', 'active')");
+                    $stmt_user->execute([$tenant_id, $master_username, $master_email, password_hash($master_password, PASSWORD_BCRYPT)]);
+                    $new_user_id = $db->lastInsertId();
+
+                    // Retrieve template
+                    $stmt_tpl = $db->prepare("SELECT content_json FROM templates WHERE id = ?");
+                    $stmt_tpl->execute([$template_id]);
+                    $tpl = $stmt_tpl->fetch();
+                    $content_json = $tpl ? $tpl['content_json'] : '[]';
+
+                    // Bootstrapping initial tenant project/website
+                    $proj_slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $tenant_name), '-'));
+                    $stmt_proj = $db->prepare("INSERT INTO projects (user_id, tenant_id, name, slug, description, content_json, status) VALUES (?, ?, ?, ?, 'Seeded Onboarding Landing Page', ?, 'draft')");
+                    $stmt_proj->execute([$new_user_id, $tenant_id, $tenant_name . ' Website', $proj_slug, $content_json]);
+
+                    // Write initial log
+                    write_system_log('info', "Tenant Onboarded successfully via Guided Wizard. ID: {$tenant_id} Name: {$tenant_name}");
+
+                    $db->commit();
+                    $success_msg = "Tenant '{$tenant_name}' successfully onboarded! Created owner user '{$master_username}' and bootstrapped landing layout.";
+                } catch (PDOException $e) {
+                    $db->rollBack();
+                    $error_msg = "SaaS Onboarding Failed: " . $e->getMessage();
+                }
+            }
+        }
+        elseif ($action === 'saas_update_plan' && is_admin()) {
+            $tenant_id = (int)($_POST['tenant_id'] ?? 0);
+            $new_plan = $_POST['new_plan'] ?? 'free';
+            try {
+                $stmt = $db->prepare("UPDATE tenants SET subscription_plan = ? WHERE id = ?");
+                $stmt->execute([$new_plan, $tenant_id]);
+                write_system_log('info', "Tenant ID {$tenant_id} subscription plan updated to '{$new_plan}'");
+                $success_msg = "Tenant subscription plan updated successfully.";
+            } catch (PDOException $e) {
+                $error_msg = "Failed to update subscription: " . $e->getMessage();
+            }
+        }
+        elseif ($action === 'cms_approve_comment' && is_admin()) {
+            $comment_id = (int)($_POST['comment_id'] ?? 0);
+            try {
+                $stmt = $db->prepare("UPDATE blog_comments SET status = 'approved' WHERE id = ?");
+                $stmt->execute([$comment_id]);
+                $success_msg = "CMS blog comment approved successfully.";
+            } catch (PDOException $e) {
+                $error_msg = "Failed to approve comment: " . $e->getMessage();
+            }
+        }
+        elseif ($action === 'cms_reject_comment' && is_admin()) {
+            $comment_id = (int)($_POST['comment_id'] ?? 0);
+            try {
+                $stmt = $db->prepare("UPDATE blog_comments SET status = 'moderated' WHERE id = ?");
+                $stmt->execute([$comment_id]);
+                $success_msg = "CMS blog comment rejected successfully.";
+            } catch (PDOException $e) {
+                $error_msg = "Failed to moderate comment: " . $e->getMessage();
+            }
+        }
+        elseif ($action === 'update_user_role' && is_admin()) {
             // Admin only user privilege promotion
             $target_user_id = (int)($_POST['target_user_id'] ?? 0);
             $new_role = $_POST['new_role'] ?? 'user';
@@ -744,6 +828,56 @@ try {
     error_log($e->getMessage());
 }
 
+// Fetch all registered Tenants & Usage Meters (SaaS Layer)
+$all_tenants = [];
+$tenant_usage = [];
+try {
+    $all_tenants = $db->query("SELECT * FROM tenants ORDER BY created_at DESC")->fetchAll();
+
+    $stmt_meter = $db->query("SELECT * FROM usage_meters");
+    while ($row = $stmt_meter->fetch()) {
+        $tenant_usage[$row['tenant_id']] = $row;
+    }
+} catch (PDOException $e) {
+    error_log("Tenancy fetch failed: " . $e->getMessage());
+}
+
+// Fetch E-Commerce Products & Orders
+$ecommerce_products = [];
+$ecommerce_orders = [];
+try {
+    $ecommerce_products = $db->query("SELECT ecommerce_products.*, tenants.name AS tenant_name FROM ecommerce_products JOIN tenants ON ecommerce_products.tenant_id = tenants.id ORDER BY ecommerce_products.created_at DESC")->fetchAll();
+    $ecommerce_orders = $db->query("SELECT ecommerce_orders.*, tenants.name AS tenant_name FROM ecommerce_orders JOIN tenants ON ecommerce_orders.tenant_id = tenants.id ORDER BY ecommerce_orders.created_at DESC")->fetchAll();
+} catch (PDOException $e) {
+    error_log("E-commerce fetch failed: " . $e->getMessage());
+}
+
+// Fetch CMS Blog posts & comments
+$blog_posts = [];
+$blog_comments = [];
+try {
+    $blog_posts = $db->query("SELECT blog_posts.*, tenants.name AS tenant_name FROM blog_posts JOIN tenants ON blog_posts.tenant_id = tenants.id ORDER BY blog_posts.created_at DESC")->fetchAll();
+    $blog_comments = $db->query("SELECT blog_comments.*, blog_posts.title AS post_title FROM blog_comments JOIN blog_posts ON blog_comments.post_id = blog_posts.id ORDER BY blog_comments.created_at DESC")->fetchAll();
+} catch (PDOException $e) {
+    error_log("Blog fetch failed: " . $e->getMessage());
+}
+
+// Fetch Booking Schedules
+$booking_schedules = [];
+try {
+    $booking_schedules = $db->query("SELECT booking_schedules.*, tenants.name AS tenant_name FROM booking_schedules JOIN tenants ON booking_schedules.tenant_id = tenants.id ORDER BY booking_schedules.created_at DESC")->fetchAll();
+} catch (PDOException $e) {
+    error_log("Bookings fetch failed: " . $e->getMessage());
+}
+
+// Fetch CRM Leads
+$crm_leads = [];
+try {
+    $crm_leads = $db->query("SELECT crm_leads.*, tenants.name AS tenant_name FROM crm_leads JOIN tenants ON crm_leads.tenant_id = tenants.id ORDER BY crm_leads.created_at DESC")->fetchAll();
+} catch (PDOException $e) {
+    error_log("CRM fetch failed: " . $e->getMessage());
+}
+
 // Fetch global email settings
 $email_settings = [
     'recipient_email' => 'admin@nuvis-webbuilder.io',
@@ -852,10 +986,26 @@ $csrf_token = generate_csrf_token();
                     <i class="fas fa-user-shield text-sm"></i> Account Security
                 </button>
 
+                <div class="pt-4 pb-2 px-4">
+                    <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">SaaS Capabilities</span>
+                </div>
+                <button onclick="switchTab('tab-capabilities', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-briefcase text-sm"></i> Business Modules
+                </button>
+                <button onclick="switchTab('tab-roles', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-user-tag text-sm"></i> Roles & Permissions
+                </button>
+
                 <?php if (is_admin()): ?>
                 <div class="pt-4 pb-2 px-4">
-                    <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Admin Control</span>
+                    <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">SaaS Layer Admin</span>
                 </div>
+                <button onclick="switchTab('tab-tenancy', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-city text-sm"></i> Tenant Isolation Manager
+                </button>
+                <button onclick="switchTab('tab-onboarding', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                    <i class="fas fa-user-plus text-sm"></i> Tenant Onboarding Wizard
+                </button>
                 <button onclick="switchTab('tab-users', this)" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition duration-200 text-slate-400 hover:text-white hover:bg-slate-800/50">
                     <i class="fas fa-users-cog text-sm"></i> User Manager
                 </button>
@@ -1423,6 +1573,403 @@ $csrf_token = generate_csrf_token();
                 <?php endif; ?>
 
                 <!-- TAB 7: ACCOUNT SECURITY -->
+                <!-- TAB 5A: TENANT ISOLATION MANAGER -->
+                <div id="tab-tenancy" class="tab-content space-y-6">
+                    <div class="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 space-y-2">
+                        <span class="text-[10px] font-extrabold text-teal-400 uppercase tracking-wider block">SaaS Tenancy Monitor</span>
+                        <h2 class="text-xl font-black text-white">Database-per-Tenant Isolated Core</h2>
+                        <p class="text-slate-400 text-xs">Strict multi-tenancy locks all records (websites, custom domains, contact entries, and e-commerce orders) to designated tenant context IDs.</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                        <div class="p-6 border-b border-slate-800 bg-slate-950/40">
+                            <h3 class="text-xs font-extrabold text-white uppercase tracking-wider">Tenant Register & Usage Meters</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-950 text-slate-400 uppercase font-black border-b border-slate-800 text-[10px]">
+                                        <th class="p-4">Tenant Name</th>
+                                        <th class="p-4">Subdomain</th>
+                                        <th class="p-4">Custom Domain</th>
+                                        <th class="p-4">Subscription</th>
+                                        <th class="p-4 text-center">Usage Meters</th>
+                                        <th class="p-4 text-center">Manage Plan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800">
+                                    <?php foreach ($all_tenants as $ten):
+                                        $meter = $tenant_usage[$ten['id']] ?? ['sites_count'=>0, 'storage_used_bytes'=>0, 'bandwidth_used_bytes'=>0, 'ai_calls_count'=>0];
+                                        $sites = $meter['sites_count'];
+                                        $storage = round($meter['storage_used_bytes'] / (1024*1024), 1);
+                                        $bandwidth = round($meter['bandwidth_used_bytes'] / (1024*1024), 0);
+                                        $ai = $meter['ai_calls_count'];
+                                    ?>
+                                        <tr class="hover:bg-slate-900/40 transition">
+                                            <td class="p-4 font-bold text-white"><?php echo htmlspecialchars($ten['name']); ?></td>
+                                            <td class="p-4 font-mono text-teal-400"><?php echo htmlspecialchars($ten['subdomain']); ?>.nuvis.io</td>
+                                            <td class="p-4 font-mono text-slate-300"><?php echo htmlspecialchars($ten['custom_domain'] ?? 'Not Mapped'); ?></td>
+                                            <td class="p-4">
+                                                <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-teal-500/10 text-teal-400">
+                                                    <?php echo htmlspecialchars($ten['subscription_plan']); ?>
+                                                </span>
+                                            </td>
+                                            <td class="p-4 space-y-1">
+                                                <div class="flex justify-between text-[9px] text-slate-500 font-bold uppercase">
+                                                    <span>Sites: <?php echo $sites; ?>/3</span>
+                                                    <span>Storage: <?php echo $storage; ?>MB</span>
+                                                    <span>Bandwidth: <?php echo $bandwidth; ?>MB</span>
+                                                </div>
+                                                <div class="w-full h-1 bg-slate-950 rounded-full overflow-hidden">
+                                                    <div class="bg-teal-500 h-full rounded-full" style="width: <?php echo min(100, ($sites/3)*100); ?>%;"></div>
+                                                </div>
+                                            </td>
+                                            <td class="p-4">
+                                                <form method="POST" action="admin.php?action=saas_update_plan" class="flex items-center gap-1.5 justify-center">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>" />
+                                                    <input type="hidden" name="tenant_id" value="<?php echo $ten['id']; ?>" />
+                                                    <select name="new_plan" class="bg-slate-950 border border-slate-800 text-[10px] text-white rounded p-1 font-bold">
+                                                        <option value="free" <?php echo $ten['subscription_plan']==='free' ? 'selected' : ''; ?>>Free</option>
+                                                        <option value="pro" <?php echo $ten['subscription_plan']==='pro' ? 'selected' : ''; ?>>Pro</option>
+                                                        <option value="agency" <?php echo $ten['subscription_plan']==='agency' ? 'selected' : ''; ?>>Agency</option>
+                                                        <option value="white-label" <?php echo $ten['subscription_plan']==='white-label' ? 'selected' : ''; ?>>White-Label</option>
+                                                    </select>
+                                                    <button type="submit" class="bg-teal-500 text-slate-950 font-black px-2 py-1 rounded text-[9px] uppercase tracking-wider">Save</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5B: TENANT ONBOARDING WIZARD -->
+                <div id="tab-onboarding" class="tab-content space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-2xl mx-auto shadow-2xl space-y-6">
+                        <div class="text-center space-y-2 pb-4 border-b border-slate-800">
+                            <div class="w-12 h-12 bg-teal-500/10 text-teal-400 rounded-full flex items-center justify-center text-xl mx-auto border border-teal-500/20"><i class="fas fa-magic"></i></div>
+                            <h2 class="text-lg font-black text-white uppercase tracking-wider">Guided Tenant Onboarding</h2>
+                            <p class="text-slate-400 text-xs">Register new SaaS clients, assign Owner roles, and seed design elements instantly.</p>
+                        </div>
+
+                        <form method="POST" action="admin.php?action=saas_onboard_tenant" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>" />
+
+                            <!-- Step 1: Tenant Details -->
+                            <div class="space-y-3.5">
+                                <h3 class="text-xs font-bold text-teal-400 uppercase tracking-widest"><i class="fas fa-id-card mr-1"></i> Step 1: Corporate Tenant Context</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Company / Tenant Name</label>
+                                        <input type="text" name="tenant_name" required placeholder="e.g. PestKit NY Branch" class="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs text-white focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subdomain Pointer</label>
+                                        <input type="text" name="subdomain" required placeholder="e.g. nypestkit" class="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs text-white focus:outline-none font-mono" />
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Custom Domain pointer (Optional)</label>
+                                        <input type="text" name="custom_domain" placeholder="e.g. nypestkit.com" class="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs text-white focus:outline-none font-mono" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Subscription Plan Tier</label>
+                                        <select name="plan_tier" class="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs text-white focus:outline-none font-bold">
+                                            <option value="free">Free Starter Tier</option>
+                                            <option value="pro" selected>Pro SaaS Tier</option>
+                                            <option value="agency">Agency Reseller License</option>
+                                            <option value="white-label">White-Label Brand License</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-800" />
+
+                            <!-- Step 2: Choose Template -->
+                            <div class="space-y-3">
+                                <h3 class="text-xs font-bold text-teal-400 uppercase tracking-widest"><i class="fas fa-layer-group mr-1"></i> Step 2: Bootstrap Landing Template</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="bg-slate-950 p-4 border border-slate-800 rounded-xl cursor-pointer hover:border-teal-500/50 flex flex-col justify-between">
+                                        <div>
+                                            <input type="radio" name="template_id" value="1" checked class="text-teal-400 focus:ring-0" />
+                                            <span class="ml-2 font-bold text-white text-xs">SaaS Product Landing</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 mt-2 block">Standard layout containing headers, testimonials, chatbot, and inquiry form structures.</span>
+                                    </label>
+                                    <label class="bg-slate-950 p-4 border border-slate-800 rounded-xl cursor-pointer hover:border-teal-500/50 flex flex-col justify-between">
+                                        <div>
+                                            <input type="radio" name="template_id" value="4" class="text-teal-400 focus:ring-0" />
+                                            <span class="ml-2 font-bold text-white text-xs">PestKit Pest Control Demo</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 mt-2 block">High-fidelity responsive clone with custom topbars, services grids, project galleries, and callback finders.</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-800" />
+
+                            <!-- Step 3: Master Site Owner Credentials -->
+                            <div class="space-y-3">
+                                <h3 class="text-xs font-bold text-teal-400 uppercase tracking-widest"><i class="fas fa-user-shield mr-1"></i> Step 3: Owner Admin Account</h3>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Username</label>
+                                        <input type="text" name="master_username" required placeholder="pestowner" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Email Address</label>
+                                        <input type="email" name="master_email" required placeholder="owner@nypest.com" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white font-mono" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Password</label>
+                                        <input type="password" name="master_password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white font-mono" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition duration-300 flex items-center justify-center gap-1.5 shadow-lg shadow-teal-500/10 mt-6">
+                                <i class="fas fa-paper-plane"></i> Execute SaaS Onboarding Wizard Flow
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 5C: ADVANCED CAPABILITIES -->
+                <div id="tab-capabilities" class="tab-content space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex gap-2 overflow-x-auto shrink-0 font-bold text-[10px] uppercase tracking-widest">
+                        <button onclick="const panes = document.querySelectorAll('.cap-pane'); panes.forEach(p => p.classList.add('hidden')); document.getElementById('cap-store').classList.remove('hidden');" class="bg-slate-800 text-teal-400 px-4 py-2 rounded-lg border border-slate-750 flex items-center gap-1.5">
+                            <i class="fas fa-store"></i> Store Catalog & Orders
+                        </button>
+                        <button onclick="const panes = document.querySelectorAll('.cap-pane'); panes.forEach(p => p.classList.add('hidden')); document.getElementById('cap-blog').classList.remove('hidden');" class="bg-slate-800 text-teal-400 px-4 py-2 rounded-lg border border-slate-750 flex items-center gap-1.5">
+                            <i class="fas fa-rss"></i> CMS Blog Feed
+                        </button>
+                        <button onclick="const panes = document.querySelectorAll('.cap-pane'); panes.forEach(p => p.classList.add('hidden')); document.getElementById('cap-booking').classList.remove('hidden');" class="bg-slate-800 text-teal-400 px-4 py-2 rounded-lg border border-slate-750 flex items-center gap-1.5">
+                            <i class="fas fa-calendar-alt"></i> Bookings Calendar
+                        </button>
+                        <button onclick="const panes = document.querySelectorAll('.cap-pane'); panes.forEach(p => p.classList.add('hidden')); document.getElementById('cap-crm').classList.remove('hidden');" class="bg-slate-800 text-teal-400 px-4 py-2 rounded-lg border border-slate-750 flex items-center gap-1.5">
+                            <i class="fas fa-address-book"></i> CRM Lead Capture
+                        </button>
+                    </div>
+
+                    <!-- Store Pane -->
+                    <div id="cap-store" class="cap-pane space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Catalog -->
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                                <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">E-Commerce Products Catalog</h3></div>
+                                <div class="p-4 space-y-4 max-h-[350px] overflow-y-auto">
+                                    <?php foreach ($ecommerce_products as $p): ?>
+                                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex items-center gap-4">
+                                            <img src="<?php echo htmlspecialchars($p['image_url']); ?>" class="w-12 h-12 object-cover rounded-lg border border-slate-800" />
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-bold text-white text-xs truncate"><?php echo htmlspecialchars($p['name']); ?></h4>
+                                                <p class="text-[10px] text-slate-500 font-mono">SKU: <?php echo htmlspecialchars($p['sku']); ?> | Tenant: <?php echo htmlspecialchars($p['tenant_name']); ?></p>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-teal-400 font-black text-xs">$<?php echo number_format($p['price'], 2); ?></div>
+                                                <div class="text-[9px] text-slate-400">Stock: <?php echo $p['stock']; ?></div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <!-- Orders -->
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                                <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">Simulated Stripe Orders Log</h3></div>
+                                <div class="p-4 space-y-4 max-h-[350px] overflow-y-auto">
+                                    <?php foreach ($ecommerce_orders as $o): ?>
+                                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-1 text-xs">
+                                            <div class="flex justify-between font-bold">
+                                                <span class="text-white"><?php echo htmlspecialchars($o['customer_name']); ?></span>
+                                                <span class="text-teal-400 font-black">$<?php echo number_format($o['total_amount'], 2); ?></span>
+                                            </div>
+                                            <div class="flex justify-between text-[10px] text-slate-500">
+                                                <span><?php echo htmlspecialchars($o['customer_email']); ?></span>
+                                                <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 uppercase font-black"><?php echo htmlspecialchars($o['payment_status']); ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blog Pane -->
+                    <div id="cap-blog" class="cap-pane space-y-6 hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                                <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">CMS Blog Articles</h3></div>
+                                <div class="p-4 space-y-4 max-h-[350px] overflow-y-auto">
+                                    <?php foreach ($blog_posts as $post): ?>
+                                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex gap-3 text-xs">
+                                            <img src="<?php echo htmlspecialchars($post['image_url']); ?>" class="w-14 h-14 object-cover rounded-lg border border-slate-800" />
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-bold text-white truncate"><?php echo htmlspecialchars($post['title']); ?></h4>
+                                                <span class="text-[9px] bg-teal-500/10 text-teal-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wider mt-1 inline-block"><?php echo htmlspecialchars($post['category']); ?></span>
+                                                <p class="text-[9px] text-slate-500 font-mono mt-1">Tenant: <?php echo htmlspecialchars($post['tenant_name']); ?></p>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                                <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">Blog Comment Moderation</h3></div>
+                                <div class="p-4 space-y-4 max-h-[350px] overflow-y-auto">
+                                    <?php foreach ($blog_comments as $com): ?>
+                                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-xs">
+                                            <div class="flex justify-between items-center">
+                                                <span class="font-bold text-white"><?php echo htmlspecialchars($com['author_name']); ?></span>
+                                                <span class="text-[10px] text-slate-500 font-mono"><?php echo htmlspecialchars($com['author_email']); ?></span>
+                                            </div>
+                                            <p class="text-slate-400 text-[11px] leading-relaxed break-words">"<?php echo htmlspecialchars($com['comment_text']); ?>"</p>
+                                            <div class="flex justify-between items-center text-[10px]">
+                                                <span class="text-slate-500 font-bold truncate max-w-[120px]">Post: <?php echo htmlspecialchars($com['post_title']); ?></span>
+                                                <div class="flex gap-1">
+                                                    <?php if ($com['status'] !== 'approved'): ?>
+                                                        <form method="POST" action="admin.php?action=cms_approve_comment">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>" />
+                                                            <input type="hidden" name="comment_id" value="<?php echo $com['id']; ?>" />
+                                                            <button type="submit" class="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded text-[9px] uppercase">Approve</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <?php if ($com['status'] !== 'moderated'): ?>
+                                                        <form method="POST" action="admin.php?action=cms_reject_comment">
+                                                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>" />
+                                                            <input type="hidden" name="comment_id" value="<?php echo $com['id']; ?>" />
+                                                            <button type="submit" class="bg-rose-600 text-white font-bold px-2 py-0.5 rounded text-[9px] uppercase">Reject</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bookings Pane -->
+                    <div id="cap-booking" class="cap-pane space-y-6 hidden">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                            <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">Booked Services Appointment Calendar</h3></div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-950 text-slate-400 uppercase font-black border-b border-slate-800 text-[10px]">
+                                            <th class="p-4">Customer Name</th>
+                                            <th class="p-4">Email</th>
+                                            <th class="p-4">Service</th>
+                                            <th class="p-4">Appointment Date</th>
+                                            <th class="p-4">Time Slotted</th>
+                                            <th class="p-4">Tenant Scope</th>
+                                            <th class="p-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-850">
+                                        <?php if (count($booking_schedules) === 0): ?>
+                                            <tr><td colspan="7" class="p-8 text-center text-slate-500 font-bold uppercase tracking-wider">No active bookings slated in calendar yet.</td></tr>
+                                        <?php else: ?>
+                                            <?php foreach ($booking_schedules as $bk): ?>
+                                                <tr class="hover:bg-slate-955 transition">
+                                                    <td class="p-4 font-bold text-white"><?php echo htmlspecialchars($bk['customer_name']); ?></td>
+                                                    <td class="p-4 font-mono text-slate-400"><?php echo htmlspecialchars($bk['customer_email']); ?></td>
+                                                    <td class="p-4 text-slate-200"><?php echo htmlspecialchars($bk['service_name']); ?></td>
+                                                    <td class="p-4 font-bold text-teal-400"><?php echo htmlspecialchars($bk['booking_date']); ?></td>
+                                                    <td class="p-4 font-bold text-white"><?php echo htmlspecialchars($bk['booking_time']); ?></td>
+                                                    <td class="p-4 text-slate-400"><?php echo htmlspecialchars($bk['tenant_name']); ?></td>
+                                                    <td class="p-4">
+                                                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-emerald-500/10 text-emerald-400">
+                                                            <?php echo htmlspecialchars($bk['status']); ?>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CRM Pane -->
+                    <div id="cap-crm" class="cap-pane space-y-6 hidden">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                            <div class="p-5 bg-slate-950 border-b border-slate-800"><h3 class="text-xs font-bold text-white uppercase tracking-wider">CRM Lead Pipelines Tracker</h3></div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-950 text-slate-400 uppercase font-black border-b border-slate-800 text-[10px]">
+                                            <th class="p-4">Lead Name</th>
+                                            <th class="p-4">Email</th>
+                                            <th class="p-4">Phone</th>
+                                            <th class="p-4">Lead Source</th>
+                                            <th class="p-4">Tenant Company</th>
+                                            <th class="p-4">Pipeline Status</th>
+                                            <th class="p-4">Capture Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-850">
+                                        <?php if (count($crm_leads) === 0): ?>
+                                            <tr><td colspan="7" class="p-8 text-center text-slate-500 font-bold uppercase tracking-wider">No customer pipeline leads captured yet.</td></tr>
+                                        <?php else: ?>
+                                            <?php foreach ($crm_leads as $ld): ?>
+                                                <tr class="hover:bg-slate-955 transition">
+                                                    <td class="p-4 font-bold text-white"><?php echo htmlspecialchars($ld['name']); ?></td>
+                                                    <td class="p-4 font-mono text-slate-400"><?php echo htmlspecialchars($ld['email']); ?></td>
+                                                    <td class="p-4 text-slate-200"><?php echo htmlspecialchars($ld['phone'] ?? 'N/A'); ?></td>
+                                                    <td class="p-4 font-mono text-slate-400"><?php echo htmlspecialchars($ld['source']); ?></td>
+                                                    <td class="p-4 text-slate-400"><?php echo htmlspecialchars($ld['tenant_name']); ?></td>
+                                                    <td class="p-4">
+                                                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-cyan-500/10 text-cyan-400">
+                                                            <?php echo htmlspecialchars($ld['status']); ?>
+                                                        </span>
+                                                    </td>
+                                                    <td class="p-4 text-slate-500"><?php echo htmlspecialchars($ld['created_at']); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5D: ROLES & WORKSPACE PERMISSIONS -->
+                <div id="tab-roles" class="tab-content space-y-6">
+                    <div class="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 space-y-2">
+                        <span class="text-[10px] font-extrabold text-teal-400 uppercase tracking-wider block">Fine-Grained Access Control</span>
+                        <h2 class="text-xl font-black text-white">Commercial Roles Hierarchy</h2>
+                        <p class="text-slate-400 text-xs">Define specific visual builder privileges across user tiers to enable structured white-label agency workflows.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center space-y-2.5">
+                            <div class="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center text-md mx-auto"><i class="fas fa-crown"></i></div>
+                            <h3 class="font-black text-white text-xs uppercase tracking-wider">Site Owner</h3>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">Full master control. Allowed to delete websites, upgrade billing tiers, map domains, and configure CRM dispatches.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center space-y-2.5">
+                            <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center text-md mx-auto"><i class="fas fa-edit"></i></div>
+                            <h3 class="font-black text-white text-xs uppercase tracking-wider">Editor</h3>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">Allowed to customize headings, write blogs, catalog store inventory, and review incoming contact inquires.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center space-y-2.5">
+                            <div class="w-10 h-10 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-md mx-auto"><i class="fas fa-palette"></i></div>
+                            <h3 class="font-black text-white text-xs uppercase tracking-wider">Designer</h3>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">Allowed to tweak design tokens, alter custom stylesheets, drag components, and modify visual margins/padding.</p>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center space-y-2.5">
+                            <div class="w-10 h-10 rounded-full bg-slate-500/10 text-slate-400 flex items-center justify-center text-md mx-auto"><i class="fas fa-eye"></i></div>
+                            <h3 class="font-black text-white text-xs uppercase tracking-wider">Viewer</h3>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">Read-only workspace access. Allowed to preview layouts in desktop/mobile device bezels and monitor telemetry meters.</p>
+                        </div>
+                    </div>
+                </div>
                 <div id="tab-security" class="tab-content space-y-6">
                     <div class="max-w-md bg-slate-900 border border-slate-800 rounded-xl overflow-hidden p-6 shadow-md">
                         <h3 class="font-extrabold text-white text-xs uppercase tracking-widest text-teal-400 mb-4 flex items-center gap-2">
@@ -1535,6 +2082,10 @@ $csrf_token = generate_csrf_token();
             // Change page top header title description
             const vTitle = document.getElementById('view-title');
             if (tabId === 'tab-dashboard') vTitle.innerText = 'Dashboard';
+            if (tabId === 'tab-tenancy') vTitle.innerText = 'Tenant Isolation Manager';
+            if (tabId === 'tab-onboarding') vTitle.innerText = 'Tenant Onboarding Wizard';
+            if (tabId === 'tab-capabilities') vTitle.innerText = 'Dynamic SaaS Business Modules';
+            if (tabId === 'tab-roles') vTitle.innerText = 'Roles & Workspace Permissions';
             if (tabId === 'tab-sites') vTitle.innerText = 'My Websites';
             if (tabId === 'tab-templates') vTitle.innerText = 'Templates Library';
             if (tabId === 'tab-submissions') vTitle.innerText = 'Contact Form Submissions';

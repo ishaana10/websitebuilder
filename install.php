@@ -39,6 +39,25 @@ function run_installation_process($pdo, $output_callback = null) {
     }
     $log("Database schema imported and verified successfully!", 'success');
 
+    // Seed default tenants (for multi-tenancy SaaS layer mockup)
+    $stmt_tenants = $pdo->query("SELECT COUNT(*) as tenant_count FROM tenants");
+    $res_tenants = $stmt_tenants->fetch();
+    if ($res_tenants['tenant_count'] == 0) {
+        $log("Seeding default SaaS tenants...", 'pending');
+        $insert_tenant = $pdo->prepare("INSERT INTO tenants (id, name, subdomain, custom_domain, subscription_plan, billing_status) VALUES (?, ?, ?, ?, ?, ?)");
+        $insert_tenant->execute([1, 'Nuvis Global Headquarters', 'hq', 'hq.nuvis-webbuilder.io', 'agency', 'active']);
+        $insert_tenant->execute([2, 'PestKit Local Exterminators', 'pestkit', 'pestkit-demo.com', 'pro', 'active']);
+        $insert_tenant->execute([3, 'Acme Retailers', 'acme', 'acmestore.com', 'free', 'active']);
+        $log("SaaS tenants seeded successfully!", 'success');
+
+        // Seed default usage metrics
+        $pdo->exec("INSERT INTO usage_meters (tenant_id, sites_count, storage_used_bytes, bandwidth_used_bytes, ai_calls_count) VALUES
+            (1, 4, 157286400, 1073741824, 182),
+            (2, 2, 52428800, 536870912, 45),
+            (3, 1, 10485760, 104857600, 3)
+        ON DUPLICATE KEY UPDATE tenant_id = tenant_id;");
+    }
+
     // 3. Seed initial admin user if not already present
     $stmt = $pdo->query("SELECT COUNT(*) as admin_count FROM users WHERE username = 'admin' OR role = 'admin'");
     $res = $stmt->fetch();
@@ -49,45 +68,73 @@ function run_installation_process($pdo, $output_callback = null) {
         $admin_email = 'admin@nuvis-webbuilder.io';
         $admin_pass_hash = password_hash('admin123', PASSWORD_BCRYPT);
 
-        $insert_admin = $pdo->prepare("INSERT INTO users (username, email, password_hash, role, status) VALUES (?, ?, ?, 'admin', 'active')");
+        // Map global admin to HQ tenant
+        $insert_admin = $pdo->prepare("INSERT INTO users (username, email, password_hash, role, status, tenant_id) VALUES (?, ?, ?, 'admin', 'active', 1)");
         $insert_admin->execute([$admin_user, $admin_email, $admin_pass_hash]);
         $log("Administrator account created successfully!", 'success');
     } else {
         $log("Admin account already exists. Skipping seeding.", 'info');
     }
 
-    // 3.5 Seed email_settings table if empty
-    $pdo->exec("CREATE TABLE IF NOT EXISTS `email_settings` (
-        `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `recipient_email` VARCHAR(255) NOT NULL DEFAULT 'admin@nuvis-webbuilder.io',
-        `auto_responder_enabled` TINYINT(1) NOT NULL DEFAULT 1,
-        `auto_responder_subject` VARCHAR(255) NOT NULL DEFAULT 'Thank you for contacting us!',
-        `auto_responder_body` TEXT NOT NULL,
-        `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
-    ) ENGINE=InnoDB;");
+    // Seed other multi-tenant users / roles for simulation
+    $stmt_roles = $pdo->query("SELECT COUNT(*) as user_count FROM users WHERE role IN ('Owner', 'Editor', 'Designer', 'Viewer')");
+    $res_roles = $stmt_roles->fetch();
+    if ($res_roles['user_count'] == 0) {
+        $log("Seeding multi-tenant demonstration users...", 'pending');
+        $insert_user = $pdo->prepare("INSERT INTO users (username, email, password_hash, role, status, tenant_id) VALUES (?, ?, ?, ?, 'active', ?)");
+        $insert_user->execute(['owner_pest', 'owner@pestkit.com', password_hash('owner123', PASSWORD_BCRYPT), 'Owner', 2]);
+        $insert_user->execute(['editor_pest', 'editor@pestkit.com', password_hash('editor123', PASSWORD_BCRYPT), 'Editor', 2]);
+        $insert_user->execute(['designer_pest', 'designer@pestkit.com', password_hash('designer123', PASSWORD_BCRYPT), 'Designer', 2]);
+        $insert_user->execute(['viewer_pest', 'viewer@pestkit.com', password_hash('viewer123', PASSWORD_BCRYPT), 'Viewer', 2]);
+        $insert_user->execute(['owner_acme', 'owner@acme.com', password_hash('owneracme', PASSWORD_BCRYPT), 'Owner', 3]);
+        $log("Multi-tenant demonstration users loaded!", 'success');
+    }
 
-    // Ensure page versioning table exists
-    $pdo->exec("CREATE TABLE IF NOT EXISTS `project_versions` (
-        `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `project_id` INT NOT NULL,
-        `label` VARCHAR(150) NOT NULL,
-        `content_json` LONGTEXT NOT NULL,
-        `version_type` VARCHAR(50) NOT NULL DEFAULT 'manual',
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
-        INDEX `idx_project_version_id` (`project_id`)
-    ) ENGINE=InnoDB;");
+    // Seed mock E-commerce catalog for PestKit & Acme
+    $stmt_products = $pdo->query("SELECT COUNT(*) as prod_count FROM ecommerce_products");
+    $res_products = $stmt_products->fetch();
+    if ($res_products['prod_count'] == 0) {
+        $log("Seeding mock E-commerce product catalog...", 'pending');
+        $insert_prod = $pdo->prepare("INSERT INTO ecommerce_products (tenant_id, name, sku, price, description, image_url, stock) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        // Tenant 2 (PestKit)
+        $insert_prod->execute([2, 'Eco-Friendly Ant Bait Station', 'PEST-ANT-01', 24.99, 'Organic non-toxic ant exterminator bait traps safe for indoor pets.', 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&auto=format&fit=crop&q=80', 45]);
+        $insert_prod->execute([2, 'Ultrasonic Pest Repeller Probe', 'PEST-ULTRA-02', 49.99, 'Electronic high-frequency wave emitter that deter rodents and bats.', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&auto=format&fit=crop&q=80', 20]);
+        // Tenant 3 (Acme)
+        $insert_prod->execute([3, 'Acme Smart Wi-Fi Thermostat', 'ACME-THERM-88', 129.00, 'Touchscreen smart temperature scheduler controller with Alexa support.', 'https://images.unsplash.com/photo-1558002038-1055907df827?w=400&auto=format&fit=crop&q=80', 15]);
+        $log("Mock E-commerce products catalog seeded!", 'success');
+    }
 
-    // Ensure system_logs table exists
-    $pdo->exec("CREATE TABLE IF NOT EXISTS `system_logs` (
-        `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `log_level` VARCHAR(20) NOT NULL DEFAULT 'info',
-        `message` TEXT NOT NULL,
-        `context` TEXT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX `idx_log_level` (`log_level`)
-    ) ENGINE=InnoDB;");
+    // Seed mock blog posts for CMS
+    $stmt_blog = $pdo->query("SELECT COUNT(*) as blog_count FROM blog_posts");
+    $res_blog = $stmt_blog->fetch();
+    if ($res_blog['blog_count'] == 0) {
+        $log("Seeding mock CMS Blog posts...", 'pending');
+        $insert_post = $pdo->prepare("INSERT INTO blog_posts (tenant_id, title, slug, content, excerpt, image_url, category, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        // Tenant 2 (PestKit)
+        $insert_post->execute([
+            2,
+            '5 Signs You Have a Termite Infestation under Your Wood Flooring',
+            '5-signs-termite-infestation',
+            '<p>Termites cause billions of dollars in structural property damage each year. Early detection is paramount to defending your investment.</p><h4>1. Hollow Wood Sound</h4><p>If you tap on your wooden structural beams or floors and hear a echoing, hollow sound, termites may have hollowed out the core.</p>',
+            'Learn how to identify destructive termite tunnels and hollow flooring before structural damage spreads.',
+            'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80',
+            'Extermination Guide',
+            'termites,pestcontrol,safety'
+        ]);
+        $insert_post->execute([
+            2,
+            'Why Eco-Friendly Baiting Systems are Better for Pets and Children',
+            'why-eco-friendly-baiting-is-better',
+            '<p>Traditional pest extermination relied on heavy aerosol chemical sprays that left residues. Modern smart baiting targets insects directly without toxic vapors.</p>',
+            'A guide to understanding pet-safe chemical configurations in residential pest control.',
+            'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80',
+            'Safety & Eco',
+            'eco,pets,families'
+        ]);
+        $log("Mock CMS blog posts loaded successfully!", 'success');
+    }
 
+    // Seeding default global email settings
     $stmt_email = $pdo->query("SELECT COUNT(*) as email_count FROM email_settings");
     $res_email = $stmt_email->fetch();
 
@@ -164,29 +211,6 @@ function run_installation_process($pdo, $output_callback = null) {
                 <textarea name="message" rows="4" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500"></textarea>
             </div>
             <button type="submit" class="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 rounded-lg transition-all">Send Message</button>
-        </form>
-    </div>
-</div>
-<div data-component="chatbot" class="fixed bottom-6 right-6 z-50">
-    <button onclick="toggleNuvisWebbuilderChatbot()" class="bg-teal-500 text-slate-950 p-4 rounded-full shadow-2xl hover:scale-110 transition-transform">
-        <i class="fas fa-comments text-2xl"></i>
-    </button>
-    <div id="nuvis-webbuilder-chatbot-box" class="hidden fixed bottom-24 right-6 w-96 bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <div class="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
-            <span class="font-bold text-white flex items-center gap-2">
-                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
-                AI Support Bot
-            </span>
-            <button onclick="toggleNuvisWebbuilderChatbot()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="nuvis-webbuilder-chat-messages" class="h-64 p-4 overflow-y-auto space-y-3 flex flex-col text-sm text-slate-300">
-            <div class="bg-slate-900 p-3 rounded-xl max-w-[85%] self-start">
-                Hello there! I am your AI assistant. How can I help you customize your Nuvis Webbuilder project today?
-            </div>
-        </div>
-        <form onsubmit="sendNuvisWebbuilderChatMessage(event, this)" class="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
-            <input type="text" name="chat_msg" placeholder="Ask something..." class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500 text-sm">
-            <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-950 px-3 py-2 rounded-lg"><i class="fas fa-paper-plane"></i></button>
         </form>
     </div>
 </div>
@@ -575,7 +599,7 @@ HTML;
                     </ul>
                 </div>
                 <div class="p-6 bg-slate-50 border-t border-slate-100 text-center">
-                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-sm font-semibold font-semibold">Get Started</a>
+                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-sm font-semibold">Get Started</a>
                 </div>
             </div>
 
@@ -596,7 +620,7 @@ HTML;
                     </ul>
                 </div>
                 <div class="p-6 bg-emerald-50 border-t border-slate-100 text-center">
-                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-md shadow-emerald-600/10 font-semibold font-semibold">Get Started</a>
+                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-md shadow-emerald-600/10 font-semibold">Get Started</a>
                 </div>
             </div>
 
@@ -616,7 +640,7 @@ HTML;
                     </ul>
                 </div>
                 <div class="p-6 bg-slate-50 border-t border-slate-100 text-center">
-                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-sm font-semibold font-semibold font-semibold font-semibold">Get Started</a>
+                    <a href="#contact" class="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-sm font-semibold font-semibold">Get Started</a>
                 </div>
             </div>
         </div>
@@ -657,34 +681,7 @@ HTML;
                 <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&auto=format&fit=crop&q=80" alt="Warehouse Cleaning" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500" />
                 <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/40 to-transparent flex flex-col justify-end p-6">
                     <span class="text-amber-400 text-[10px] font-black uppercase tracking-wider font-semibold">Industrial</span>
-                    <h4 class="text-white text-lg font-black mt-1 font-semibold font-semibold">Warehouse Cleaning</h4>
-                </div>
-            </div>
-
-            <!-- Project 4 -->
-            <div class="project-item relative group overflow-hidden rounded-2xl border border-slate-100 shadow-sm" style="padding: 0;">
-                <img src="https://images.unsplash.com/photo-1516549655169-df83a0774514?w=600&auto=format&fit=crop&q=80" alt="Hospital Clean" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500" />
-                <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/40 to-transparent flex flex-col justify-end p-6">
-                    <span class="text-amber-400 text-[10px] font-black uppercase tracking-wider font-semibold">Medical Care</span>
-                    <h4 class="text-white text-lg font-black mt-1 font-semibold font-semibold">Hospital Cleaning</h4>
-                </div>
-            </div>
-
-            <!-- Project 5 -->
-            <div class="project-item relative group overflow-hidden rounded-2xl border border-slate-100 shadow-sm" style="padding: 0;">
-                <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&auto=format&fit=crop&q=80" alt="Factory Clean" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500" />
-                <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/40 to-transparent flex flex-col justify-end p-6">
-                    <span class="text-amber-400 text-[10px] font-black uppercase tracking-wider font-semibold">Manufacturing</span>
-                    <h4 class="text-white text-lg font-black mt-1 font-semibold font-semibold">Factory Cleaning</h4>
-                </div>
-            </div>
-
-            <!-- Project 6 -->
-            <div class="project-item relative group overflow-hidden rounded-2xl border border-slate-100 shadow-sm" style="padding: 0;">
-                <img src="https://images.unsplash.com/photo-1540518614846-7eded433c457?w=600&auto=format&fit=crop&q=80" alt="Furniture Sanitizing" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500" />
-                <div class="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/40 to-transparent flex flex-col justify-end p-6">
-                    <span class="text-amber-400 text-[10px] font-black uppercase tracking-wider font-semibold">Furniture Sanitization</span>
-                    <h4 class="text-white text-lg font-black mt-1 font-semibold font-semibold font-semibold">Furniture Sanitizing</h4>
+                    <h4 class="text-white text-lg font-black mt-1 font-semibold">Warehouse Cleaning</h4>
                 </div>
             </div>
         </div>
@@ -719,24 +716,6 @@ HTML;
                     <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Director of Extermination</p>
                 </div>
             </div>
-
-            <!-- Team Member 3 -->
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden text-center hover:shadow-xl transition-all duration-300">
-                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80" alt="Full Name" class="w-full h-64 object-cover" />
-                <div class="p-6 bg-slate-900 text-white">
-                    <h4 class="text-base font-black text-amber-400 font-semibold font-semibold">Sonia Kova</h4>
-                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Senior Bedbug Specialist</p>
-                </div>
-            </div>
-
-            <!-- Team Member 4 -->
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden text-center hover:shadow-xl transition-all duration-300">
-                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80" alt="Full Name" class="w-full h-64 object-cover" />
-                <div class="p-6 bg-slate-900 text-white">
-                    <h4 class="text-base font-black text-amber-400 font-semibold font-semibold">Robert Chen</h4>
-                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Termite Barrier Architect</p>
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -760,36 +739,8 @@ HTML;
                 <div class="flex items-center gap-3.5 mt-6 pt-4 border-t border-slate-200/60">
                     <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80" alt="Client 1" class="w-10 h-10 rounded-full object-cover" />
                     <div>
-                        <h4 class="font-black text-slate-800 text-xs font-semibold font-semibold">James Wilson</h4>
+                        <h4 class="font-black text-slate-800 text-xs font-semibold">James Wilson</h4>
                         <span class="text-[10px] text-slate-400">Operations Manager</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Review 2 -->
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 relative shadow-sm flex flex-col justify-between">
-                <p class="text-slate-600 text-xs italic leading-relaxed">
-                    "The termite inspection was extremely thorough. Dr Alexandra explained the subsoil barrier system, and it has kept our building decays safe since."
-                </p>
-                <div class="flex items-center gap-3.5 mt-6 pt-4 border-t border-slate-200/60">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" alt="Client 2" class="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                        <h4 class="font-black text-slate-800 text-xs font-semibold font-semibold">Sarah Jenkins</h4>
-                        <span class="text-[10px] text-slate-400">Home Owner</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Review 3 -->
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 relative shadow-sm flex flex-col justify-between">
-                <p class="text-slate-600 text-xs italic leading-relaxed">
-                    "Very friendly team and eco-friendly products! Our yard had heavy mosquito nesting and after the treatment we enjoyed outdoor summer hosting entirely bite-free."
-                </p>
-                <div class="flex items-center gap-3.5 mt-6 pt-4 border-t border-slate-200/60">
-                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" alt="Client 3" class="w-10 h-10 rounded-full object-cover" />
-                    <div>
-                        <h4 class="font-black text-slate-800 text-xs font-semibold font-semibold">Sonia Carter</h4>
-                        <span class="text-[10px] text-slate-400">Restaurateur</span>
                     </div>
                 </div>
             </div>
@@ -812,25 +763,6 @@ HTML;
             <!-- Map Embed -->
             <div class="rounded-2xl overflow-hidden shadow-md border border-slate-200">
                 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3001583.639214438!2d-78.4099249913019!3d42.71993723844549!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4ccc4bf0f123a5a9%3A0xddcfc6c1de189567!2sNew%20York%2C%20USA!5e0!3m2!1sen!2sbd!4v1687175686342!5m2!1sen!2sbd" class="w-full h-56 border-0" allowfullscreen="" loading="lazy"></iframe>
-            </div>
-
-            <!-- Small Contacts Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center shadow-sm">
-                    <i class="fas fa-map-marker-alt text-emerald-600 text-lg mb-2"></i>
-                    <span class="font-black text-slate-800 text-[10px] uppercase">Address</span>
-                    <p class="text-[11px] text-slate-500 mt-1">123 Street, NY, USA</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center shadow-sm">
-                    <i class="fas fa-phone-alt text-emerald-600 text-lg mb-2"></i>
-                    <span class="font-black text-slate-800 text-[10px] uppercase">Call Us</span>
-                    <p class="text-[11px] text-slate-500 mt-1">+012 3456 7890</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center shadow-sm">
-                    <i class="fas fa-envelope text-emerald-600 text-lg mb-2"></i>
-                    <span class="font-black text-slate-800 text-[10px] uppercase">Email Us</span>
-                    <p class="text-[11px] text-slate-500 mt-1">info@example.com</p>
-                </div>
             </div>
         </div>
 
@@ -870,50 +802,6 @@ HTML;
                 <span class="p-1 bg-amber-400 rounded text-emerald-950 text-xs"><i class="fas fa-shield-virus"></i></span>
                 <span>Pest<span class="text-amber-500">Kit</span></span>
             </h3>
-            <p class="text-slate-400 text-xs leading-relaxed">
-                Nostrud exertation ullamco labor nisi aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.
-            </p>
-        </div>
-
-        <!-- Useful Links -->
-        <div class="space-y-4">
-            <h4 class="text-white font-bold text-xs uppercase tracking-widest border-l-2 border-emerald-500 pl-3">Useful Links</h4>
-            <div class="flex flex-col space-y-2 text-xs text-slate-400 font-medium font-semibold">
-                <a href="#about" class="hover:text-amber-400 transition">About Us</a>
-                <a href="#contact" class="hover:text-amber-400 transition">Contact Us</a>
-                <a href="#services" class="hover:text-amber-400 transition">Our Services</a>
-                <a href="#pricing" class="hover:text-amber-400 transition">Terms & Condition</a>
-            </div>
-        </div>
-
-        <!-- Services Link -->
-        <div class="space-y-4">
-            <h4 class="text-white font-bold text-xs uppercase tracking-widest border-l-2 border-emerald-500 pl-3">Services Link</h4>
-            <div class="flex flex-col space-y-2 text-xs text-slate-400 font-medium font-semibold">
-                <a href="#services" class="hover:text-amber-400 transition">Apartment Cleaning</a>
-                <a href="#services" class="hover:text-amber-400 transition">Office Cleaning</a>
-                <a href="#services" class="hover:text-amber-400 transition">Car Washing</a>
-                <a href="#services" class="hover:text-amber-400 transition">Green Cleaning</a>
-            </div>
-        </div>
-
-        <!-- Contact Us Info -->
-        <div class="space-y-4">
-            <h4 class="text-white font-bold text-xs uppercase tracking-widest border-l-2 border-emerald-500 pl-3">Contact Us</h4>
-            <div class="flex flex-col space-y-3 text-xs text-slate-400">
-                <span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-amber-400"></i> 123 Street, CA, USA</span>
-                <span class="flex items-center gap-2"><i class="fas fa-phone-alt text-amber-400"></i> +012 345 67890</span>
-                <span class="flex items-center gap-2"><i class="fas fa-envelope text-amber-400"></i> info@example.com</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Copyright banner -->
-    <div class="max-w-7xl mx-auto pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-        <span>PestKit © 2025 All Right Reserved.</span>
-        <div class="flex items-center gap-4">
-            <span>Designed By <a href="https://htmlcodex.com/" target="_blank" class="hover:text-white underline font-semibold">HTML Codex</a></span>
-            <span>Distributed By <a href="https://themewagon.com/" target="_blank" class="hover:text-white underline font-semibold font-semibold">ThemeWagon</a></span>
         </div>
     </div>
 </footer>
@@ -1245,7 +1133,7 @@ if ($is_cli) {
                                 </span>
                                 <div>
                                     <h4 class="text-xs font-bold text-white">PHP Version 8.1+</h4>
-                                    <p class="text-[11px] text-slate-400">Current version: <?php echo phpversion(); ?></p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Current version: <?php echo phpversion(); ?></p>
                                 </div>
                             </li>
                             <!-- PDO -->
@@ -1287,24 +1175,6 @@ if ($is_cli) {
                                         <p class="text-xs text-rose-300 font-mono mt-1"><?php echo htmlspecialchars($error_msg); ?></p>
                                     </div>
                                 </div>
-                                <?php if (stripos($error_msg, '1044') !== false || stripos($error_msg, 'Access denied') !== false || stripos($db_name, 'site_builder') !== false): ?>
-                                    <div class="bg-slate-950 border border-rose-500/30 p-3.5 rounded-lg text-xs space-y-2 text-slate-300">
-                                        <p class="font-bold text-amber-400 flex items-center gap-1">
-                                            <i class="fas fa-lightbulb"></i> cPanel / Shared Hosting Tip:
-                                        </p>
-                                        <p class="leading-relaxed">
-                                            It looks like you are trying to install on a shared hosting environment (or using a restricted database user).
-                                            On shared hosting, you <strong>cannot</strong> use the default database name <strong>'site_builder'</strong>.
-                                        </p>
-                                        <ol class="list-decimal list-inside space-y-1 text-slate-400 pl-1">
-                                            <li>Go to your cPanel -> MySQL Database Wizard.</li>
-                                            <li>Create a prefixed database (e.g. <code>ictfjcom_site_builder</code>).</li>
-                                            <li>Create a prefixed user (e.g. <code>ictfjcom_webdev</code>).</li>
-                                            <li>Add user to database and grant <strong>ALL PRIVILEGES</strong>.</li>
-                                            <li>Update the fields below with the full prefixed names.</li>
-                                        </ol>
-                                    </div>
-                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
 
@@ -1314,32 +1184,27 @@ if ($is_cli) {
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Host</label>
                                     <input type="text" name="db_host" required value="<?php echo htmlspecialchars($db_host); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                                    <span class="text-[10px] text-slate-500 mt-1 block">Usually 127.0.0.1 or localhost</span>
                                 </div>
                                 <!-- DB Port -->
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Port</label>
                                     <input type="text" name="db_port" required value="<?php echo htmlspecialchars($db_port); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                                    <span class="text-[10px] text-slate-500 mt-1 block">Default: 3306</span>
                                 </div>
                                 <!-- DB Name -->
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Name</label>
-                                    <input type="text" name="db_name" required value="<?php echo htmlspecialchars($db_name); ?>" placeholder="e.g. ictfjcom_site_builder" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                                    <span class="text-[10px] text-slate-500 mt-1 block">Prefixed for shared hosts</span>
+                                    <input type="text" name="db_name" required value="<?php echo htmlspecialchars($db_name); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
                                 </div>
                                 <!-- DB User -->
                                 <div>
                                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database User</label>
-                                    <input type="text" name="db_user" required value="<?php echo htmlspecialchars($db_user); ?>" placeholder="e.g. ictfjcom_webdev" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                                    <span class="text-[10px] text-slate-500 mt-1 block">Prefixed for shared hosts</span>
+                                    <input type="text" name="db_user" required value="<?php echo htmlspecialchars($db_user); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
                                 </div>
                             </div>
                             <!-- DB Pass -->
                             <div>
                                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Database Password</label>
                                 <input type="password" name="db_pass" value="<?php echo htmlspecialchars($db_pass); ?>" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-                                <span class="text-[10px] text-slate-500 mt-1 block">Leave empty if no password is set</span>
                             </div>
 
                             <div class="pt-4">
