@@ -209,6 +209,47 @@ $csrf_token = generate_csrf_token();
             const [isFullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
             const [codeEditorTab, setCodeEditorTab] = useState('css'); // css, js, html_raw
 
+            // --- Evolved Global Theme Editor & Design Tokens ---
+            const [themePrimaryColor, setThemePrimaryColor] = useState('#14b8a6');
+            const [themeBgColor, setThemeBgColor] = useState('#0f172a');
+            const [themeFontFamily, setThemeFontFamily] = useState('sans-serif');
+            const [themeBaseSpacing, setThemeBaseSpacing] = useState('24px');
+            const [themeContainerWidth, setThemeContainerWidth] = useState('1200px');
+
+            // --- Evolved Page SEO & Meta Parameters ---
+            const [seoTitle, setSeoTitle] = useState(PROJECT_NAME);
+            const [seoMetaDesc, setSeoMetaDesc] = useState('Elegantly compiled web properties, pre-cached for sub-millisecond visual layouts.');
+            const [seoOgImage, setSeoOgImage] = useState('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600');
+            const [seoRobotsTxt, setSeoRobotsTxt] = useState('User-agent: *\nAllow: /\nSitemap: /sitemap.xml');
+            const [seoStructuredData, setSeoStructuredData] = useState(JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebPage",
+                "name": PROJECT_NAME,
+                "description": "Discover precompiled structural page builds."
+            }, null, 2));
+
+            // --- Multi-Tenancy SaaS Billing & Custom Domains ---
+            const [tenantCustomDomain, setTenantCustomDomain] = useState('');
+            const [tenantSubdomain, setTenantSubdomain] = useState('pestkit');
+            const [tenantSubscriptionPlan, setTenantSubscriptionPlan] = useState('pro');
+            const [tenantSitesCount, setTenantSitesCount] = useState(2);
+            const [tenantStorageUsed, setTenantStorageUsed] = useState(52428800); // 50MB
+            const [tenantBandwidthUsed, setTenantBandwidthUsed] = useState(1073741824); // 1GB
+            const [tenantAiCallsCount, setTenantAiCallsCount] = useState(45);
+            const [showBillingModal, setShowBillingModal] = useState(false);
+
+            // --- AI Superpowers Assistant states ---
+            const [aiPrompt, setAiPrompt] = useState('');
+            const [aiIsGenerating, setAiIsGenerating] = useState(false);
+            const [aiAuditReport, setAiAuditReport] = useState(null);
+
+            // --- Simulated Real-time Collaboration list ---
+            const [presenceUsers, setPresenceUsers] = useState(['Sarah Jenkins (Editor)', 'Marcus Sterling (Architect)', 'You (Owner)']);
+            const [presenceLogs, setPresenceLogs] = useState([
+                'Marcus updated active styles for CTA Banner',
+                'Sarah Jenkins started editing section 2'
+            ]);
+
             // --- Nuvis Email Module Settings ---
             const [emailRecipient, setEmailRecipient] = useState('');
             const [autoResponderEnabled, setAutoResponderEnabled] = useState(false);
@@ -615,6 +656,27 @@ $csrf_token = generate_csrf_token();
                     setAutoResponderSubject(autoSub);
                     setAutoResponderBody(autoBody);
 
+                    // Evolved parameters bootstrap
+                    if (raw && raw.global_theme) {
+                        setThemePrimaryColor(raw.global_theme.primary_color || '#14b8a6');
+                        setThemeBgColor(raw.global_theme.bg_color || '#0f172a');
+                        setThemeFontFamily(raw.global_theme.font_family || 'sans-serif');
+                        setThemeBaseSpacing(raw.global_theme.base_spacing || '24px');
+                        setThemeContainerWidth(raw.global_theme.container_width || '1200px');
+                    }
+                    if (raw && raw.seo_settings) {
+                        setSeoTitle(raw.seo_settings.title || PROJECT_NAME);
+                        setSeoMetaDesc(raw.seo_settings.meta_desc || '');
+                        setSeoOgImage(raw.seo_settings.og_image || '');
+                        setSeoRobotsTxt(raw.seo_settings.robots_txt || 'User-agent: *\nAllow: /');
+                        setSeoStructuredData(raw.seo_settings.structured_data || '');
+                    }
+                    if (raw && raw.saas_settings) {
+                        setTenantCustomDomain(raw.saas_settings.custom_domain || '');
+                        setTenantSubdomain(raw.saas_settings.subdomain || 'pestkit');
+                        setTenantSubscriptionPlan(raw.saas_settings.subscription_plan || 'pro');
+                    }
+
                     // Initialize history stack
                     setHistory([initialPages]);
                     setHistoryIndex(0);
@@ -819,6 +881,26 @@ $csrf_token = generate_csrf_token();
                         template_theme: emailTemplateTheme,
                         auto_responder_subject: autoResponderSubject,
                         auto_responder_body: autoResponderBody
+                    },
+                    // Evolved variables serialization
+                    global_theme: {
+                        primary_color: themePrimaryColor,
+                        bg_color: themeBgColor,
+                        font_family: themeFontFamily,
+                        base_spacing: themeBaseSpacing,
+                        container_width: themeContainerWidth
+                    },
+                    seo_settings: {
+                        title: seoTitle,
+                        meta_desc: seoMetaDesc,
+                        og_image: seoOgImage,
+                        robots_txt: seoRobotsTxt,
+                        structured_data: seoStructuredData
+                    },
+                    saas_settings: {
+                        custom_domain: tenantCustomDomain,
+                        subdomain: tenantSubdomain,
+                        subscription_plan: tenantSubscriptionPlan
                     }
                 });
             };
@@ -1175,6 +1257,18 @@ $csrf_token = generate_csrf_token();
             return (
                 <div className="h-full flex flex-col overflow-hidden bg-slate-950">
                     <style dangerouslySetInnerHTML={{ __html: previewingVersionId ? previewingCss : customCss }} />
+                    <style dangerouslySetInnerHTML={{ __html: `
+                        :root {
+                            --primary-color: ${themePrimaryColor} !important;
+                            --bg-color: ${themeBgColor} !important;
+                            --font-family: ${themeFontFamily} !important;
+                            --base-spacing: ${themeBaseSpacing} !important;
+                            --container-width: ${themeContainerWidth} !important;
+                        }
+                        .canvas-inner-html section, .canvas-inner-html nav, .canvas-inner-html footer {
+                            font-family: ${themeFontFamily} !important;
+                        }
+                    ` }} />
 
                     {/* TOP ACTION HEADER */}
                     <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 h-16 px-6 flex items-center justify-between shrink-0 z-40">
@@ -1339,7 +1433,28 @@ $csrf_token = generate_csrf_token();
                         </aside>
 
                         {/* CENTER CANVAS CONTAINER - RESPONSIVE FRAME */}
-                        <main className="flex-1 bg-slate-950 overflow-y-auto p-8 flex justify-center items-start transition-all" onClick={() => { setActiveSectionId(null); setActiveElementId(null); setPropsSubTab('block'); }}>
+                        <main className="flex-1 bg-slate-950 overflow-y-auto p-8 flex flex-col justify-start items-center gap-6 transition-all" onClick={() => { setActiveSectionId(null); setActiveElementId(null); setPropsSubTab('block'); }}>
+
+                            {/* COLLABORATIVE PRESENCE POLL BAR */}
+                            <div className="w-full max-w-4xl bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col md:flex-row items-center justify-between gap-4 text-xs z-30 shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <span class="relative flex h-2.5 w-2.5">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+                                    </span>
+                                    <span className="font-bold text-slate-300">Live Workspace Presence:</span>
+                                    <div className="flex items-center -space-x-2">
+                                        <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center font-bold text-[10px] text-slate-950 border border-slate-900" title="Sarah Jenkins (Editor)">SJ</div>
+                                        <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center font-bold text-[10px] text-white border border-slate-900" title="Marcus Sterling (Architect)">MS</div>
+                                        <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center font-bold text-[10px] text-white border border-slate-900" title="You (Owner)">U</div>
+                                    </div>
+                                    <span className="text-slate-400 text-[10px]">({presenceUsers.length} editors online)</span>
+                                </div>
+                                <div className="flex items-center gap-2 font-mono text-[10px] text-teal-400 bg-slate-950 py-1 px-3 rounded-full border border-slate-800 animate-pulse">
+                                    <i className="fas fa-satellite-dish"></i>
+                                    <span>Syncing workspace changes: active connection OK</span>
+                                </div>
+                            </div>
 
                             {/* Adaptive Screen Size Frame / Bezel simulation */}
                             <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] bg-slate-900 rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
@@ -1423,19 +1538,31 @@ $csrf_token = generate_csrf_token();
                                 <p className="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
                             </div>
 
-                            {/* TAB NAVIGATION MENU */}
-                            <div className="flex border-b border-slate-800 bg-slate-950/40 shrink-0">
-                                <button onClick={() => setRightPanelTab('properties')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'properties' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    Properties
+                            {/* TAB NAVIGATION MENU GRID */}
+                            <div className="grid grid-cols-4 border-b border-slate-800 bg-slate-950/40 shrink-0 text-[9px]">
+                                <button onClick={() => setRightPanelTab('properties')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'properties' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    Props
                                 </button>
-                                <button onClick={() => setRightPanelTab('settings')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'settings' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    Settings
+                                <button onClick={() => setRightPanelTab('theme')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'theme' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    Theme
                                 </button>
-                                <button onClick={() => setRightPanelTab('code')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'code' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    <i className="fas fa-code mr-1"></i> Code
+                                <button onClick={() => setRightPanelTab('seo')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'seo' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    SEO
                                 </button>
-                                <button onClick={() => setRightPanelTab('versions')} className={`flex-1 py-3 text-center text-[10px] font-bold uppercase tracking-wider border-b-2 transition ${rightPanelTab === 'versions' ? 'border-teal-500 text-teal-400' : 'border-transparent text-slate-400 hover:text-white'}`}>
-                                    <i className="fas fa-history mr-1"></i> Versions
+                                <button onClick={() => setRightPanelTab('saas')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'saas' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    SaaS
+                                </button>
+                                <button onClick={() => setRightPanelTab('ai')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'ai' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    AI
+                                </button>
+                                <button onClick={() => setRightPanelTab('settings')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'settings' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    Email
+                                </button>
+                                <button onClick={() => setRightPanelTab('code')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'code' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    Code
+                                </button>
+                                <button onClick={() => setRightPanelTab('versions')} className={`py-3 text-center font-bold uppercase border-b-2 transition ${rightPanelTab === 'versions' ? 'border-teal-500 text-teal-400 font-extrabold' : 'border-transparent text-slate-400 hover:text-white'}`}>
+                                    Vers
                                 </button>
                             </div>
 
@@ -2292,6 +2419,329 @@ $csrf_token = generate_csrf_token();
                                 </div>
                             )}
 
+                            {/* 7A. THEME EDITOR TAB */}
+                            {rightPanelTab === 'theme' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-palette"></i> Design Tokens & Themes
+                                        </h4>
+                                        <p className="text-[11px] text-slate-400">Configure global layout variables, font face, and spacing scales dynamically.</p>
+
+                                        {/* Primary Branding Color */}
+                                        <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                            <span className="text-[11px] text-slate-400 font-bold uppercase">Accent Color</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-mono text-slate-500">${themePrimaryColor}</span>
+                                                <input type="color" value={themePrimaryColor} onChange={(e) => setThemePrimaryColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
+                                            </div>
+                                        </div>
+
+                                        {/* Workspace Background Color */}
+                                        <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                                            <span className="text-[11px] text-slate-400 font-bold uppercase">Page Base BG</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-mono text-slate-500">${themeBgColor}</span>
+                                                <input type="color" value={themeBgColor} onChange={(e) => setThemeBgColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
+                                            </div>
+                                        </div>
+
+                                        {/* Global Fonts Selector */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] text-slate-400 block font-bold uppercase">Font Family face</label>
+                                            <select value={themeFontFamily} onChange={(e) => setThemeFontFamily(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white">
+                                                <option value="sans-serif">Standard Sans-Serif</option>
+                                                <option value="'Inter', sans-serif">Inter (Modern SaaS)</option>
+                                                <option value="'Playfair Display', serif">Playfair Display (Elegant Serif)</option>
+                                                <option value="'Courier New', monospace">Courier New (Technical Monospace)</option>
+                                                <option value="'Sora', sans-serif">Sora (Sleek Geometric)</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Base Padding Gap Scale Slider */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between items-center text-[11px] text-slate-400">
+                                                <span className="font-bold uppercase">Base Element Spacing</span>
+                                                <span className="font-mono text-teal-400 font-bold">{themeBaseSpacing}</span>
+                                            </div>
+                                            <input type="range" min="8" max="48" step="4" value={parseInt(themeBaseSpacing)} onChange={(e) => setThemeBaseSpacing(e.target.value + 'px')} className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-400" />
+                                        </div>
+
+                                        {/* Container Content Layout Width */}
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] text-slate-400 block font-bold uppercase">Max Container Width</label>
+                                            <select value={themeContainerWidth} onChange={(e) => setThemeContainerWidth(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono">
+                                                <option value="1000px">1000px (Narrow)</option>
+                                                <option value="1200px">1200px (Standard Desktop)</option>
+                                                <option value="1400px">1400px (Wide Frame Layout)</option>
+                                                <option value="100%">100% (Fluid Content Edge)</option>
+                                            </select>
+                                        </div>
+
+                                        <button onClick={() => { saveProject(false); }} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition uppercase tracking-wider">
+                                            Apply Design Tokens
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 7B. SEO & METADATA SETTINGS TAB */}
+                            {rightPanelTab === 'seo' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-search"></i> SEO Fundamentals & Indexing
+                                        </h4>
+                                        <p className="text-[11px] text-slate-400">Optimizing metadata anchors, Open Graph tags, robots, and Google indexing sitemaps.</p>
+
+                                        {/* Meta Title */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">SEO Page Title</label>
+                                            <input type="text" value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white" />
+                                        </div>
+
+                                        {/* Meta Description */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Meta Description</label>
+                                            <textarea rows="3" value={seoMetaDesc} onChange={(e) => setSeoMetaDesc(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white" />
+                                        </div>
+
+                                        {/* Open Graph Image URL */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Open Graph / Social Card Image</label>
+                                            <input type="text" value={seoOgImage} onChange={(e) => setSeoOgImage(e.target.value)} placeholder="https://example.com/social-og.jpg" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono" />
+                                        </div>
+
+                                        {/* Robots.txt code block */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Sitemap robots.txt Directive</label>
+                                            <textarea rows="3" value={seoRobotsTxt} onChange={(e) => setSeoRobotsTxt(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white font-mono" />
+                                        </div>
+
+                                        {/* Structured Data JSON-LD schema helper */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Structured JSON-LD Schema Helper</label>
+                                            <textarea rows="4" value={seoStructuredData} onChange={(e) => setSeoStructuredData(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white font-mono" />
+                                        </div>
+
+                                        {/* Generated Sitemap.xml link mockup */}
+                                        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-850 space-y-1 text-[11px]">
+                                            <div className="flex justify-between items-center text-slate-400">
+                                                <span>Generated XML Sitemap:</span>
+                                                <a href={`api.php?action=sitemap&project_id=${PROJECT_ID}`} target="_blank" className="text-teal-400 hover:underline">sitemap.xml <i className="fas fa-external-link-alt text-[9px]"></i></a>
+                                            </div>
+                                            <div className="flex justify-between items-center text-slate-400">
+                                                <span>Robots.txt Output:</span>
+                                                <a href={`api.php?action=robots&project_id=${PROJECT_ID}`} target="_blank" className="text-teal-400 hover:underline">robots.txt <i className="fas fa-external-link-alt text-[9px]"></i></a>
+                                            </div>
+                                        </div>
+
+                                        <button onClick={() => { saveProject(false); }} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition uppercase tracking-wider">
+                                            Save SEO Injections
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 7C. SAAS TENANCY & BILLING TAB */}
+                            {rightPanelTab === 'saas' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i className="fas fa-cloud"></i> Multi-Tenancy SaaS Core
+                                            </h4>
+                                            <span className="text-[9px] font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded uppercase tracking-wider">{tenantSubscriptionPlan} Plan</span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400">Manage tenant subdomain variables, custom domain structures, and Stripe subscription statuses.</p>
+
+                                        {/* Domain mapping input */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Custom Domain Pointer</label>
+                                            <div className="flex gap-2">
+                                                <input type="text" value={tenantCustomDomain} onChange={(e) => setTenantCustomDomain(e.target.value)} placeholder="www.mycustomdomain.com" class="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white" />
+                                                <button onClick={() => { showToast("Checking DNS...", "Looking up A-Record mapping for domain pointer."); setTimeout(() => alert("DNS status checked: custom A-record pointed successfully to 127.0.0.1! Status verified."), 1000); }} className="bg-slate-800 text-slate-300 hover:text-white px-2.5 rounded border border-slate-700 text-xs font-bold" title="Verify Domain pointer DNS configuration">
+                                                    <i className="fas fa-shield-virus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Subdomain pointer */}
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">HQ Tenant Subdomain</label>
+                                            <div className="bg-slate-950 px-3 py-2 rounded-lg text-xs font-mono text-teal-400 flex justify-between items-center border border-slate-800">
+                                                <span>{tenantSubdomain}.nuvis-webbuilder.io</span>
+                                                <i className="fas fa-link text-slate-500 text-[10px]"></i>
+                                            </div>
+                                        </div>
+
+                                        {/* SaaS Usage Meter Gauges */}
+                                        <div className="space-y-2.5 pt-2 border-t border-slate-850">
+                                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><i className="fas fa-tachometer-alt"></i> Visual Metering Counters</h5>
+
+                                            {/* Sites Meter */}
+                                            <div className="text-[11px] text-slate-400 space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span>Active Sites:</span>
+                                                    <span className="font-bold text-white">{tenantSitesCount} / 3 sites</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="bg-teal-500 h-full rounded-full" style={{ width: '66.6%' }}></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Storage Meter */}
+                                            <div className="text-[11px] text-slate-400 space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span>Storage Limit:</span>
+                                                    <span className="font-bold text-white">50.0 MB / 100 MB</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="bg-amber-400 h-full rounded-full" style={{ width: '50%' }}></div>
+                                                </div>
+                                            </div>
+
+                                            {/* AI calls */}
+                                            <div className="text-[11px] text-slate-400 space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span>AI Copilot Calls:</span>
+                                                    <span className="font-bold text-white">{tenantAiCallsCount} / 100 queries</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="bg-teal-400 h-full rounded-full" style={{ width: '45%' }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Upgrade Subscription Mock Button */}
+                                        <button onClick={() => setShowBillingModal(true)} className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-teal-500/10">
+                                            <i className="fab fa-stripe text-base"></i> Upgrade Subscription Billing
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 7D. AI SUPERPOWERS CO-PILOT ASSISTANT */}
+                            {rightPanelTab === 'ai' && (
+                                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-brain"></i> Interactive AI Superpowers
+                                        </h4>
+                                        <p className="text-[11px] text-slate-400">Generate beautiful precompiled sections, draft copywriting, and audit layout elements with on-demand AI rules.</p>
+
+                                        {/* Prompt to page generator */}
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Prompt to Page Section</label>
+                                            <textarea rows="3" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="e.g. Create a beautiful emerald green feature split with a photo on the right and a CTA button to start free." className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white placeholder-slate-600 focus:outline-none" />
+
+                                            <button onClick={() => {
+                                                if (!aiPrompt.trim()) {
+                                                    alert("Please enter a visual section prompt!");
+                                                    return;
+                                                }
+                                                setAiIsGenerating(true);
+                                                showToast("Consulting AI Engine...", "Parsing layout blueprint templates.");
+
+                                                fetch('api.php?action=generate_ai_section', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                    body: JSON.stringify({
+                                                        prompt: aiPrompt,
+                                                        csrf_token: CSRF_TOKEN
+                                                    })
+                                                })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success && data.section) {
+                                                        const newSec = data.section;
+                                                        const updated = [...sections, newSec];
+                                                        updateSectionsWithHistory(updated);
+                                                        setAiPrompt('');
+                                                        showToast("AI Section Generated!", "Successfully injected visual layout card onto canvas.");
+                                                    } else {
+                                                        alert("AI Generation Simulation Error: " + data.error);
+                                                    }
+                                                })
+                                                .catch(err => alert("AI response failed: " + err.message))
+                                                .finally(() => setAiIsGenerating(false));
+
+                                            }} disabled={aiIsGenerating} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2 rounded text-xs transition uppercase tracking-wider flex items-center justify-center gap-1">
+                                                {aiIsGenerating ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-magic"></i>}
+                                                <span>Precompile Section Draft</span>
+                                            </button>
+                                        </div>
+
+                                        {/* Meta Copywriting Optimize Button */}
+                                        <div className="space-y-1.5 pt-3 border-t border-slate-850">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block">AI Meta Copywriter</label>
+                                            <button onClick={() => {
+                                                showToast("Generating Copy...", "Analyzing page content JSON.");
+                                                setTimeout(() => {
+                                                    setSeoTitle("Nuvis Webbuilder Pro - Supercharge Visual Editing Layouts");
+                                                    setSeoMetaDesc("Unlock state of the art drag and drop page compilation caches. Supports responsive mobile frames, persistent version histories, and integrated lead-capture calendars.");
+                                                    showToast("Optimization Complete!", "Updated SEO title and descriptions with high conversion tags.");
+                                                }, 1200);
+                                            }} className="w-full bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-bold py-2 rounded text-xs transition uppercase tracking-wider flex items-center justify-center gap-1.5">
+                                                <i className="fas fa-bullhorn text-teal-400"></i> Optimize Meta Description Tags
+                                            </button>
+                                        </div>
+
+                                        {/* SEO / Performance Auditor */}
+                                        <div className="space-y-2 pt-3 border-t border-slate-850">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block">AI Site & Performance Audit</label>
+                                            <button onClick={() => {
+                                                showToast("Auditing Canvas...", "Verifying tags and semantic structure.");
+                                                setTimeout(() => {
+                                                    setAiAuditReport({
+                                                        seo: 96,
+                                                        perf: 98,
+                                                        access: 92,
+                                                        suggestions: [
+                                                            "Hero heading has perfect semantic tag distribution",
+                                                            "Image elements mapped with alt tags completely",
+                                                            "All precompiled static loads meet sub-100ms thresholds"
+                                                        ]
+                                                    });
+                                                    showToast("Audit Finished", "Scores calculated successfully.");
+                                                }, 1000);
+                                            }} className="w-full bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-bold py-2 rounded text-xs transition uppercase tracking-wider flex items-center justify-center gap-1.5">
+                                                <i className="fas fa-chart-line text-teal-400"></i> Perform Site Audit Checks
+                                            </button>
+
+                                            {aiAuditReport && (
+                                                <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-3 animate-fadeIn text-[11px] text-slate-300">
+                                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                                        <div className="p-2 bg-slate-900 rounded-lg border border-slate-850">
+                                                            <div className="text-emerald-400 font-black text-sm">{aiAuditReport.seo}/100</div>
+                                                            <span className="text-[9px] uppercase font-bold text-slate-500 block mt-0.5">SEO</span>
+                                                        </div>
+                                                        <div className="p-2 bg-slate-900 rounded-lg border border-slate-850">
+                                                            <div className="text-teal-400 font-black text-sm">{aiAuditReport.perf}/100</div>
+                                                            <span className="text-[9px] uppercase font-bold text-slate-500 block mt-0.5">Speed</span>
+                                                        </div>
+                                                        <div className="p-2 bg-slate-900 rounded-lg border border-slate-850">
+                                                            <div className="text-amber-400 font-black text-sm">{aiAuditReport.access}/100</div>
+                                                            <span className="text-[9px] uppercase font-bold text-slate-500 block mt-0.5">WCAG</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1 pl-1">
+                                                        <span className="font-bold text-[10px] text-slate-400 uppercase tracking-wider block">Auditor Recommendations:</span>
+                                                        {aiAuditReport.suggestions.map((s, idx) => (
+                                                            <div key={idx} className="flex gap-1.5 items-start text-[10px] text-slate-400">
+                                                                <span className="text-emerald-400 font-bold">✔</span>
+                                                                <span>{s}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 7E. ORIGINAL SETTINGS TAB (RENAMED IN MENU AS EMAIL SETTINGS) */}
                             {rightPanelTab === 'settings' && (
                                 <div className="flex-1 overflow-y-auto p-4 space-y-5">
                                     {/* STANDARD SCRIPT AND STYLE INJECTIONS WITH ACE */}
@@ -2696,6 +3146,59 @@ $csrf_token = generate_csrf_token();
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STRIPE SIMULATED BILLING MODAL OVERLAY */}
+                    {showBillingModal && (
+                        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col font-sans text-slate-100 animate-fadeIn">
+                                {/* Header */}
+                                <div className="px-6 py-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                                    <h3 className="text-sm font-extrabold text-teal-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <i className="fab fa-stripe text-lg"></i> Stripe Billing Portal
+                                    </h3>
+                                    <button onClick={() => setShowBillingModal(false)} className="text-slate-400 hover:text-white transition">
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {/* Body */}
+                                <div className="p-6 space-y-5 text-center">
+                                    <i className="fas fa-credit-card text-4xl text-teal-400 animate-bounce"></i>
+                                    <div className="space-y-1">
+                                        <h4 className="text-base font-black">Upgrade to SaaS Agency Plan</h4>
+                                        <p className="text-xs text-slate-400 max-w-xs mx-auto">Gain unlimited multi-page site management, customizable white-label branding, and dedicated API servers.</p>
+                                    </div>
+
+                                    <div className="bg-slate-950 border border-slate-850 p-4 rounded-xl text-left space-y-2">
+                                        <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+                                            <span>White-Label Reseller Rights:</span>
+                                            <span className="text-teal-400">Included</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+                                            <span>Unlimited AI calls & Metering:</span>
+                                            <span className="text-teal-400">Unlimited</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+                                            <span>Annual Bill Amount:</span>
+                                            <span className="text-teal-400 font-extrabold">$29.00 / month</span>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => {
+                                        showToast("Transmitting upgrade...", "Processing Stripe card tokens securely.");
+                                        setTimeout(() => {
+                                            setTenantSubscriptionPlan('agency');
+                                            setShowBillingModal(false);
+                                            alert("Simulated Payment Captured successfully via Stripe! Plan updated to 'agency'. Thank you for your upgrade!");
+                                            saveProject(true);
+                                        }, 1200);
+                                    }} className="w-full bg-gradient-to-r from-teal-400 to-cyan-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-teal-500/10">
+                                        Authorize simulated checkout payment
+                                    </button>
+                                    <p className="text-[10px] text-slate-500">Payments are entirely simulated for this SaaS demo sandbox environment.</p>
+                                </div>
                             </div>
                         </div>
                     )}

@@ -8,15 +8,21 @@ require_once __DIR__ . '/config.php';
 // Set JSON header
 header('Content-Type: application/json');
 
-// Ensure the user is logged in
-if (!is_logged_in()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized. Please login first.']);
-    exit;
+// Ensure public action context is resolved safely
+$public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots'];
+$action_query = $_GET['action'] ?? '';
+
+if (!in_array($action_query, $public_actions)) {
+    // Ensure the user is logged in
+    if (!is_logged_in()) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized. Please login first.']);
+        exit;
+    }
 }
 
 $db = get_db_connection();
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'] ?? null;
 
 // Get Request Body (JSON)
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -170,9 +176,25 @@ switch ($action) {
                 $slug .= '-' . rand(100, 999);
             }
 
-            $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ? WHERE id = ?");
+            // Extract SEO values from JSON if present
+            $seo_title = null;
+            $seo_desc = null;
+            $seo_og = null;
+            $seo_robots = null;
+            $seo_structured = null;
+
+            $content_decoded = json_decode($content_json, true);
+            if ($content_decoded && isset($content_decoded['seo_settings'])) {
+                $seo_title = $content_decoded['seo_settings']['title'] ?? null;
+                $seo_desc = $content_decoded['seo_settings']['meta_desc'] ?? null;
+                $seo_og = $content_decoded['seo_settings']['og_image'] ?? null;
+                $seo_robots = $content_decoded['seo_settings']['robots_txt'] ?? null;
+                $seo_structured = $content_decoded['seo_settings']['structured_data'] ?? null;
+            }
+
+            $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ?, seo_title = ?, seo_meta_desc = ?, seo_og_image = ?, seo_robots_txt = ?, seo_structured_data = ? WHERE id = ?");
             try {
-                $stmt_update->execute([$name, $slug, $description, $content_json, $project_id]);
+                $stmt_update->execute([$name, $slug, $description, $content_json, $seo_title, $seo_desc, $seo_og, $seo_robots, $seo_structured, $project_id]);
 
                 // Create a page version snapshot
                 $version_label = trim($input['version_label'] ?? '');
@@ -684,6 +706,190 @@ switch ($action) {
 
         // Delete temporary file
         unlink($zip_filename);
+        exit;
+
+    case 'get_blog_posts':
+        header('Content-Type: application/json');
+        try {
+            $stmt = $db->query("SELECT * FROM blog_posts WHERE status = 'published' ORDER BY created_at DESC");
+            $posts = $stmt->fetchAll();
+            echo json_encode(['success' => true, 'posts' => $posts]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+
+    case 'get_ecommerce_products':
+        header('Content-Type: application/json');
+        try {
+            $stmt = $db->query("SELECT * FROM ecommerce_products ORDER BY id DESC");
+            $products = $stmt->fetchAll();
+            echo json_encode(['success' => true, 'products' => $products]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+
+    case 'create_ecommerce_order':
+        header('Content-Type: application/json');
+        $cust_name = trim($_POST['customer_name'] ?? 'Guest Customer');
+        $cust_email = trim($_POST['customer_email'] ?? '');
+        $amount = floatval($_POST['total_amount'] ?? 0.00);
+
+        if (empty($cust_email)) {
+            echo json_encode(['success' => false, 'error' => 'Billing email is required for Stripe Checkout.']);
+            exit;
+        }
+
+        try {
+            $tenant_id = $_SESSION['tenant_id'] ?? 2;
+            $stmt = $db->prepare("INSERT INTO ecommerce_orders (tenant_id, customer_name, customer_email, total_amount, payment_status, shipping_address) VALUES (?, ?, ?, ?, 'paid', '123 Smart Way, NY')");
+            $stmt->execute([$tenant_id, $cust_name, $cust_email, $amount]);
+
+            $stmt_txn = $db->prepare("INSERT INTO billing_transactions (tenant_id, amount, currency, transaction_type, stripe_invoice_id) VALUES (?, ?, 'USD', 'ecommerce_checkout', ?)");
+            $inv_id = 'inv_stripe_' . bin2hex(random_bytes(6));
+            $stmt_txn->execute([$tenant_id, $amount, $inv_id]);
+
+            echo json_encode(['success' => true, 'message' => 'Simulated Stripe order paid & placed successfully!', 'invoice_id' => $inv_id]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+
+    case 'create_booking':
+        header('Content-Type: application/json');
+        $cust_name = trim($_POST['customer_name'] ?? '');
+        $cust_email = trim($_POST['customer_email'] ?? '');
+        $b_date = trim($_POST['booking_date'] ?? '');
+        $b_time = trim($_POST['booking_time'] ?? '');
+        $s_name = trim($_POST['service_name'] ?? 'Consulting');
+
+        if (empty($cust_name) || empty($cust_email) || empty($b_date)) {
+            echo json_encode(['success' => false, 'error' => 'Please provide complete appointment credentials.']);
+            exit;
+        }
+
+        try {
+            $tenant_id = $_SESSION['tenant_id'] ?? 2;
+            $stmt = $db->prepare("INSERT INTO booking_schedules (tenant_id, customer_name, customer_email, booking_date, booking_time, service_name, status) VALUES (?, ?, ?, ?, ?, ?, 'confirmed')");
+            $stmt->execute([$tenant_id, $cust_name, $cust_email, $b_date, $b_time, $s_name]);
+
+            $stmt_crm = $db->prepare("INSERT INTO crm_leads (tenant_id, name, email, source, status, notes) VALUES (?, ?, ?, 'Appointment Booking', 'Qualified', ?)");
+            $stmt_crm->execute([$tenant_id, $cust_name, $cust_email, "Scheduled appointment for service '{$s_name}' on {$b_date} at {$b_time}"]);
+
+            echo json_encode(['success' => true, 'message' => 'Booking successfully locked and sync’d to CRM pipelines.']);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+
+    case 'generate_ai_section':
+        header('Content-Type: application/json');
+        $json = json_decode(file_get_contents('php://input'), true) ?? [];
+        $prompt = strtolower(trim($json['prompt'] ?? ''));
+
+        if (empty($prompt)) {
+            echo json_encode(['success' => false, 'error' => 'Generation prompt is required.']);
+            exit;
+        }
+
+        $sec_type = 'cta_banner';
+        $props = [];
+
+        if (strpos($prompt, 'hero') !== false || strpos($prompt, 'landing') !== false || strpos($prompt, 'main') !== false) {
+            $sec_type = 'hero';
+            $props = [
+                'badgeText' => 'AI GENERATED HERO',
+                'heading' => 'Revolutionary Automated Page Building Core',
+                'text' => 'Synthesized on-demand based on custom prompts. This section is pre-packaged with precompiled caching layers.',
+                'btnText' => 'Explore AI Features',
+                'btnBg' => '#06b6d4',
+                'btnColor' => '#020617',
+                'secondaryBtnText' => 'Perform Audit',
+                'bgColor' => '#020617',
+                'headingColor' => '#ffffff',
+                'textColor' => '#94a3b8'
+            ];
+        } elseif (strpos($prompt, 'split') !== false || strpos($prompt, 'photo') !== false || strpos($prompt, 'image') !== false) {
+            $sec_type = 'feature_split';
+            $props = [
+                'heading' => 'Eco Friendly Chemical Extermination Modules',
+                'text' => 'Custom AI generation splits visual layouts. The photo represents certified technicians deploying smart, pet-friendly bait barriers.',
+                'imageUrl' => 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800',
+                'bgColor' => '#064e3b',
+                'headingColor' => '#ffffff',
+                'textColor' => '#cbd5e1',
+                'imageRounding' => 'rounded-xl'
+            ];
+        } elseif (strpos($prompt, 'pricing') !== false || strpos($prompt, 'tier') !== false || strpos($prompt, 'table') !== false) {
+            $sec_type = 'pricing_comparison';
+            $props = [
+                'tier1Name' => 'SaaS Starter',
+                'tier1Price' => '$9',
+                'tier2Name' => 'Enterprise Sovereign',
+                'tier2Price' => '$99',
+                'bgColor' => '#020617',
+                'cardBg' => '#0f172a',
+                'accentColor' => '#f59e0b',
+                'textColor' => '#cbd5e1'
+            ];
+        } else {
+            $props = [
+                'heading' => 'Supercharge Your Visual Layouts instantly',
+                'text' => 'This section is on-demand precompiled matching prompt.',
+                'btnText' => 'Get Started',
+                'bgColor' => '#14b8a6',
+                'textColor' => '#020617',
+                'btnBg' => '#020617',
+                'btnColor' => '#ffffff'
+            ];
+        }
+
+        try {
+            $tenant_id = $_SESSION['tenant_id'] ?? 1;
+            $db->prepare("UPDATE usage_meters SET ai_calls_count = ai_calls_count + 1 WHERE tenant_id = ?")->execute([$tenant_id]);
+        } catch (PDOException $e) {}
+
+        echo json_encode([
+            'success' => true,
+            'section' => [
+                'id' => 'sec-ai-' . time() . '-' . rand(100, 999),
+                'type' => $sec_type,
+                'props' => $props,
+                'style' => ['classes' => []]
+            ]
+        ]);
+        exit;
+
+    case 'sitemap':
+        header('Content-Type: application/xml; charset=utf-8');
+        $p_id = (int)($_GET['project_id'] ?? 1);
+        try {
+            $stmt = $db->prepare("SELECT slug, updated_at FROM projects WHERE id = ?");
+            $stmt->execute([$p_id]);
+            $p = $stmt->fetch();
+            $slug = $p ? $p['slug'] : 'site';
+            $date = $p ? date('Y-m-d', strtotime($p['updated_at'])) : date('Y-m-d');
+        } catch (PDOException $e) {
+            $slug = 'site';
+            $date = date('Y-m-d');
+        }
+        echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        echo '  <url>' . "\n";
+        echo '    <loc>http://127.0.0.1:8000/render.php?slug=' . htmlspecialchars($slug) . '</loc>' . "\n";
+        echo '    <lastmod>' . $date . '</lastmod>' . "\n";
+        echo '    <changefreq>daily</changefreq>' . "\n";
+        echo '    <priority>1.0</priority>' . "\n";
+        echo '  </url>' . "\n";
+        echo '</urlset>' . "\n";
+        exit;
+
+    case 'robots':
+        header('Content-Type: text/plain; charset=utf-8');
+        echo "User-agent: *\n";
+        echo "Allow: /\n";
+        echo "Sitemap: http://127.0.0.1:8000/api.php?action=sitemap&project_id=" . intval($_GET['project_id'] ?? 1) . "\n";
         exit;
 
     default:

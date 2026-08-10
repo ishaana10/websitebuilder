@@ -80,8 +80,32 @@ if (!$is_published || empty($body_content)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo sanitize_output($project['name']); ?></title>
-    <meta name="description" content="<?php echo sanitize_output($project['description'] ?? ''); ?>">
+    <?php
+    $seo_title = !empty($project['seo_title']) ? $project['seo_title'] : $project['name'];
+    $seo_desc = !empty($project['seo_meta_desc']) ? $project['seo_meta_desc'] : ($project['description'] ?? '');
+    $seo_og_image = !empty($project['seo_og_image']) ? $project['seo_og_image'] : '';
+    $seo_structured = !empty($project['seo_structured_data']) ? $project['seo_structured_data'] : '';
+    ?>
+    <title><?php echo sanitize_output($seo_title); ?></title>
+    <meta name="description" content="<?php echo sanitize_output($seo_desc); ?>">
+
+    <!-- Open Graph / Facebook / Twitter -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?php echo sanitize_output($seo_title); ?>">
+    <meta property="og:description" content="<?php echo sanitize_output($seo_desc); ?>">
+    <?php if (!empty($seo_og_image)): ?>
+    <meta property="og:image" content="<?php echo sanitize_output($seo_og_image); ?>">
+    <?php endif; ?>
+
+    <!-- Dynamic robots sitemap indicators link -->
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="api.php?action=sitemap&project_id=<?php echo intval($project['id']); ?>">
+
+    <!-- Structured Data JSON-LD Schema Helper -->
+    <?php if (!empty($seo_structured)): ?>
+    <script type="application/ld+json">
+        <?php echo $seo_structured; ?>
+    </script>
+    <?php endif; ?>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
