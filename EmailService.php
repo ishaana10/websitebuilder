@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder Email Service Module
+ * Nuvis Webidesigner Email Service Module
  * Handles robust HTML e-mail rendering using premium inline-styled templates
  * and supports real PHP mail() dispatches with fallback database logging.
  */
@@ -28,7 +28,7 @@ class EmailService {
             $textColor = '#334155';    // Dark text
         }
 
-        $footer = $footer_note ?: "This is an automated notification from Nuvis Webbuilder.";
+        $footer = $footer_note ?: "This is an automated notification from Nuvis Webidesigner.";
 
         return "
 <!DOCTYPE html>
@@ -52,7 +52,7 @@ class EmailService {
     <div class='wrapper'>
         <div class='card'>
             <div class='header'>
-                <div class='logo-text'>Nuvis Webbuilder</div>
+                <div class='logo-text'>Nuvis Webidesigner</div>
                 <div class='title'>" . htmlspecialchars($title) . "</div>
             </div>
             <div class='body-content'>
@@ -77,7 +77,7 @@ class EmailService {
         // Headers for HTML Mail
         $headers[] = 'MIME-Version: 1.0';
         $headers[] = 'Content-type: text/html; charset=UTF-8';
-        $headers[] = 'From: Nuvis Webbuilder <noreply@nuvis-webbuilder.io>';
+        $headers[] = 'From: Nuvis Webidesigner <noreply@nuvis-webidesigner.io>';
         $headers[] = 'X-Mailer: PHP/' . phpversion();
 
         // 1. Attempt Native PHP mail dispatch

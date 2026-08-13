@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder Open-Source Site Builder - Automated Installer and DB Seeder
+ * Nuvis Webidesigner Open-Source Site Builder - Automated Installer and DB Seeder
  */
 require_once __DIR__ . '/config.php';
 
@@ -45,7 +45,7 @@ function run_installation_process($pdo, $output_callback = null) {
     if ($res_tenants['tenant_count'] == 0) {
         $log("Seeding default SaaS tenants...", 'pending');
         $insert_tenant = $pdo->prepare("INSERT INTO tenants (id, name, subdomain, custom_domain, subscription_plan, billing_status) VALUES (?, ?, ?, ?, ?, ?)");
-        $insert_tenant->execute([1, 'Nuvis Global Headquarters', 'hq', 'hq.nuvis-webbuilder.io', 'agency', 'active']);
+        $insert_tenant->execute([1, 'Nuvis Global Headquarters', 'hq', 'hq.nuvis-webidesigner.io', 'agency', 'active']);
         $insert_tenant->execute([2, 'PestKit Local Exterminators', 'pestkit', 'pestkit-demo.com', 'pro', 'active']);
         $insert_tenant->execute([3, 'Acme Retailers', 'acme', 'acmestore.com', 'free', 'active']);
         $log("SaaS tenants seeded successfully!", 'success');
@@ -65,7 +65,7 @@ function run_installation_process($pdo, $output_callback = null) {
     if ($res['admin_count'] == 0) {
         $log("Seeding default admin credentials ('admin' / 'admin123')...", 'pending');
         $admin_user = 'admin';
-        $admin_email = 'admin@nuvis-webbuilder.io';
+        $admin_email = 'admin@nuvis-webidesigner.io';
         $admin_pass_hash = password_hash('admin123', PASSWORD_BCRYPT);
 
         // Map global admin to HQ tenant
@@ -142,7 +142,7 @@ function run_installation_process($pdo, $output_callback = null) {
         $log("Seeding default global email settings...", 'pending');
         $insert_email = $pdo->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme) VALUES (?, ?, ?, ?, ?)");
         $insert_email->execute([
-            'admin@nuvis-webbuilder.io',
+            'admin@nuvis-webidesigner.io',
             1,
             'Thank you for contacting us!',
             "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team",
@@ -197,7 +197,7 @@ function run_installation_process($pdo, $output_callback = null) {
 <div data-component-instance="contact" class="bg-slate-900 py-16 px-6 text-slate-300">
     <div class="max-w-lg mx-auto bg-slate-950 p-8 rounded-2xl border border-slate-800">
         <h2 class="text-3xl font-extrabold text-white mb-6 text-center">Get in Touch</h2>
-        <form onsubmit="submitNuvisWebbuilderForm(event, this)">
+        <form onsubmit="submitNuvisWebidesignerForm(event, this)">
             <div class="mb-4">
                 <label class="block text-sm font-semibold mb-2">Name</label>
                 <input type="text" name="name" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500">
@@ -383,8 +383,8 @@ HTML;
         <span class="text-emerald-600 font-bold uppercase tracking-wider text-xs block mb-1">Instant Booking</span>
         <h2 class="text-2xl font-black text-slate-800">Find Your Pest Control Services</h2>
     </div>
-    <form class="grid grid-cols-1 md:grid-cols-4 gap-4" onsubmit="event.preventDefault(); window.submitNuvisWebbuilderForm(this);">
-        <div class="nuvis-webbuilder-form-status hidden col-span-1 md:col-span-4 p-3 rounded text-xs font-bold text-center"></div>
+    <form class="grid grid-cols-1 md:grid-cols-4 gap-4" onsubmit="event.preventDefault(); window.submitNuvisWebidesignerForm(this);">
+        <div class="nuvis-webidesigner-form-status hidden col-span-1 md:col-span-4 p-3 rounded text-xs font-bold text-center"></div>
 
         <input type="hidden" name="name" value="Quick Finder Callback Request" />
 
@@ -769,8 +769,8 @@ HTML;
         <!-- Right: Submit Form -->
         <div class="lg:col-span-6 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
             <h3 class="text-xl font-black text-slate-850 mb-6 flex items-center gap-2"><span class="w-2.5 h-2.5 bg-amber-400 rounded-full"></span> Request a Safe Inspection</h3>
-            <form onsubmit="event.preventDefault(); window.submitNuvisWebbuilderForm(this);" class="space-y-4">
-                <div class="nuvis-webbuilder-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
+            <form onsubmit="event.preventDefault(); window.submitNuvisWebidesignerForm(this);" class="space-y-4">
+                <div class="nuvis-webidesigner-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
 
                 <div>
                     <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Your Full Name</label>
@@ -842,7 +842,7 @@ HTML;
 if ($is_cli) {
     // CLI Guided Mode
     header_remove('Content-Type');
-    echo "=== Nuvis Webbuilder Automated System Installer ===\n\n";
+    echo "=== Nuvis Webidesigner Automated System Installer ===\n\n";
 
     try {
         // Establish initial DB connection using credentials in config.php
@@ -860,10 +860,10 @@ if ($is_cli) {
         });
 
         if (function_exists('write_system_log')) {
-            write_system_log('info', 'Nuvis Webbuilder installation successfully completed via CLI.');
+            write_system_log('info', 'Nuvis Webidesigner installation successfully completed via CLI.');
         }
 
-        echo "\n=== Nuvis Webbuilder System Successfully Installed! ===\n";
+        echo "\n=== Nuvis Webidesigner System Successfully Installed! ===\n";
         exit(0);
     } catch (Exception $e) {
         echo "\n❌ INSTALLATION FAILED!\n";
@@ -998,10 +998,10 @@ if ($is_cli) {
 
             // 4. Log to database system_logs
             if (function_exists('write_system_log')) {
-                write_system_log('info', 'Nuvis Webbuilder installation started via guided web installer.');
+                write_system_log('info', 'Nuvis Webidesigner installation started via guided web installer.');
                 write_system_log('info', 'Database tables imported from schema.sql successfully.');
                 write_system_log('info', 'Default templates loaded successfully.');
-                write_system_log('info', 'Nuvis Webbuilder installation completed successfully.');
+                write_system_log('info', 'Nuvis Webidesigner installation completed successfully.');
             }
 
             $success_msg = "Installation completed successfully!";
@@ -1022,7 +1022,7 @@ if ($is_cli) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nuvis Webbuilder - Guided Interactive Setup</title>
+        <title>Nuvis Webidesigner - Guided Interactive Setup</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
@@ -1032,7 +1032,7 @@ if ($is_cli) {
             <div class="max-w-5xl mx-auto flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="p-2 bg-emerald-500 rounded-lg text-slate-950 shadow-md font-extrabold text-xl"><i class="fas fa-cubes"></i></span>
-                    <span class="text-2xl font-black tracking-tight text-white">Nuvis <span class="text-emerald-400">Webbuilder</span></span>
+                    <span class="text-2xl font-black tracking-tight text-white">Nuvis <span class="text-emerald-400">Webidesigner</span></span>
                 </div>
                 <div class="text-xs text-slate-400 font-medium bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
                     <span class="w-2 h-2 inline-block bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span> Open-Source Installer
@@ -1047,7 +1047,7 @@ if ($is_cli) {
                     <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/30">
                         <i class="fas fa-check-double"></i>
                     </div>
-                    <h2 class="text-2xl font-extrabold text-white">Nuvis Webbuilder is Already Installed!</h2>
+                    <h2 class="text-2xl font-extrabold text-white">Nuvis Webidesigner is Already Installed!</h2>
                     <p class="text-slate-400 text-sm max-w-lg mx-auto">
                         Your system is already set up and connected to the database successfully. You can safely proceed to the Admin Panel or view the site builder dashboard.
                     </p>
@@ -1068,7 +1068,7 @@ if ($is_cli) {
                             <i class="fas fa-circle-check"></i>
                         </div>
                         <h2 class="text-3xl font-black text-white">Installation Successful!</h2>
-                        <p class="text-emerald-400 text-sm font-semibold">Nuvis Webbuilder is fully configured and ready for production.</p>
+                        <p class="text-emerald-400 text-sm font-semibold">Nuvis Webidesigner is fully configured and ready for production.</p>
                     </div>
 
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
@@ -1221,7 +1221,7 @@ if ($is_cli) {
         <!-- Footer -->
         <footer class="bg-slate-950 border-t border-slate-800 py-6 px-6 text-center text-xs text-slate-500">
             <div class="max-w-5xl mx-auto">
-                <p>Nuvis Webbuilder Installer &copy; <?php echo date('Y'); ?>. All rights reserved.</p>
+                <p>Nuvis Webidesigner Installer &copy; <?php echo date('Y'); ?>. All rights reserved.</p>
             </div>
         </footer>
     </body>

@@ -5,7 +5,7 @@
 *.tmp
 *.log
 
-# Nuvis Webbuilder local test exports
+# Nuvis Webidesigner local test exports
 *.zip
 export_test.zip
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder User Authentication and Session Manager
+ * Nuvis Webidesigner User Authentication and Session Manager
  */
 require_once __DIR__ . '/config.php';
 

@@ -1,6 +1,6 @@
-# Nuvis Webbuilder Website Builder
+# Nuvis Webidesigner Website Builder
 
-Nuvis Webbuilder is a full, commercial-grade, open-source visual website builder developed with highly modular, secure, low-code paradigms. Compatible with **PHP 8.1 to 8.3+** and **MySQL/MariaDB**, Nuvis Webbuilder is engineered for performance, security, and developer extensibility.
+Nuvis Webidesigner is a full, commercial-grade, open-source visual website builder developed with highly modular, secure, low-code paradigms. Compatible with **PHP 8.1 to 8.3+** and **MySQL/MariaDB**, Nuvis Webidesigner is engineered for performance, security, and developer extensibility.
 
 It features a robust authentication gate, dynamic drag-and-drop workspace, properties customizer, live low-code HTML compilation, instant caching delivery wrappers, and a feature-rich admin dashboard tracking form submissions, chatbot interaction, and SMTP notification dispatch simulations.
 
@@ -64,8 +64,8 @@ It features a robust authentication gate, dynamic drag-and-drop workspace, prope
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/nuvis-webbuilder-site-builder.git
-   cd nuvis-webbuilder-site-builder
+   git clone https://github.com/yourusername/nuvis-webidesigner-site-builder.git
+   cd nuvis-webidesigner-site-builder
    ```
 
 2. **Initialize the Database Schema:**
@@ -177,7 +177,7 @@ Screenshots and videos of the flow will be captured in the `/home/jules/verifica
   - Ensure `.env` database parameters match the credentials granted in step 2.
   - Check user privileges: ensure `builder_user` has `ALL PRIVILEGES` on database `site_builder`.
 - **PHP Version Issues:**
-  - Nuvis Webbuilder is compatible with PHP 8.1 up to PHP 8.3+. Running older PHP versions (< 8.1) will result in syntax errors like array destructuring or short open tags. Check version with `php -v`.
+  - Nuvis Webidesigner is compatible with PHP 8.1 up to PHP 8.3+. Running older PHP versions (< 8.1) will result in syntax errors like array destructuring or short open tags. Check version with `php -v`.
 - **Zip Generation Failures ("Could not generate zip archive on server"):**
   - Verify that the PHP Zip extension is enabled on your server: `php -m | grep zip`. On Debian/Ubuntu servers, install it using `sudo apt install php-zip`.
 

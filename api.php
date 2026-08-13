@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder REST API Endpoints
+ * Nuvis Webidesigner REST API Endpoints
  * Supports secure operations for saving, retrieving, publishing, exporting, and deleting websites
  */
 require_once __DIR__ . '/config.php';
@@ -568,7 +568,7 @@ switch ($action) {
 
         // Create Zip Archive
         $zip = new ZipArchive();
-        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webbuilder_export_') . '.zip';
+        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webidesigner_export_') . '.zip';
 
         if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             http_response_code(500);
@@ -631,7 +631,7 @@ switch ($action) {
                         if ($block['componentId'] === 'html_raw') {
                             $html_content .= $block['raw_html'] ?? '';
                         } elseif ($block['componentId'] === 'navbar') {
-                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER';
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis Webidesigner';
                             $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<span class="text-xl font-extrabold tracking-wider text-teal-400">' . sanitize_output($bText) . '</span>';
                             $linksHtml = '';
                             $navLinks = $block['links'] ?? [['text' => 'Home', 'url' => '#home'], ['text' => 'Features', 'url' => '#features'], ['text' => 'Pricing', 'url' => '#pricing'], ['text' => 'Contact', 'url' => '#contact']];
@@ -640,9 +640,9 @@ switch ($action) {
                             }
                             $html_content .= '<nav class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center shadow-md rounded-lg" data-component="navbar"><div class="text-xl font-extrabold tracking-wider text-teal-400">' . $logoHtml . '</div><div class="hidden md:flex space-x-6">' . $linksHtml . '</div><div><a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a></div></nav>';
                         } elseif ($block['componentId'] === 'footer') {
-                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'NUVIS WEBBUILDER BUILDER';
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis Webidesigner BUILDER';
                             $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
-                            $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webbuilder. All rights reserved.';
+                            $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webidesigner. All rights reserved.';
                             $linksHtml = '';
                             $footLinks = $block['links'] ?? [['text' => 'Privacy Policy', 'url' => '#'], ['text' => 'Terms of Use', 'url' => '#'], ['text' => 'Support', 'url' => '#']];
                             foreach ($footLinks as $lnk) {
