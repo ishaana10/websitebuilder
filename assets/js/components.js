@@ -28,7 +28,12 @@ const UI_COMPONENTS = [
             ]},
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
-            { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#14b8a6' }
+            { key: 'accentColor', label: 'Accent Color', type: 'color', default: '#14b8a6' },
+            { key: 'brandColor', label: 'Brand Name Color', type: 'color', default: '#14b8a6' },
+            { key: 'showCta', label: 'Show CTA Button', type: 'checkbox', default: true },
+            { key: 'btnText', label: 'CTA Button Text', type: 'text', default: 'Get Started' },
+            { key: 'btnBg', label: 'CTA Button Background', type: 'color', default: '#14b8a6' },
+            { key: 'btnColor', label: 'CTA Button Text Color', type: 'color', default: '#0f172a' }
         ],
         html: `
 <nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
@@ -42,7 +47,7 @@ const UI_COMPONENTS = [
 
         <div class="flex items-center gap-4">
             <!-- CTA Button -->
-            <a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm animate-pulse" style="background-color: {{accentColor}}; color: {{bgColor}};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Get Started</a>
+            {{ctaButton}}
 
             <!-- Mobile Burger Toggle -->
             <button onclick="const m = this.closest('[data-component]').querySelector('.mobile-menu'); m.classList.toggle('hidden');" class="md:hidden text-xl focus:outline-none" style="color: {{textColor}};">
@@ -81,7 +86,8 @@ const UI_COMPONENTS = [
             { key: 'copyright', label: 'Copyright Note', type: 'text', default: 'Nuvis Webidesigner. All rights reserved.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' },
-            { key: 'accentColor', label: 'Link Accent Color', type: 'color', default: '#14b8a6' }
+            { key: 'accentColor', label: 'Link Accent Color', type: 'color', default: '#14b8a6' },
+            { key: 'brandColor', label: 'Brand Name Color', type: 'color', default: '#14b8a6' }
         ],
         html: `
 <footer class="py-12 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="footer">
@@ -139,9 +145,6 @@ const UI_COMPONENTS = [
                 { value: 'grid-cols-4', label: '4 Columns split' }
             ]},
             { key: 'heading', label: 'Section Header Title', type: 'text', default: 'Structured Grid Layout' },
-            { key: 'colText1', label: 'Column Card 1 Content', type: 'textarea', default: 'High density column structure details.' },
-            { key: 'colText2', label: 'Column Card 2 Content', type: 'textarea', default: 'Responsive breakpoint scaling configurations.' },
-            { key: 'colText3', label: 'Column Card 3 Content', type: 'textarea', default: 'Flex space distribution values.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#1e293b' },
             { key: 'headingColor', label: 'Header Text Color', type: 'color', default: '#ffffff' },
             { key: 'cardBgColor', label: 'Card Block Background', type: 'color', default: '#0f172a' },
@@ -152,9 +155,7 @@ const UI_COMPONENTS = [
     <div class="max-w-6xl mx-auto">
         <h2 class="text-3xl font-bold text-center mb-10" style="color: {{headingColor}};">{{heading}}</h2>
         <div class="grid gap-6 {{colCount}}">
-            <div class="p-6 rounded-lg shadow-lg border border-white/5" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText1}}</div>
-            <div class="p-6 rounded-lg shadow-lg border border-white/5" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText2}}</div>
-            <div class="p-6 rounded-lg shadow-lg border border-white/5" style="background-color: {{cardBgColor}}; color: {{textColor}};">{{colText3}}</div>
+            {{gridCards}}
         </div>
     </div>
 </section>`

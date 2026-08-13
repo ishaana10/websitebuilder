@@ -700,7 +700,47 @@ $csrf_token = generate_csrf_token();
             };
 
             const updateSectionsWithHistory = (newSections) => {
-                const updatedPages = { ...pages, [activePage]: newSections };
+                let updatedPages = { ...pages, [activePage]: newSections };
+
+                // Automatically synchronize Navigation Bar and Footer properties across all pages
+                const updatedNavbar = newSections.find(s => s.type && s.type.toLowerCase() === 'navbar');
+                const updatedFooter = newSections.find(s => s.type && s.type.toLowerCase() === 'footer');
+
+                if (updatedNavbar || updatedFooter) {
+                    Object.keys(updatedPages).forEach(pKey => {
+                        if (pKey === activePage) return; // Skip current active page
+
+                        let pageSects = updatedPages[pKey] || [];
+                        let pageUpdated = false;
+
+                        pageSects = pageSects.map(s => {
+                            if (updatedNavbar && s.type && s.type.toLowerCase() === 'navbar') {
+                                pageUpdated = true;
+                                return {
+                                    ...s,
+                                    props: { ...updatedNavbar.props },
+                                    bg_color_override: updatedNavbar.bg_color_override,
+                                    bg_image_override: updatedNavbar.bg_image_override
+                                };
+                            }
+                            if (updatedFooter && s.type && s.type.toLowerCase() === 'footer') {
+                                pageUpdated = true;
+                                return {
+                                    ...s,
+                                    props: { ...updatedFooter.props },
+                                    bg_color_override: updatedFooter.bg_color_override,
+                                    bg_image_override: updatedFooter.bg_image_override
+                                };
+                            }
+                            return s;
+                        });
+
+                        if (pageUpdated) {
+                            updatedPages[pKey] = pageSects;
+                        }
+                    });
+                }
+
                 setPages(updatedPages);
                 commitToHistory(updatedPages);
             };
@@ -782,9 +822,7 @@ $csrf_token = generate_csrf_token();
                 e.dataTransfer.effectAllowed = 'copy';
             };
 
-            const handleCanvasDrop = (e) => {
-                e.preventDefault();
-                const componentId = e.dataTransfer.getData('text/plain');
+            const handleAddSection = (componentId) => {
                 const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (componentId || '').toLowerCase().trim());
                 if (!compDef) return;
 
@@ -806,6 +844,12 @@ $csrf_token = generate_csrf_token();
                 updateSectionsWithHistory(updated);
                 setActiveSectionId(newSection.id);
                 showToast("Section Added", `${compDef.name} successfully inserted.`);
+            };
+
+            const handleCanvasDrop = (e) => {
+                e.preventDefault();
+                const componentId = e.dataTransfer.getData('text/plain');
+                handleAddSection(componentId);
             };
 
             // --- Section Management Operations ---
@@ -959,12 +1003,13 @@ $csrf_token = generate_csrf_token();
                     const showLogo = sec.props.showLogo !== undefined ? sec.props.showLogo : true;
                     const showBrandText = sec.props.showBrandText !== undefined ? sec.props.showBrandText : true;
                     const accentColor = sec.props.accentColor || '#14b8a6';
+                    const brandColor = sec.props.brandColor || accentColor;
 
                     let brandTextHtml = '';
                     if (showBrandText) {
                         const isNavbar = sec.type.toLowerCase() === 'navbar';
                         const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black text-white";
-                        brandTextHtml = `<div class="${brandClass}" style="color: ${accentColor};">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
+                        brandTextHtml = `<div class="${brandClass}" style="color: ${brandColor};">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
                     }
 
                     let logoHtml = '';
@@ -1073,6 +1118,38 @@ $csrf_token = generate_csrf_token();
 
                     compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/, linksHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*links\s*}}/, mobileLinksHtml);
+
+                    if (sec.type.toLowerCase() === 'navbar') {
+                        const showCta = sec.props.showCta !== undefined ? sec.props.showCta : true;
+                        let ctaButtonHtml = '';
+                        if (showCta) {
+                            const btnText = sec.props.btnText || 'Get Started';
+                            const btnBg = sec.props.btnBg || accentColor;
+                            const btnColor = sec.props.btnColor || sec.props.bgColor || '#0f172a';
+                            ctaButtonHtml = `<a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${btnText}</a>`;
+                        }
+                        compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
+                    }
+                }
+
+                // Dynamic compiler for layout_grid component
+                if (sec.type.toLowerCase() === 'layout_grid') {
+                    const cards = sec.props.cards || [
+                        { content: 'High density column structure details.' },
+                        { content: 'Responsive breakpoint scaling configurations.' },
+                        { content: 'Flex space distribution values.' }
+                    ];
+
+                    const cardBgColor = sec.props.cardBgColor || '#0f172a';
+                    const textColor = sec.props.textColor || '#94a3b8';
+
+                    const cardsHtml = cards.map(card => `
+                        <div class="p-6 rounded-lg shadow-lg border border-white/5" style="background-color: ${cardBgColor}; color: ${textColor};">
+                            ${card.content}
+                        </div>
+                    `).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*gridCards\s*}}/g, cardsHtml);
                 }
 
                 // Dynamic compiler for interactive_tabs component
@@ -1420,7 +1497,7 @@ $csrf_token = generate_csrf_token();
                                             <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{cat}</h3>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {items.map(comp => (
-                                                    <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-grab transition-all duration-200 select-none group hover:border-teal-500/30">
+                                                    <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} onClick={() => handleAddSection(comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-pointer transition-all duration-200 select-none group hover:border-teal-500/30">
                                                         <div className="text-teal-400 text-lg mb-1.5 group-hover:scale-110 transition-transform duration-200"><i className={comp.icon}></i></div>
                                                         <div className="text-[10px] text-slate-300 font-medium truncate">{comp.name}</div>
                                                     </div>
@@ -1668,18 +1745,18 @@ $csrf_token = generate_csrf_token();
                                                             } else if (field.type === 'color') {
                                                                 return (
                                                                     <div key={field.key} className="flex items-center justify-between">
-                                                                        <label className="text-[11px] text-slate-400 block">{field.label}</label>
+                                                                        <label className="text-[11px] text-slate-400 block" htmlFor={`prop-${field.key}`}>{field.label}</label>
                                                                         <div className="flex items-center gap-2">
                                                                             <span className="text-[10px] font-mono text-slate-400">{val}</span>
-                                                                            <input type="color" value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
+                                                                            <input id={`prop-${field.key}`} type="color" value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
                                                                         </div>
                                                                     </div>
                                                                 );
                                                             } else if (field.type === 'select') {
                                                                 return (
                                                                     <div key={field.key}>
-                                                                        <label className="text-[11px] text-slate-400 block mb-1">{field.label}</label>
-                                                                        <select value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                                        <label className="text-[11px] text-slate-400 block mb-1" htmlFor={`prop-${field.key}`}>{field.label}</label>
+                                                                        <select id={`prop-${field.key}`} value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
                                                                             {field.options.map(opt => (
                                                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                                             ))}
@@ -1689,8 +1766,8 @@ $csrf_token = generate_csrf_token();
                                                             } else if (field.type === 'checkbox') {
                                                                 return (
                                                                     <div key={field.key} className="flex items-center justify-between">
-                                                                        <label className="text-[11px] text-slate-400 block">{field.label}</label>
-                                                                        <input type="checkbox" checked={!!val} onChange={(e) => handleFieldChange(e.target.checked)} className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0" />
+                                                                        <label className="text-[11px] text-slate-400 block" htmlFor={`prop-${field.key}`}>{field.label}</label>
+                                                                        <input id={`prop-${field.key}`} type="checkbox" checked={!!val} onChange={(e) => handleFieldChange(e.target.checked)} className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0" />
                                                                     </div>
                                                                 );
                                                             }
@@ -2042,6 +2119,59 @@ $csrf_token = generate_csrf_token();
                                                         </div>
                                                         <button onClick={addTab} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
                                                             <i className="fas fa-plus mr-1"></i> Add New Tab
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC CARDS EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'layout_grid' && (() => {
+                                                const currentCards = selectedSection.props.cards || [
+                                                    { content: 'High density column structure details.' },
+                                                    { content: 'Responsive breakpoint scaling configurations.' },
+                                                    { content: 'Flex space distribution values.' }
+                                                ];
+
+                                                const handleCardsChange = (newCards) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, cards: newCards } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addCard = () => {
+                                                    handleCardsChange([...currentCards, { content: 'New grid card content goes here...' }]);
+                                                };
+
+                                                const removeCard = (cIdx) => {
+                                                    handleCardsChange(currentCards.filter((_, idx) => idx !== cIdx));
+                                                };
+
+                                                const updateCard = (cIdx, val) => {
+                                                    const updatedCards = currentCards.map((card, idx) => idx === cIdx ? { ...card, content: val } : card);
+                                                    handleCardsChange(updatedCards);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-th-large"></i> Manage Grid Cards
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {currentCards.map((card, cIdx) => (
+                                                                <div key={cIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                    <div className="flex justify-between items-center gap-2">
+                                                                        <span className="text-[10px] font-semibold text-slate-400">Card #{cIdx + 1}</span>
+                                                                        <button onClick={() => removeCard(cIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Card">
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <textarea rows={3} value={card.content} onChange={(e) => updateCard(cIdx, e.target.value)} placeholder="Card Content" className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white" />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={addCard} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
+                                                            <i className="fas fa-plus mr-1"></i> Add New Card
                                                         </button>
                                                     </div>
                                                 );
