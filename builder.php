@@ -700,7 +700,47 @@ $csrf_token = generate_csrf_token();
             };
 
             const updateSectionsWithHistory = (newSections) => {
-                const updatedPages = { ...pages, [activePage]: newSections };
+                let updatedPages = { ...pages, [activePage]: newSections };
+
+                // Automatically synchronize Navigation Bar and Footer properties across all pages
+                const updatedNavbar = newSections.find(s => s.type && s.type.toLowerCase() === 'navbar');
+                const updatedFooter = newSections.find(s => s.type && s.type.toLowerCase() === 'footer');
+
+                if (updatedNavbar || updatedFooter) {
+                    Object.keys(updatedPages).forEach(pKey => {
+                        if (pKey === activePage) return; // Skip current active page
+
+                        let pageSects = updatedPages[pKey] || [];
+                        let pageUpdated = false;
+
+                        pageSects = pageSects.map(s => {
+                            if (updatedNavbar && s.type && s.type.toLowerCase() === 'navbar') {
+                                pageUpdated = true;
+                                return {
+                                    ...s,
+                                    props: { ...updatedNavbar.props },
+                                    bg_color_override: updatedNavbar.bg_color_override,
+                                    bg_image_override: updatedNavbar.bg_image_override
+                                };
+                            }
+                            if (updatedFooter && s.type && s.type.toLowerCase() === 'footer') {
+                                pageUpdated = true;
+                                return {
+                                    ...s,
+                                    props: { ...updatedFooter.props },
+                                    bg_color_override: updatedFooter.bg_color_override,
+                                    bg_image_override: updatedFooter.bg_image_override
+                                };
+                            }
+                            return s;
+                        });
+
+                        if (pageUpdated) {
+                            updatedPages[pKey] = pageSects;
+                        }
+                    });
+                }
+
                 setPages(updatedPages);
                 commitToHistory(updatedPages);
             };

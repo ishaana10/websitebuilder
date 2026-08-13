@@ -138,6 +138,21 @@ if (!$is_published || empty($body_content)) {
     <!-- Inject runtime parameters and interactivity logic -->
     <script>
         const PROJECT_ID = <?php echo (int)$project['id']; ?>;
+
+        // Interceptor for page links to preserve slug & user query parameters in preview mode
+        document.addEventListener('click', function(e) {
+            const anchor = e.target.closest('a');
+            if (anchor) {
+                const href = anchor.getAttribute('href');
+                if (href && href.startsWith('?page=')) {
+                    e.preventDefault();
+                    const pageName = href.substring(6);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('page', pageName);
+                    window.location.href = 'render.php?' + urlParams.toString();
+                }
+            }
+        });
     </script>
     <script src="assets/js/components.js?v=<?php echo time(); ?>"></script>
     <?php if (!empty($custom_js)): ?>

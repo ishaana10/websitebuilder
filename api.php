@@ -693,6 +693,31 @@ switch ($action) {
             $zip->addFromString('assets/js/components.js', $components_js);
         }
 
+        // Dynamically bundle any uploaded media/logos referenced in pages to the zip
+        $referenced_uploads = [];
+        if ($decoded_pages !== null && is_array($decoded_pages)) {
+            foreach ($decoded_pages as $html_content) {
+                if (preg_match_all('/uploads\/[a-zA-Z0-9._-]+/', $html_content, $matches)) {
+                    foreach ($matches[0] as $match) {
+                        $referenced_uploads[$match] = true;
+                    }
+                }
+            }
+        } else {
+            if (preg_match_all('/uploads\/[a-zA-Z0-9._-]+/', $published_data, $matches)) {
+                foreach ($matches[0] as $match) {
+                    $referenced_uploads[$match] = true;
+                }
+            }
+        }
+
+        foreach (array_keys($referenced_uploads) as $rel_path) {
+            $full_path = __DIR__ . '/' . $rel_path;
+            if (file_exists($full_path) && is_file($full_path)) {
+                $zip->addFile($full_path, $rel_path);
+            }
+        }
+
         $zip->close();
 
         // Clear output buffer and override headers to send zip file down
