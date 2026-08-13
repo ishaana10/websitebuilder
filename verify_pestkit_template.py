@@ -11,10 +11,10 @@ def get_latest_slug(username):
 def run_pestkit_verification(page):
     ts = str(int(time.time()))
     username = f"dev_pest_{ts}"
-    email = f"dev_pest_{ts}@nuvis-webbuilder.io"
+    email = f"dev_pest_{ts}@nuvis-webidesigner.io"
     password = "securepass123"
 
-    print("Navigating to Nuvis Webbuilder Landing Portal...")
+    print("Navigating to Nuvis Webidesigner Landing Portal...")
     page.goto("http://127.0.0.1:8000/index.php")
     page.wait_for_timeout(1000)
 
@@ -31,7 +31,7 @@ def run_pestkit_verification(page):
     page.click("button[type='submit']")
     page.wait_for_timeout(1500)
 
-    print("Logging into Nuvis Webbuilder...")
+    print("Logging into Nuvis Webidesigner...")
     page.fill("input[name='username_or_email']", username)
     page.fill("input[name='password']", password)
     page.wait_for_timeout(500)
@@ -85,7 +85,7 @@ def run_pestkit_verification(page):
     page.wait_for_timeout(1000)
     page.screenshot(path="/home/jules/verification/screenshots/pest_03_filled_form.png")
 
-    page.click("form[onsubmit*='submitNuvisWebbuilderForm'] button[type='submit']")
+    page.click("form[onsubmit*='submitNuvisWebidesignerForm'] button[type='submit']")
     page.wait_for_timeout(3000) # Wait for secure AJAX process & success animation alert
     page.screenshot(path="/home/jules/verification/screenshots/pest_04_form_success.png")
 

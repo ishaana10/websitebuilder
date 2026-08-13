@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder Open-Source Site Builder Configuration
+ * Nuvis Webidesigner Open-Source Site Builder Configuration
  * High Security, Modular Architecture compatible with PHP 8.1+ and MySQL/MariaDB
  */
 

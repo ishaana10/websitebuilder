@@ -1,5 +1,5 @@
 /**
- * Nuvis Webbuilder — JSON-driven render pipeline
+ * Nuvis Webidesigner — JSON-driven render pipeline
  * Single source of truth: `page` object (from LOADED_CONTENT_STATE).
  * DOM is always a pure projection of page.sections.
  */
@@ -330,7 +330,7 @@ function handleCanvasDrop(e) {
         props: {
             heading:   '',
             text:      '',
-            brandText: 'NUVIS WEBBUILDER',
+            brandText: 'Nuvis Webidesigner',
             logoUrl:   '',
             copyright: '',
             links:     [],
@@ -452,7 +452,7 @@ function saveProject(silent = false) {
     const contentJson = serializeCanvasContent();
     const payload = {
         project_id:   PROJECT_ID,
-        name:         document.title.replace('Nuvis Webbuilder - Editing: ', ''),
+        name:         document.title.replace('Nuvis Webidesigner - Editing: ', ''),
         content_json: contentJson,
         csrf_token:   CSRF_TOKEN,
     };
@@ -684,7 +684,7 @@ function updateNavbarFromFields() {
     if (logoContainer) {
         logoContainer.innerHTML = logoImgUrl
             ? `<img src="${logoImgUrl}" class="h-8 max-w-[120px] object-contain" alt="Logo">`
-            : `<span class="text-xl font-extrabold tracking-wider text-teal-400">${bText||'NUVIS WEBBUILDER'}</span>`;
+            : `<span class="text-xl font-extrabold tracking-wider text-teal-400">${bText||'Nuvis Webidesigner'}</span>`;
     }
 
     const rows = document.getElementById('navbar-links-list').querySelectorAll('.navbar-link-row');
@@ -724,7 +724,7 @@ function reconstructNavbarComponent(tempDiv, block) {
         if (block.logoImg) {
             logoContainer.innerHTML = `<img src="${block.logoImg}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
         } else {
-            logoContainer.innerHTML = `<span class="text-xl font-extrabold tracking-wider text-teal-400">${block.brandText||'NUVIS WEBBUILDER'}</span>`;
+            logoContainer.innerHTML = `<span class="text-xl font-extrabold tracking-wider text-teal-400">${block.brandText||'Nuvis Webidesigner'}</span>`;
         }
     }
     const linksContainer = nav.querySelector('.hidden.md\\:flex');
@@ -750,7 +750,7 @@ function loadFooterCustomizerFields(wrapper) {
     if (!foot) return;
 
     const brandDiv = foot.querySelector('div:first-of-type div:first-of-type') || foot.querySelector('div:first-of-type img');
-    document.getElementById('footer-brand-text').value = (brandDiv && brandDiv.tagName !== 'IMG') ? brandDiv.innerText.trim() : 'NUVIS WEBBUILDER BUILDER';
+    document.getElementById('footer-brand-text').value = (brandDiv && brandDiv.tagName !== 'IMG') ? brandDiv.innerText.trim() : 'Nuvis Webidesigner BUILDER';
 
     const brandImg = foot.querySelector('div:first-of-type img');
     document.getElementById('footer-logo-img').value = brandImg ? brandImg.getAttribute('src') : '';
@@ -821,14 +821,14 @@ function updateFooterFromFields() {
                 : (logoContainer.outerHTML = `<img src="${logoImgUrl}" class="h-8 max-w-[120px] object-contain" alt="Logo">`);
         } else {
             logoContainer.tagName === 'IMG'
-                ? (logoContainer.outerHTML = `<div class="text-lg font-black text-white">${bText||'NUVIS WEBBUILDER BUILDER'}</div>`)
-                : (logoContainer.innerText = bText || 'NUVIS WEBBUILDER BUILDER');
+                ? (logoContainer.outerHTML = `<div class="text-lg font-black text-white">${bText||'Nuvis Webidesigner BUILDER'}</div>`)
+                : (logoContainer.innerText = bText || 'Nuvis Webidesigner BUILDER');
         }
     }
 
     const copyEl = foot.querySelector('.text-xs');
     const copyText = document.getElementById('footer-copyright').value.trim();
-    if (copyEl) copyEl.innerText = copyText || `© ${new Date().getFullYear()} Nuvis Webbuilder. All rights reserved.`;
+    if (copyEl) copyEl.innerText = copyText || `© ${new Date().getFullYear()} Nuvis Webidesigner. All rights reserved.`;
 
     const rows = document.getElementById('footer-links-list').querySelectorAll('.footer-link-row');
     const linksContainer = foot.querySelector('.flex.space-x-6');
@@ -869,7 +869,7 @@ function reconstructFooterComponent(tempDiv, block) {
         if (block.logoImg) {
             brandContainer.outerHTML = `<img src="${block.logoImg}" class="h-8 max-w-[120px] object-contain" alt="Logo">`;
         } else {
-            brandContainer.outerHTML = `<div class="text-lg font-black text-white">${block.brandText||'NUVIS WEBBUILDER BUILDER'}</div>`;
+            brandContainer.outerHTML = `<div class="text-lg font-black text-white">${block.brandText||'Nuvis Webidesigner BUILDER'}</div>`;
         }
     }
     const copyEl = foot.querySelector('.text-xs');

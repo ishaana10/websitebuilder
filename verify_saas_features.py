@@ -2,7 +2,7 @@ import requests
 import re
 
 def test_saas_endpoints():
-    print("=== Nuvis Webbuilder SaaS Integration Test Suite ===")
+    print("=== Nuvis Webidesigner SaaS Integration Test Suite ===")
     session = requests.Session()
     base_url = "http://127.0.0.1:8000/api.php"
 

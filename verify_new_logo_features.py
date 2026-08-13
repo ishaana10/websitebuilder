@@ -16,7 +16,7 @@ def run_verification():
         # Step 1: Register and login
         print("Navigating to index.php...")
         page.goto("http://127.0.0.1:8000/index.php")
-        page.wait_for_selector("text=Nuvis Webbuilder")
+        page.wait_for_selector("text=Nuvis Webidesigner")
 
         print("Switching to registration form...")
         page.click("text=Register standard builder")

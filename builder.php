@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder Live React-Powered Workspace
+ * Nuvis Webidesigner Live React-Powered Workspace
  * State-of-the-art visual builder featuring real-time React render pipeline,
  * multi-level Undo/Redo history stack, live properties customizers,
  * visual theme-color selectors, device bezels, and live HTML code compilers.
@@ -31,7 +31,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvis Webbuilder - Editing: <?php echo sanitize_output($project['name']); ?></title>
+    <title>Nuvis Webidesigner - Editing: <?php echo sanitize_output($project['name']); ?></title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -501,7 +501,7 @@ $csrf_token = generate_csrf_token();
                 const newNavbar = indexNavbar ? JSON.parse(JSON.stringify(indexNavbar)) : {
                     id: 'sec-navbar-' + Date.now(),
                     type: 'navbar',
-                    props: { brandText: 'NUVIS WEBBUILDER', logoUrl: '', links: [], bgColor: '#0f172a', textColor: '#ffffff', accentColor: '#14b8a6' },
+                    props: { brandText: 'Nuvis Webidesigner', logoUrl: '', links: [], bgColor: '#0f172a', textColor: '#ffffff', accentColor: '#14b8a6' },
                     style: { classes: [] }
                 };
                 newNavbar.id = 'sec-navbar-' + Date.now();
@@ -509,7 +509,7 @@ $csrf_token = generate_csrf_token();
                 const newFooter = indexFooter ? JSON.parse(JSON.stringify(indexFooter)) : {
                     id: 'sec-footer-' + Date.now(),
                     type: 'footer',
-                    props: { brandText: 'NUVIS WEBBUILDER', logoUrl: '', copyright: 'Nuvis Webbuilder. All rights reserved.', links: [], bgColor: '#020617', textColor: '#94a3b8', accentColor: '#14b8a6' },
+                    props: { brandText: 'Nuvis Webidesigner', logoUrl: '', copyright: 'Nuvis Webidesigner. All rights reserved.', links: [], bgColor: '#020617', textColor: '#94a3b8', accentColor: '#14b8a6' },
                     style: { classes: [] }
                 };
                 newFooter.id = 'sec-footer-' + Date.now();
@@ -964,7 +964,7 @@ $csrf_token = generate_csrf_token();
                     if (showBrandText) {
                         const isNavbar = sec.type.toLowerCase() === 'navbar';
                         const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black text-white";
-                        brandTextHtml = `<div class="${brandClass}" style="color: ${accentColor};">${sec.props.brandText || 'NUVIS WEBBUILDER'}</div>`;
+                        brandTextHtml = `<div class="${brandClass}" style="color: ${accentColor};">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
                     }
 
                     let logoHtml = '';
@@ -2570,7 +2570,7 @@ $csrf_token = generate_csrf_token();
                                         <div>
                                             <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">HQ Tenant Subdomain</label>
                                             <div className="bg-slate-950 px-3 py-2 rounded-lg text-xs font-mono text-teal-400 flex justify-between items-center border border-slate-800">
-                                                <span>{tenantSubdomain}.nuvis-webbuilder.io</span>
+                                                <span>{tenantSubdomain}.nuvis-webidesigner.io</span>
                                                 <i className="fas fa-link text-slate-500 text-[10px]"></i>
                                             </div>
                                         </div>
@@ -2678,7 +2678,7 @@ $csrf_token = generate_csrf_token();
                                             <button onClick={() => {
                                                 showToast("Generating Copy...", "Analyzing page content JSON.");
                                                 setTimeout(() => {
-                                                    setSeoTitle("Nuvis Webbuilder Pro - Supercharge Visual Editing Layouts");
+                                                    setSeoTitle("Nuvis Webidesigner Pro - Supercharge Visual Editing Layouts");
                                                     setSeoMetaDesc("Unlock state of the art drag and drop page compilation caches. Supports responsive mobile frames, persistent version histories, and integrated lead-capture calendars.");
                                                     showToast("Optimization Complete!", "Updated SEO title and descriptions with high conversion tags.");
                                                 }, 1200);

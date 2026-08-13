@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webbuilder Master Landing Page & Access Gate
+ * Nuvis Webidesigner Master Landing Page & Access Gate
  * Combines highly polished, interactive dark-themed landing presentation,
  * secure unified Login/Signup forms, feature breakdowns, and automated active session routing.
  */
@@ -22,7 +22,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvis Webbuilder - Open Source Commercial Grade Website Builder</title>
+    <title>Nuvis Webidesigner - Open Source Commercial Grade Website Builder</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -35,9 +35,9 @@ $csrf_token = generate_csrf_token();
 
         <!-- Branding top -->
         <div class="flex items-center gap-3">
-            <div class="bg-teal-500 text-slate-950 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-lg shadow-teal-500/20">WC</div>
+            <img src="assets/images/logo.png" alt="Nuvis Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg shadow-teal-500/20">
             <div>
-                <span class="font-black text-md tracking-wider text-white">NUVIS WEBBUILDER</span>
+                <span class="font-black text-md tracking-wider text-white">Nuvis Webidesigner</span>
                 <span class="bg-teal-500/10 text-teal-400 font-extrabold px-2 py-0.5 rounded text-[9px] uppercase ml-1 border border-teal-500/15">Open Source</span>
             </div>
         </div>
@@ -72,7 +72,7 @@ $csrf_token = generate_csrf_token();
 
         <!-- Footer signature -->
         <div class="text-xs text-slate-600">
-            &copy; <?php echo date('Y'); ?> Nuvis Webbuilder Open-Source. MIT Licensed.
+            &copy; <?php echo date('Y'); ?> Nuvis Webidesigner Open-Source. MIT Licensed.
         </div>
     </div>
 

@@ -1,6 +1,6 @@
-# Contributing to Nuvis Webbuilder Website Builder
+# Contributing to Nuvis Webidesigner Website Builder
 
-Thank you for your interest in contributing to Nuvis Webbuilder! We are building a robust, open-source, secure, visual website builder, and your contributions make this platform better for everyone.
+Thank you for your interest in contributing to Nuvis Webidesigner! We are building a robust, open-source, secure, visual website builder, and your contributions make this platform better for everyone.
 
 Below are guidelines and standards to help you get started with contributing.
 
