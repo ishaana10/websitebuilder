@@ -76,19 +76,51 @@ try {
     error_log("Failed to load global email settings: " . $e->getMessage());
 }
 
-// Fallback to project-level email settings if they exist
+// Resolve project/site level SMTP & email settings
+$site_smtp = null;
 try {
     $content_json = json_decode($project_info['content_json'] ?? '[]', true);
-    if ($content_json && isset($content_json['email_settings']) && !empty($content_json['email_settings']['recipient'])) {
-        $email_settings = $content_json['email_settings'];
-        $custom_recipient = trim($email_settings['recipient'] ?? $custom_recipient);
-        $auto_responder_enabled = !empty($email_settings['auto_responder_enabled']);
-        $template_theme = $email_settings['template_theme'] ?? $template_theme;
-        $auto_responder_subject = $email_settings['auto_responder_subject'] ?? $auto_responder_subject;
-        $auto_responder_body = $email_settings['auto_responder_body'] ?? $auto_responder_body;
+    if ($content_json && isset($content_json['email_settings'])) {
+        $es = $content_json['email_settings'];
+        $custom_recipient = trim($es['recipient'] ?? $custom_recipient);
+        $auto_responder_enabled = isset($es['auto_responder_enabled']) ? !empty($es['auto_responder_enabled']) : $auto_responder_enabled;
+        $template_theme = $es['template_theme'] ?? $template_theme;
+        $auto_responder_subject = $es['auto_responder_subject'] ?? $auto_responder_subject;
+        $auto_responder_body = $es['auto_responder_body'] ?? $auto_responder_body;
+
+        if (!empty($es['smtp_host'])) {
+            $site_smtp = [
+                'smtp_host' => $es['smtp_host'] ?? '',
+                'smtp_port' => $es['smtp_port'] ?? '',
+                'smtp_username' => $es['smtp_username'] ?? '',
+                'smtp_password' => $es['smtp_password'] ?? '',
+                'smtp_encryption' => $es['smtp_encryption'] ?? 'none',
+                'smtp_from_email' => $es['smtp_from_email'] ?? '',
+                'smtp_from_name' => $es['smtp_from_name'] ?? ''
+            ];
+        }
     }
 } catch (Exception $e) {
     error_log("Failed to parse project email configurations: " . $e->getMessage());
+}
+
+// Component-level overrides submitted in POST request
+$posted_recipient = trim($_POST['custom_recipient'] ?? '');
+if (!empty($posted_recipient)) {
+    $custom_recipient = $posted_recipient;
+}
+
+$posted_smtp_host = trim($_POST['smtp_host'] ?? '');
+if (!empty($posted_smtp_host)) {
+    $site_smtp = [
+        'smtp_host' => $posted_smtp_host,
+        'smtp_port' => trim($_POST['smtp_port'] ?? '587'),
+        'smtp_username' => trim($_POST['smtp_user'] ?? ''),
+        'smtp_password' => trim($_POST['smtp_pass'] ?? ''),
+        'smtp_encryption' => 'tls',
+        'smtp_from_email' => $custom_recipient,
+        'smtp_from_name' => 'Custom Form Inquiry'
+    ];
 }
 
 try {
@@ -113,7 +145,7 @@ try {
     $admin_html_body = EmailService::getTemplate($template_theme, $admin_subject, $admin_content, "Securely processed by Nuvis Webidesigner Notification Module.");
 
     // Send and Log Administrator notification alert
-    EmailService::send($recipient, $admin_subject, $admin_html_body, $admin_content, $submission_id);
+    EmailService::send($recipient, $admin_subject, $admin_html_body, $admin_content, $submission_id, $site_smtp);
 
     // 5. Send automated HTML email response template back to the customer if configured
     if ($auto_responder_enabled) {
@@ -123,7 +155,7 @@ try {
         $customer_html_body = EmailService::getTemplate($template_theme, $customer_subject, $customer_content, "Sent on behalf of " . $project_info['project_name']);
 
         // Dispatch auto-responder
-        EmailService::send($email, $customer_subject, $customer_html_body, $customer_content, $submission_id);
+        EmailService::send($email, $customer_subject, $customer_html_body, $customer_content, $submission_id, $site_smtp);
     }
 
     $db->commit();

@@ -9,7 +9,7 @@ require_once __DIR__ . '/config.php';
 header('Content-Type: application/json');
 
 // Ensure public action context is resolved safely
-$public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots'];
+$public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots', 'get_site_submissions', 'save_site_smtp'];
 $action_query = $_GET['action'] ?? '';
 
 if (!in_array($action_query, $public_actions)) {
@@ -915,6 +915,125 @@ switch ($action) {
         echo "User-agent: *\n";
         echo "Allow: /\n";
         echo "Sitemap: http://127.0.0.1:8000/api.php?action=sitemap&project_id=" . intval($_GET['project_id'] ?? 1) . "\n";
+        exit;
+
+    case 'get_site_submissions':
+        header('Content-Type: application/json');
+        $project_id = intval($_GET['project_id'] ?? 0);
+        $passcode = $_GET['passcode'] ?? '';
+
+        if (!$project_id) {
+            echo json_encode(['success' => false, 'error' => 'Missing project ID.']);
+            exit;
+        }
+
+        // Verify the passcode in the active inquiry admin panel inside project components
+        $stmt = $db->prepare("SELECT content_json FROM projects WHERE id = ?");
+        $stmt->execute([$project_id]);
+        $proj = $stmt->fetch();
+        if (!$proj) {
+            echo json_encode(['success' => false, 'error' => 'Project not found.']);
+            exit;
+        }
+
+        $expected_passcode = 'admin123';
+        $content = json_decode($proj['content_json'] ?? '', true);
+        if ($content && isset($content['blocks']) && is_array($content['blocks'])) {
+            foreach ($content['blocks'] as $b) {
+                if ($b['componentId'] === 'inquiry_admin_panel' && isset($b['passcode'])) {
+                    $expected_passcode = $b['passcode'];
+                    break;
+                }
+            }
+        }
+
+        if (empty($passcode) || $passcode !== $expected_passcode) {
+            echo json_encode(['success' => false, 'error' => 'Unauthorized. Invalid administration passcode.']);
+            exit;
+        }
+
+        try {
+            $stmt_subs = $db->prepare("SELECT id, name, email, message, created_at FROM contact_submissions WHERE project_id = ? ORDER BY created_at DESC");
+            $stmt_subs->execute([$project_id]);
+            $submissions = $stmt_subs->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'submissions' => $submissions]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+
+    case 'save_site_smtp':
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Method Not Allowed']);
+            exit;
+        }
+
+        $project_id = intval($_GET['project_id'] ?? 0);
+        $passcode = $_GET['passcode'] ?? '';
+
+        if (!$project_id) {
+            echo json_encode(['success' => false, 'error' => 'Missing project ID.']);
+            exit;
+        }
+
+        $stmt = $db->prepare("SELECT content_json FROM projects WHERE id = ?");
+        $stmt->execute([$project_id]);
+        $proj = $stmt->fetch();
+        if (!$proj) {
+            echo json_encode(['success' => false, 'error' => 'Project not found.']);
+            exit;
+        }
+
+        $expected_passcode = 'admin123';
+        $content = json_decode($proj['content_json'] ?? '', true);
+        if ($content && isset($content['blocks']) && is_array($content['blocks'])) {
+            foreach ($content['blocks'] as $b) {
+                if ($b['componentId'] === 'inquiry_admin_panel' && isset($b['passcode'])) {
+                    $expected_passcode = $b['passcode'];
+                    break;
+                }
+            }
+        }
+
+        if (empty($passcode) || $passcode !== $expected_passcode) {
+            echo json_encode(['success' => false, 'error' => 'Unauthorized. Invalid administration passcode.']);
+            exit;
+        }
+
+        // Parse inputs
+        $raw_body = file_get_contents('php://input');
+        $data = json_decode($raw_body, true);
+        if (!$data) {
+            echo json_encode(['success' => false, 'error' => 'Invalid or missing configuration parameters.']);
+            exit;
+        }
+
+        // We will store these settings inside the project's content_json under the email_settings key!
+        if (!$content || !is_array($content)) {
+            $content = ['blocks' => []];
+        }
+
+        $content['email_settings'] = [
+            'recipient' => trim($data['recipient'] ?? ''),
+            'auto_responder_enabled' => intval($data['auto_responder_enabled'] ?? 0),
+            'smtp_host' => trim($data['smtp_host'] ?? ''),
+            'smtp_port' => intval($data['smtp_port'] ?? 587),
+            'smtp_username' => trim($data['smtp_username'] ?? ''),
+            'smtp_password' => trim($data['smtp_password'] ?? ''),
+            'smtp_encryption' => trim($data['smtp_encryption'] ?? 'none'),
+            'smtp_from_name' => trim($data['smtp_from_name'] ?? ''),
+            'smtp_from_email' => trim($data['smtp_from_email'] ?? '')
+        ];
+
+        $updated_json = json_encode($content);
+        $stmt_upd = $db->prepare("UPDATE projects SET content_json = ? WHERE id = ?");
+        try {
+            $stmt_upd->execute([$updated_json, $project_id]);
+            echo json_encode(['success' => true, 'message' => 'Site-specific SMTP settings saved successfully.']);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
         exit;
 
     default:

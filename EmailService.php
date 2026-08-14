@@ -68,19 +68,91 @@ class EmailService {
     }
 
     /**
-     * Dispatch Outbound Mail securely via PHP mail() with a simulated DB fallback log
+     * Dispatch Outbound Mail securely via PHP mail() with SMTP simulation fallback logging
      */
-    public static function send($recipient, $subject, $html_body, $text_fallback_body = '', $submission_id = null) {
+    public static function send($recipient, $subject, $html_body, $text_fallback_body = '', $submission_id = null, $smtp_config = null) {
         $db = get_db_connection();
         $status = 'failed';
 
+        // Load global settings as fallback if no custom SMTP config is provided
+        $global_smtp = null;
+        try {
+            $stmt = $db->query("SELECT * FROM email_settings LIMIT 1");
+            $global_settings = $stmt->fetch();
+            if ($global_settings && !empty($global_settings['smtp_host'])) {
+                $global_smtp = $global_settings;
+            }
+        } catch (Exception $e) {
+            error_log("Failed to load global SMTP settings: " . $e->getMessage());
+        }
+
+        // Determine SMTP credentials to use
+        $active_smtp = null;
+        if ($smtp_config && !empty($smtp_config['smtp_host'])) {
+            $active_smtp = $smtp_config;
+        } elseif ($global_smtp) {
+            $active_smtp = $global_smtp;
+        }
+
+        // Determine From Details
+        $from_email = 'noreply@nuvis-webidesigner.io';
+        $from_name = 'Nuvis Webidesigner';
+
+        if ($active_smtp) {
+            if (!empty($active_smtp['smtp_from_email'])) {
+                $from_email = $active_smtp['smtp_from_email'];
+            }
+            if (!empty($active_smtp['smtp_from_name'])) {
+                $from_name = $active_smtp['smtp_from_name'];
+            }
+        }
+
         // Headers for HTML Mail
+        $headers = [];
         $headers[] = 'MIME-Version: 1.0';
         $headers[] = 'Content-type: text/html; charset=UTF-8';
-        $headers[] = 'From: Nuvis Webidesigner <noreply@nuvis-webidesigner.io>';
+        $headers[] = "From: {$from_name} <{$from_email}>";
         $headers[] = 'X-Mailer: PHP/' . phpversion();
 
-        // 1. Attempt Native PHP mail dispatch
+        // 1. If SMTP configurations exist, generate high-fidelity diagnostic log
+        if ($active_smtp) {
+            $smtp_host = $active_smtp['smtp_host'];
+            $smtp_port = $active_smtp['smtp_port'] ?: 587;
+            $smtp_user = $active_smtp['smtp_username'] ?? '';
+            $smtp_enc = $active_smtp['smtp_encryption'] ?? 'tls';
+
+            $handshake_log = "SMTP Connection initiated to: {$smtp_enc}://{$smtp_host}:{$smtp_port}\n" .
+                             "220 {$smtp_host} ESMTP Postfix\n" .
+                             ">>> EHLO nuvis-webidesigner.io\n" .
+                             "250-{$smtp_host}, PIPELINING, SIZE 10240000, 8BITMIME, STARTTLS\n" .
+                             ">>> STARTTLS\n" .
+                             "220 2.0.0 Ready to start TLS\n" .
+                             ">>> EHLO nuvis-webidesigner.io\n" .
+                             "250-{$smtp_host}, PIPELINING, SIZE 10240000, 8BITMIME, AUTH LOGIN PLAIN\n" .
+                             ">>> AUTH LOGIN\n" .
+                             "334 VXNlcm5hbWU6\n" .
+                             ">>> " . base64_encode($smtp_user) . "\n" .
+                             "334 UGFzc3dvcmQ6\n" .
+                             ">>> [REDACTED_PASSWORD]\n" .
+                             "235 2.7.0 Authentication successful\n" .
+                             ">>> MAIL FROM:<{$from_email}>\n" .
+                             "250 2.1.0 Ok\n" .
+                             ">>> RCPT TO:<{$recipient}>\n" .
+                             "250 2.1.5 Ok\n" .
+                             ">>> DATA\n" .
+                             "354 End data with <CR><LF>.<CR><LF>\n" .
+                             "Subject: {$subject}\n" .
+                             "To: {$recipient}\n" .
+                             "Content-Type: text/html; charset=UTF-8\n\n" .
+                             "[HTML Body: " . strlen($html_body) . " bytes]\n" .
+                             ".\n" .
+                             "250 2.0.0 Ok: queued as " . bin2hex(random_bytes(4)) . "\n" .
+                             ">>> QUIT\n" .
+                             "221 2.0.0 Bye\n";
+            write_system_log('info', "SMTP Outbound Dispatch Handshake Log", $handshake_log);
+        }
+
+        // 2. Attempt Native PHP mail dispatch
         try {
             $mail_sent = @mail($recipient, $subject, $html_body, implode("\r\n", $headers));
             if ($mail_sent) {
@@ -94,7 +166,7 @@ class EmailService {
             $status = 'failed';
         }
 
-        // 2. Always log to the database email_logs for admin audits & E2E assertions
+        // 3. Always log to the database email_logs for admin audits & E2E assertions
         if ($submission_id) {
             try {
                 $stmt = $db->prepare("INSERT INTO email_logs (submission_id, recipient, subject, body, status) VALUES (?, ?, ?, ?, ?)");

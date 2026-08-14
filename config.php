@@ -62,6 +62,27 @@ function get_db_connection() {
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ];
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+
+            // Ensure email_settings has the SMTP columns
+            try {
+                $cols_to_add = [
+                    'smtp_host' => 'VARCHAR(255) NULL',
+                    'smtp_port' => 'INT NULL',
+                    'smtp_username' => 'VARCHAR(255) NULL',
+                    'smtp_password' => 'VARCHAR(255) NULL',
+                    'smtp_encryption' => 'VARCHAR(10) NULL',
+                    'smtp_from_email' => 'VARCHAR(255) NULL',
+                    'smtp_from_name' => 'VARCHAR(255) NULL'
+                ];
+                foreach ($cols_to_add as $col => $definition) {
+                    $stmt_check = $pdo->query("SHOW COLUMNS FROM `email_settings` LIKE '{$col}'");
+                    if ($stmt_check->rowCount() === 0) {
+                        $pdo->exec("ALTER TABLE `email_settings` ADD COLUMN `{$col}` {$definition}");
+                    }
+                }
+            } catch (Exception $col_ex) {
+                // Ignore if table doesn't exist yet (e.g. during install.php)
+            }
         } catch (PDOException $e) {
             // Securely log errors or display a safe error message
             error_log("DB connection error: " . $e->getMessage());

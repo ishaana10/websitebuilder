@@ -402,7 +402,12 @@ const UI_COMPONENTS = [
             { key: 'text', label: 'Sub-text prompt', type: 'textarea', default: 'Have questions? Drop us a line.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#14b8a6' },
-            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#0f172a' }
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#0f172a' },
+            { key: 'customRecipient', label: 'Custom Recipient Email Override', type: 'text', default: '' },
+            { key: 'smtpHost', label: 'Custom SMTP Host Override', type: 'text', default: '' },
+            { key: 'smtpPort', label: 'Custom SMTP Port Override', type: 'text', default: '' },
+            { key: 'smtpUser', label: 'Custom SMTP User Override', type: 'text', default: '' },
+            { key: 'smtpPass', label: 'Custom SMTP Pass Override', type: 'text', default: '' }
         ],
         html: `
 <section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="contact">
@@ -412,6 +417,13 @@ const UI_COMPONENTS = [
 
         <form class="mt-8 space-y-4 text-left" onsubmit="event.preventDefault(); window.submitNuvisWebidesignerForm(this);">
             <div class="nuvis-webidesigner-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
+
+            <input type="hidden" name="custom_recipient" value="{{customRecipient}}" />
+            <input type="hidden" name="smtp_host" value="{{smtpHost}}" />
+            <input type="hidden" name="smtp_port" value="{{smtpPort}}" />
+            <input type="hidden" name="smtp_user" value="{{smtpUser}}" />
+            <input type="hidden" name="smtp_pass" value="{{smtpPass}}" />
+
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name</label>
                 <input type="text" name="name" placeholder="John Doe" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-500 text-sm" />
@@ -1073,6 +1085,38 @@ const UI_COMPONENTS = [
         </div>
     </div>
 </section>`
+    },
+    {
+        id: 'inquiry_admin_panel',
+        name: 'Inquiry & SMTP Admin Panel',
+        category: 'Forms',
+        icon: 'fas fa-user-shield',
+        schema: [
+            { key: 'heading', label: 'Admin Panel Title', type: 'text', default: 'Website Administration & SMTP Setup' },
+            { key: 'adminPasscode', label: 'Admin Panel Access Passcode', type: 'text', default: 'admin123' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Theme Accent Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="inquiry_admin_panel" data-passcode="{{adminPasscode}}">
+    <div class="max-w-4xl mx-auto bg-slate-900/50 p-8 rounded-2xl border border-slate-800/80 shadow-xl">
+        <div class="flex items-center gap-3 mb-6">
+            <span class="p-2.5 bg-slate-800 rounded-lg flex items-center justify-center text-lg" style="color: {{accentColor}};"><i class="fas fa-user-shield"></i></span>
+            <div>
+                <h3 class="text-xl font-bold text-white">{{heading}}</h3>
+                <p class="text-xs text-slate-400 mt-1">Manage website settings, view form submissions, and configure custom SMTP delivery.</p>
+            </div>
+        </div>
+
+        <div class="nuvis-client-admin-workspace font-sans text-slate-200">
+            <!-- Simulated loader or interactive control center populated by runtime JS -->
+            <div class="p-8 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
+                <i class="fas fa-circle-notch animate-spin text-xl mb-2" style="color: {{accentColor}};"></i>
+                <h4 class="text-xs font-bold text-slate-400">Loading Admin Control Center...</h4>
+            </div>
+        </div>
+    </div>
+</section>`
     }
 ];
 
@@ -1429,12 +1473,326 @@ if (typeof window !== 'undefined') {
         });
     };
 
+    window.initInquiryAdminPanels = function() {
+        const panels = document.querySelectorAll('[data-component="inquiry_admin_panel"]');
+        panels.forEach(panel => {
+            const workspace = panel.querySelector('.nuvis-client-admin-workspace');
+            if (!workspace || workspace.getAttribute('data-loaded') === 'true') return;
+            workspace.setAttribute('data-loaded', 'true');
+
+            const passcode = panel.getAttribute('data-passcode') || 'admin123';
+            const badge = panel.querySelector('span[style*="color"]');
+            const accentColor = badge ? (badge.style.color || '#14b8a6') : '#14b8a6';
+
+            // Check if we are in page builder mode
+            const isBuilder = (typeof window.parent !== 'undefined' && window.parent !== window && window.parent.UI_COMPONENTS) || (typeof PROJECT_ID === 'undefined');
+            if (isBuilder) {
+                workspace.innerHTML = `
+                <div class="p-8 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-dashed border-slate-800">
+                    <i class="fas fa-tools text-2xl mb-2" style="color: ${accentColor};"></i>
+                    <h4 class="text-xs font-bold text-slate-400">Admin Control Center Workspace</h4>
+                    <p class="text-[10px] mt-1 leading-relaxed">Interactive logins, inquiry lists, and custom SMTP account settings will render live in production/published mode.</p>
+                </div>`;
+                return;
+            }
+
+            // Render Login Form by default
+            const renderLoginForm = (error = '') => {
+                workspace.innerHTML = `
+                <div class="max-w-sm mx-auto space-y-4 py-4">
+                    <div class="text-center">
+                        <i class="fas fa-lock text-3xl text-slate-600 mb-2"></i>
+                        <h4 class="text-sm font-bold text-white">Enter Access Passcode</h4>
+                        <p class="text-[10px] text-slate-400 mt-1">Please enter your website admin passcode to continue.</p>
+                    </div>
+                    ${error ? `<div class="p-3 bg-red-950/50 text-red-400 border border-red-500/20 text-xs rounded text-center font-bold">${error}</div>` : ''}
+                    <div class="space-y-3">
+                        <input type="password" placeholder="Enter Admin Passcode" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-xs text-center text-white focus:outline-none focus:border-teal-500 font-mono tracking-widest" />
+                        <button class="w-full font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider text-slate-950 transition duration-300 transform hover:scale-[1.01]" style="background-color: ${accentColor};">
+                            Verify & Log In
+                        </button>
+                    </div>
+                </div>`;
+
+                const btn = workspace.querySelector('button');
+                const input = workspace.querySelector('input');
+
+                const handleLogin = () => {
+                    if (input.value === passcode) {
+                        renderDashboard(input.value);
+                    } else {
+                        renderLoginForm('Invalid administration passcode. Please try again.');
+                    }
+                };
+
+                btn.onclick = handleLogin;
+                input.onkeydown = (e) => { if (e.key === 'Enter') handleLogin(); };
+            };
+
+            // Render Logged-in Administration Dashboard
+            const renderDashboard = (verifiedPasscode) => {
+                workspace.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Navigation Tabs -->
+                    <div class="flex border-b border-slate-800/80">
+                        <button class="tab-btn-sub active px-4 py-2 text-xs font-bold uppercase border-b-2 transition duration-200" style="border-color: ${accentColor}; color: ${accentColor};">
+                            <i class="fas fa-envelope-open-text mr-1"></i> Customer Inquiries
+                        </button>
+                        <button class="tab-btn-smtp px-4 py-2 text-xs font-bold uppercase border-b-2 border-transparent text-slate-400 hover:text-white transition duration-200">
+                            <i class="fas fa-server mr-1"></i> SMTP Server Setup
+                        </button>
+                    </div>
+
+                    <!-- Workspaces -->
+                    <div class="workspace-content py-2">
+                        <!-- Submissions Area -->
+                        <div class="tab-content-sub space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Enquiry Form Submissions</h4>
+                                <button class="btn-refresh bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold px-3 py-1.5 rounded text-[10px] uppercase tracking-wider transition">
+                                    <i class="fas fa-sync-alt"></i> Refresh Logs
+                                </button>
+                            </div>
+                            <div class="submissions-list space-y-2.5">
+                                <div class="text-center py-12 text-slate-500 font-mono text-[11px]">
+                                    <i class="fas fa-spinner animate-spin mr-1"></i> Fetching submissions...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SMTP Area (Hidden initially) -->
+                        <div class="tab-content-smtp hidden space-y-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Site-Specific SMTP Credentials</h4>
+                            <div class="p-4 bg-slate-950/40 rounded-xl border border-slate-800/80">
+                                <form class="smtp-client-form space-y-4">
+                                    <div class="smtp-status-msg hidden p-3 rounded text-xs font-bold text-center"></div>
+
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Inquiry Recipient Email</label>
+                                        <input type="email" name="recipient" required placeholder="owner@domain.com" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                    </div>
+
+                                    <div class="flex items-center justify-between border-t border-slate-800/60 pt-3">
+                                        <label class="text-xs font-semibold text-slate-300">Enable Customer Auto-Responder</label>
+                                        <input type="checkbox" name="auto_responder_enabled" class="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0">
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Host</label>
+                                            <input type="text" name="smtp_host" placeholder="smtp.gmail.com" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Port</label>
+                                            <input type="number" name="smtp_port" placeholder="587" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Username</label>
+                                            <input type="text" name="smtp_username" placeholder="user@gmail.com" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Password</label>
+                                            <input type="password" name="smtp_password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Encryption</label>
+                                            <select name="smtp_encryption" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-2 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500 font-sans">
+                                                <option value="none">None</option>
+                                                <option value="ssl">SSL</option>
+                                                <option value="tls">TLS</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Name</label>
+                                            <input type="text" name="smtp_from_name" placeholder="My Site Inquiry" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Email Address</label>
+                                        <input type="email" name="smtp_from_email" placeholder="inquiry@mysite.com" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                    </div>
+
+                                    <button type="submit" class="w-full font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider text-slate-950 transition duration-300" style="background-color: ${accentColor};">
+                                        Save SMTP settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                const tabBtnSub = workspace.querySelector('.tab-btn-sub');
+                const tabBtnSmtp = workspace.querySelector('.tab-btn-smtp');
+                const tabContentSub = workspace.querySelector('.tab-content-sub');
+                const tabContentSmtp = workspace.querySelector('.tab-content-smtp');
+                const subList = workspace.querySelector('.submissions-list');
+                const refreshBtn = workspace.querySelector('.btn-refresh');
+                const smtpForm = workspace.querySelector('.smtp-client-form');
+                const smtpStatus = workspace.querySelector('.smtp-status-msg');
+
+                // Tab Switcher Click handlers
+                tabBtnSub.onclick = () => {
+                    tabBtnSub.className = 'tab-btn-sub active px-4 py-2 text-xs font-bold uppercase border-b-2 transition duration-200';
+                    tabBtnSub.style.borderColor = accentColor;
+                    tabBtnSub.style.color = accentColor;
+
+                    tabBtnSmtp.className = 'tab-btn-smtp px-4 py-2 text-xs font-bold uppercase border-b-2 border-transparent text-slate-400 hover:text-white transition duration-200';
+                    tabBtnSmtp.style.borderColor = 'transparent';
+                    tabBtnSmtp.style.color = '#94a3b8';
+
+                    tabContentSub.classList.remove('hidden');
+                    tabContentSmtp.classList.add('hidden');
+                };
+
+                tabBtnSmtp.onclick = () => {
+                    tabBtnSmtp.className = 'tab-btn-smtp active px-4 py-2 text-xs font-bold uppercase border-b-2 transition duration-200';
+                    tabBtnSmtp.style.borderColor = accentColor;
+                    tabBtnSmtp.style.color = accentColor;
+
+                    tabBtnSub.className = 'tab-btn-sub px-4 py-2 text-xs font-bold uppercase border-b-2 border-transparent text-slate-400 hover:text-white transition duration-200';
+                    tabBtnSub.style.borderColor = 'transparent';
+                    tabBtnSub.style.color = '#94a3b8';
+
+                    tabContentSmtp.classList.remove('hidden');
+                    tabContentSub.classList.add('hidden');
+                };
+
+                // Fetch Submissions
+                const fetchSubmissions = () => {
+                    subList.innerHTML = `
+                    <div class="text-center py-12 text-slate-500 font-mono text-[11px]">
+                        <i class="fas fa-spinner animate-spin mr-1"></i> Fetching submissions...
+                    </div>`;
+
+                    const projId = typeof window.PROJECT_ID !== 'undefined' ? window.PROJECT_ID : 1;
+                    fetch(`api.php?action=get_site_submissions&project_id=${projId}&passcode=${encodeURIComponent(verifiedPasscode)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && Array.isArray(data.submissions)) {
+                            if (data.submissions.length === 0) {
+                                subList.innerHTML = `
+                                <div class="text-center py-12 text-slate-500 bg-slate-950/20 rounded-xl border border-slate-850">
+                                    <i class="fas fa-envelope-open text-xl mb-1.5" style="color: ${accentColor};"></i>
+                                    <p class="text-[11px] font-bold text-slate-400">No submissions received yet</p>
+                                </div>`;
+                            } else {
+                                subList.innerHTML = data.submissions.map(sub => `
+                                <div class="p-4 bg-slate-950/40 rounded-xl border border-slate-850 space-y-2">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h5 class="text-xs font-extrabold text-white">${sub.name}</h5>
+                                            <a href="mailto:${sub.email}" class="text-[10px] text-teal-400 hover:underline font-mono">${sub.email}</a>
+                                        </div>
+                                        <span class="text-[9px] text-slate-500 font-mono">${sub.created_at}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 font-sans leading-relaxed pt-1 bg-slate-900/30 p-2.5 rounded border border-slate-850/50">${sub.message}</p>
+                                </div>`).join('');
+                            }
+                        } else {
+                            subList.innerHTML = `<div class="p-3 bg-red-950/50 text-red-400 border border-red-500/20 text-xs rounded text-center">${data.error || "Failed to load."}</div>`;
+                        }
+                    })
+                    .catch(err => {
+                        subList.innerHTML = `<div class="p-3 bg-red-950/50 text-red-400 border border-red-500/20 text-xs rounded text-center">Connection failed.</div>`;
+                    });
+                };
+
+                // Load existing SMTP settings
+                const loadSmtpSettings = () => {
+                    const projId = typeof window.PROJECT_ID !== 'undefined' ? window.PROJECT_ID : 1;
+                    fetch(`api.php?action=load&project_id=${projId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.project) {
+                            try {
+                                const content = JSON.parse(data.project.content_json);
+                                if (content && content.email_settings) {
+                                    const es = content.email_settings;
+                                    smtpForm.querySelector('[name="recipient"]').value = es.recipient || '';
+                                    smtpForm.querySelector('[name="auto_responder_enabled"]').checked = !!es.auto_responder_enabled;
+                                    smtpForm.querySelector('[name="smtp_host"]').value = es.smtp_host || '';
+                                    smtpForm.querySelector('[name="smtp_port"]').value = es.smtp_port || '';
+                                    smtpForm.querySelector('[name="smtp_username"]').value = es.smtp_username || '';
+                                    smtpForm.querySelector('[name="smtp_password"]').value = es.smtp_password || '';
+                                    smtpForm.querySelector('[name="smtp_encryption"]').value = es.smtp_encryption || 'none';
+                                    smtpForm.querySelector('[name="smtp_from_name"]').value = es.smtp_from_name || '';
+                                    smtpForm.querySelector('[name="smtp_from_email"]').value = es.smtp_from_email || '';
+                                }
+                            } catch(e){}
+                        }
+                    });
+                };
+
+                refreshBtn.onclick = fetchSubmissions;
+
+                // Handle SMTP submit
+                smtpForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    smtpStatus.className = "smtp-status-msg p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
+                    smtpStatus.innerText = "Saving settings...";
+                    smtpStatus.classList.remove('hidden');
+
+                    const projId = typeof window.PROJECT_ID !== 'undefined' ? window.PROJECT_ID : 1;
+                    const fd = new FormData(smtpForm);
+
+                    const payload = {
+                        recipient: fd.get('recipient'),
+                        auto_responder_enabled: smtpForm.querySelector('[name="auto_responder_enabled"]').checked ? 1 : 0,
+                        smtp_host: fd.get('smtp_host'),
+                        smtp_port: fd.get('smtp_port'),
+                        smtp_username: fd.get('smtp_username'),
+                        smtp_password: fd.get('smtp_password'),
+                        smtp_encryption: fd.get('smtp_encryption'),
+                        smtp_from_name: fd.get('smtp_from_name'),
+                        smtp_from_email: fd.get('smtp_from_email')
+                    };
+
+                    fetch(`api.php?action=save_site_smtp&project_id=${projId}&passcode=${encodeURIComponent(verifiedPasscode)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            smtpStatus.className = "smtp-status-msg p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20 animate-pulse";
+                            smtpStatus.innerText = "SMTP settings updated successfully!";
+                            setTimeout(() => smtpStatus.classList.add('hidden'), 3000);
+                        } else {
+                            smtpStatus.className = "smtp-status-msg p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+                            smtpStatus.innerText = data.error || "Save failed.";
+                        }
+                    })
+                    .catch(err => {
+                        smtpStatus.className = "smtp-status-msg p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+                        smtpStatus.innerText = "Connection failed.";
+                    });
+                };
+
+                fetchSubmissions();
+                loadSmtpSettings();
+            };
+
+            renderLoginForm();
+        });
+    };
+
     // Auto-sync cart and initialize dynamic clocks on DOM load
     document.addEventListener('DOMContentLoaded', () => {
         window.updateMiniCartCount();
         window.initNuvisCountdownClocks();
         window.loadNuvisSaaSStorefront();
         window.loadNuvisSaaSBlogs();
+        if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
     });
 
     // Handle React re-render visual hook to trigger clock setup and lists fetch
@@ -1442,6 +1800,16 @@ if (typeof window !== 'undefined') {
         window.initNuvisCountdownClocks();
         window.loadNuvisSaaSStorefront();
         window.loadNuvisSaaSBlogs();
+        if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Immediate execution fallback for already-loaded document states
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        window.updateMiniCartCount();
+        window.initNuvisCountdownClocks();
+        window.loadNuvisSaaSStorefront();
+        window.loadNuvisSaaSBlogs();
+        if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
+    }
 }
