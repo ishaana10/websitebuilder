@@ -549,6 +549,7 @@ $csrf_token = generate_csrf_token();
                 setActivePage("index");
                 commitToHistory(updatedPages);
                 showToast("Page Deleted", `Page "${pageName}" has been deleted.`);
+                saveProject(true, updatedPages);
             };
 
             const handleCreateCustomComponentSubmit = (e) => {
@@ -923,7 +924,8 @@ $csrf_token = generate_csrf_token();
             };
 
             // --- Serializing layout data for Save ---
-            const serializeCanvas = () => {
+            const serializeCanvas = (customPages = null) => {
+                const targetPages = customPages || pages;
                 const compileBlocksForPage = (pageSects) => {
                     return (pageSects || []).map(sec => ({
                         id:            sec.id,
@@ -940,11 +942,11 @@ $csrf_token = generate_csrf_token();
                     }));
                 };
 
-                const indexSections = pages["index"] || [];
+                const indexSections = targetPages["index"] || [];
                 const blocks = compileBlocksForPage(indexSections);
 
                 return JSON.stringify({
-                    pages:      pages,
+                    pages:      targetPages,
                     activePage: activePage,
                     sections:   indexSections,   // index fallback
                     blocks:     blocks,          // index fallback
@@ -990,9 +992,9 @@ $csrf_token = generate_csrf_token();
             };
 
             // --- Save / Publish / Export Requests ---
-            const saveProject = (silent = false) => {
+            const saveProject = (silent = false, customPages = null) => {
                 if (!silent) setIsSaving(true);
-                const contentJson = serializeCanvas();
+                const contentJson = serializeCanvas(customPages);
                 const payload = {
                     project_id:   PROJECT_ID,
                     name:         PROJECT_NAME,
@@ -1005,7 +1007,16 @@ $csrf_token = generate_csrf_token();
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
                     body: JSON.stringify(payload),
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(data => {
+                            throw new Error(data.error || "Session expired or unauthorized. Please login first.");
+                        }).catch(() => {
+                            throw new Error("Session expired or unauthorized. Please login first.");
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         if (!silent) showToast("Draft Saved", "Workspace saved successfully.");
@@ -1016,7 +1027,10 @@ $csrf_token = generate_csrf_token();
                         throw new Error(data.error);
                     }
                 })
-                .catch(err => showToast("Network Error", err.message))
+                .catch(err => {
+                    showToast("Network Error", err.message);
+                    throw err; // Propagate rejection
+                })
                 .finally(() => setIsSaving(false));
             };
 
