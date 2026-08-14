@@ -724,6 +724,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             $auto_responder_subject = trim($_POST['auto_responder_subject'] ?? '');
             $auto_responder_body = trim($_POST['auto_responder_body'] ?? '');
             $template_theme = trim($_POST['template_theme'] ?? 'modern_minimalist');
+            $smtp_host = trim($_POST['smtp_host'] ?? '');
+            $smtp_port = !empty($_POST['smtp_port']) ? intval($_POST['smtp_port']) : null;
+            $smtp_username = trim($_POST['smtp_username'] ?? '');
+            $smtp_password = trim($_POST['smtp_password'] ?? '');
+            $smtp_encryption = trim($_POST['smtp_encryption'] ?? 'none');
+            $smtp_from_email = trim($_POST['smtp_from_email'] ?? '');
+            $smtp_from_name = trim($_POST['smtp_from_name'] ?? '');
 
             if (empty($recipient_email)) {
                 $error_msg = "Recipient email is required.";
@@ -732,11 +739,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
             } else {
                 $stmt = $db->query("SELECT COUNT(*) FROM email_settings");
                 if ($stmt->fetchColumn() == 0) {
-                    $stmt_ins = $db->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme) VALUES (?, ?, ?, ?, ?)");
-                    $stmt_ins->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme]);
+                    $stmt_ins = $db->prepare("INSERT INTO email_settings (recipient_email, auto_responder_enabled, auto_responder_subject, auto_responder_body, template_theme, smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, smtp_from_email, smtp_from_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt_ins->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme, $smtp_host, $smtp_port, $smtp_username, $smtp_password, $smtp_encryption, $smtp_from_email, $smtp_from_name]);
                 } else {
-                    $stmt_upd = $db->prepare("UPDATE email_settings SET recipient_email = ?, auto_responder_enabled = ?, auto_responder_subject = ?, auto_responder_body = ?, template_theme = ? WHERE id = 1");
-                    $stmt_upd->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme]);
+                    $stmt_upd = $db->prepare("UPDATE email_settings SET recipient_email = ?, auto_responder_enabled = ?, auto_responder_subject = ?, auto_responder_body = ?, template_theme = ?, smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_encryption = ?, smtp_from_email = ?, smtp_from_name = ? WHERE id = 1");
+                    $stmt_upd->execute([$recipient_email, $auto_responder_enabled, $auto_responder_subject, $auto_responder_body, $template_theme, $smtp_host, $smtp_port, $smtp_username, $smtp_password, $smtp_encryption, $smtp_from_email, $smtp_from_name]);
                 }
                 $success_msg = "Global email settings updated successfully!";
             }
@@ -1522,6 +1529,52 @@ $csrf_token = generate_csrf_token();
                                     <div>
                                         <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Auto-Response Message Body</label>
                                         <textarea name="auto_responder_body" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-teal-500 font-sans"><?php echo sanitize_output($email_settings['auto_responder_body']); ?></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4 border-t border-slate-800/80 pt-3">
+                                    <h4 class="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i class="fas fa-server"></i> SMTP Server Settings (Optional)</h4>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Host</label>
+                                            <input type="text" name="smtp_host" placeholder="smtp.gmail.com" value="<?php echo sanitize_output($email_settings['smtp_host'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Port</label>
+                                            <input type="number" name="smtp_port" placeholder="587" value="<?php echo sanitize_output($email_settings['smtp_port'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Username</label>
+                                            <input type="text" name="smtp_username" placeholder="user@gmail.com" value="<?php echo sanitize_output($email_settings['smtp_username'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Password</label>
+                                            <input type="password" name="smtp_password" placeholder="••••••••" value="<?php echo sanitize_output($email_settings['smtp_password'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div class="col-span-1">
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Encryption</label>
+                                            <select name="smtp_encryption" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                                <option value="none" <?php echo ($email_settings['smtp_encryption'] ?? '') === 'none' ? 'selected' : ''; ?>>None</option>
+                                                <option value="ssl" <?php echo ($email_settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>>SSL</option>
+                                                <option value="tls" <?php echo ($email_settings['smtp_encryption'] ?? '') === 'tls' ? 'selected' : ''; ?>>TLS</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Name</label>
+                                            <input type="text" name="smtp_from_name" placeholder="Nuvis Webidesigner" value="<?php echo sanitize_output($email_settings['smtp_from_name'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Email Address</label>
+                                        <input type="email" name="smtp_from_email" placeholder="noreply@yourdomain.com" value="<?php echo sanitize_output($email_settings['smtp_from_email'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono">
                                     </div>
                                 </div>
 

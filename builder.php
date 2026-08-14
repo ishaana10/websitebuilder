@@ -257,6 +257,15 @@ $csrf_token = generate_csrf_token();
             const [autoResponderSubject, setAutoResponderSubject] = useState('Thank you for contacting us!');
             const [autoResponderBody, setAutoResponderBody] = useState('Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team');
 
+            // Site-Specific SMTP server credentials
+            const [smtpHost, setSmtpHost] = useState('');
+            const [smtpPort, setSmtpPort] = useState('');
+            const [smtpUsername, setSmtpUsername] = useState('');
+            const [smtpPassword, setSmtpPassword] = useState('');
+            const [smtpEncryption, setSmtpEncryption] = useState('none');
+            const [smtpFromEmail, setSmtpFromEmail] = useState('');
+            const [smtpFromName, setSmtpFromName] = useState('');
+
             // --- Undo/Redo History States ---
             const [history, setHistory] = useState([]);
             const [historyIndex, setHistoryIndex] = useState(-1);
@@ -611,12 +620,27 @@ $csrf_token = generate_csrf_token();
                     }
 
                     // Extract integrated Nuvis Email module configuration state
+                    let sHost = '';
+                    let sPort = '';
+                    let sUser = '';
+                    let sPass = '';
+                    let sEnc = 'none';
+                    let sFromEmail = '';
+                    let sFromName = '';
+
                     if (raw && raw.email_settings) {
                         rec = raw.email_settings.recipient || '';
                         autoResp = !!raw.email_settings.auto_responder_enabled;
                         templTheme = raw.email_settings.template_theme || 'modern_minimalist';
                         autoSub = raw.email_settings.auto_responder_subject || 'Thank you for contacting us!';
                         autoBody = raw.email_settings.auto_responder_body || 'Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team';
+                        sHost = raw.email_settings.smtp_host || '';
+                        sPort = raw.email_settings.smtp_port || '';
+                        sUser = raw.email_settings.smtp_username || '';
+                        sPass = raw.email_settings.smtp_password || '';
+                        sEnc = raw.email_settings.smtp_encryption || 'none';
+                        sFromEmail = raw.email_settings.smtp_from_email || '';
+                        sFromName = raw.email_settings.smtp_from_name || '';
                     }
 
                     if (raw && Array.isArray(raw.custom_components)) {
@@ -655,6 +679,13 @@ $csrf_token = generate_csrf_token();
                     setEmailTemplateTheme(templTheme);
                     setAutoResponderSubject(autoSub);
                     setAutoResponderBody(autoBody);
+                    setSmtpHost(sHost);
+                    setSmtpPort(sPort);
+                    setSmtpUsername(sUser);
+                    setSmtpPassword(sPass);
+                    setSmtpEncryption(sEnc);
+                    setSmtpFromEmail(sFromEmail);
+                    setSmtpFromName(sFromName);
 
                     // Evolved parameters bootstrap
                     if (raw && raw.global_theme) {
@@ -924,7 +955,14 @@ $csrf_token = generate_csrf_token();
                         auto_responder_enabled: autoResponderEnabled,
                         template_theme: emailTemplateTheme,
                         auto_responder_subject: autoResponderSubject,
-                        auto_responder_body: autoResponderBody
+                        auto_responder_body: autoResponderBody,
+                        smtp_host: smtpHost,
+                        smtp_port: smtpPort,
+                        smtp_username: smtpUsername,
+                        smtp_password: smtpPassword,
+                        smtp_encryption: smtpEncryption,
+                        smtp_from_email: smtpFromEmail,
+                        smtp_from_name: smtpFromName
                     },
                     // Evolved variables serialization
                     global_theme: {
@@ -2874,22 +2912,97 @@ $csrf_token = generate_csrf_token();
                             {/* 7E. ORIGINAL SETTINGS TAB (RENAMED IN MENU AS EMAIL SETTINGS) */}
                             {rightPanelTab === 'settings' && (
                                 <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                                    {/* STANDARD SCRIPT AND STYLE INJECTIONS WITH ACE */}
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5"><i className="fas fa-sliders-h"></i> Custom Script Injection</h4>
+                                        <h3 className="text-xs font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i className="fas fa-envelope-open-text"></i> Email & SMTP Settings
+                                        </h3>
+                                        <p className="text-[10px] text-slate-400 leading-relaxed">Configure inquiry notifications and SMTP server dispatch details specifically for this website.</p>
 
-                                        <div>
-                                            <label className="text-[11px] text-slate-400 block mb-1">Custom CSS Stylesheet</label>
-                                            <AceEditor value={customCss} mode="css" onChange={setCustomCss} className="w-full bg-slate-950 border border-slate-800 rounded p-1 text-xs font-mono" style={{ height: '150px', width: '100%' }} />
+                                        {/* RECIPIENT */}
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase block">Inquiry Recipient Email</label>
+                                            <input type="email" value={emailRecipient} onChange={(e) => setEmailRecipient(e.target.value)} placeholder="recipient@domain.com" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                            <span className="text-[9px] text-slate-500 block">Where customer submissions on the Enquiry Page will be routed.</span>
                                         </div>
 
-                                        <div>
-                                            <label className="text-[11px] text-slate-400 block mb-1">Custom JavaScript Logic</label>
-                                            <AceEditor value={customJs} mode="javascript" onChange={setCustomJs} className="w-full bg-slate-950 border border-slate-800 rounded p-1 text-xs font-mono" style={{ height: '150px', width: '100%' }} />
+                                        {/* AUTO-RESPONDER */}
+                                        <div className="flex items-center justify-between border-t border-slate-800/60 pt-3">
+                                            <label className="text-xs font-semibold text-slate-300">Enable Customer Auto-Responder</label>
+                                            <input type="checkbox" checked={autoResponderEnabled} onChange={(e) => setAutoResponderEnabled(e.target.checked)} className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-teal-500 focus:ring-0" />
                                         </div>
 
-                                        <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition">
-                                            Apply & Save Settings
+                                        {autoResponderEnabled && (
+                                            <div className="space-y-3 bg-slate-950/40 p-3 rounded-lg border border-slate-800 animate-fadeIn">
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Template Theme</label>
+                                                    <select value={emailTemplateTheme} onChange={(e) => setEmailTemplateTheme(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                                        <option value="modern_minimalist">Modern Minimalist (Teal)</option>
+                                                        <option value="elegant">Elegant Indigo Gold (Royal)</option>
+                                                        <option value="tech_light">Tech Light (Clean Blue)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Subject</label>
+                                                    <input type="text" value={autoResponderSubject} onChange={(e) => setAutoResponderSubject(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Message Body</label>
+                                                    <textarea rows="4" value={autoResponderBody} onChange={(e) => setAutoResponderBody(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-sans"></textarea>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* SMTP CONFIG */}
+                                        <div className="border-t border-slate-800/60 pt-3 space-y-3">
+                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                <i className="fas fa-server"></i> SMTP Configuration (Site Override)
+                                            </h4>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Host</label>
+                                                    <input type="text" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} placeholder="smtp.mailtrap.io" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Port</label>
+                                                    <input type="text" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} placeholder="587" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Username</label>
+                                                    <input type="text" value={smtpUsername} onChange={(e) => setSmtpUsername(e.target.value)} placeholder="user@gmail.com" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">SMTP Password</label>
+                                                    <input type="password" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="col-span-1">
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Encryption</label>
+                                                    <select value={smtpEncryption} onChange={(e) => setSmtpEncryption(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-teal-500">
+                                                        <option value="none">None</option>
+                                                        <option value="ssl">SSL</option>
+                                                        <option value="tls">TLS</option>
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Name</label>
+                                                    <input type="text" value={smtpFromName} onChange={(e) => setSmtpFromName(e.target.value)} placeholder="My Site Inquiry" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Email Address</label>
+                                                <input type="email" value={smtpFromEmail} onChange={(e) => setSmtpFromEmail(e.target.value)} placeholder="inquiry@mysite.com" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                                            </div>
+                                        </div>
+
+                                        <button onClick={() => saveProject(false)} className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-2.5 rounded text-xs transition uppercase tracking-wider">
+                                            Apply & Save Email Settings
                                         </button>
                                     </div>
                                 </div>

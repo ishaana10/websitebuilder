@@ -106,7 +106,14 @@ CREATE TABLE IF NOT EXISTS `email_settings` (
     `auto_responder_enabled` TINYINT(1) NOT NULL DEFAULT 1,
     `auto_responder_subject` VARCHAR(255) NOT NULL DEFAULT 'Thank you for contacting us!',
     `auto_responder_body` TEXT NOT NULL,
-    `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist'
+    `template_theme` VARCHAR(50) NOT NULL DEFAULT 'modern_minimalist',
+    `smtp_host` VARCHAR(255) NULL,
+    `smtp_port` INT NULL,
+    `smtp_username` VARCHAR(255) NULL,
+    `smtp_password` VARCHAR(255) NULL,
+    `smtp_encryption` VARCHAR(10) NULL,
+    `smtp_from_email` VARCHAR(255) NULL,
+    `smtp_from_name` VARCHAR(255) NULL
 ) ENGINE=InnoDB;
 
 -- Page Versioning / Snapshot History Timeline
