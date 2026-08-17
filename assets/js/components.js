@@ -577,6 +577,79 @@ const UI_COMPONENTS = [
 </div>`
     },
     {
+        id: 'google_chatbot',
+        name: 'Google AI Agent Chatbot',
+        category: 'Advanced',
+        icon: 'fab fa-google',
+        schema: [
+            { key: 'agentName', label: 'Bot Name / Title', type: 'text', default: 'Google AI Assistant' },
+            { key: 'welcomeMessage', label: 'Welcome Message', type: 'textarea', default: 'Hello! I am your Google AI agent assistant. How can I help you today?' },
+            { key: 'provider', label: 'Provider Integration Mode', type: 'select', default: 'demo', options: [
+                { value: 'demo', label: 'Interactive Demo AI Agent (Free / Built-in)' },
+                { value: 'gemini', label: 'Google Gemini API' },
+                { value: 'dialogflow', label: 'Google Dialogflow Messenger' }
+            ]},
+            { key: 'geminiApiKey', label: 'Google Gemini API Key (for Gemini Mode)', type: 'text', default: '' },
+            { key: 'geminiModel', label: 'Gemini AI Model', type: 'select', default: 'gemini-1.5-flash', options: [
+                { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash (Fast & Efficient)' },
+                { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (Complex Reasoning)' },
+                { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Next-Gen)' }
+            ]},
+            { key: 'dialogflowAgentId', label: 'Dialogflow Agent/Project ID (for Dialogflow Mode)', type: 'text', default: '' },
+            { key: 'position', label: 'Screen Position', type: 'select', default: 'bottom-right', options: [
+                { value: 'bottom-right', label: 'Bottom Right' },
+                { value: 'bottom-left', label: 'Bottom Left' }
+            ]},
+            { key: 'accentColor', label: 'Theme Highlight Color', type: 'color', default: '#14b8a6' },
+            { key: 'bgColor', label: 'Chat Window Background', type: 'color', default: '#0f172a' }
+        ],
+        html: `
+<div class="fixed {{position === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6'}} z-50 font-sans google-ai-chatbot-root" data-component="google_chatbot" data-provider="{{provider}}" data-gemini-key="{{geminiApiKey}}" data-gemini-model="{{geminiModel}}" data-dialogflow-id="{{dialogflowAgentId}}" data-agent-name="{{agentName}}" data-welcome-msg="{{welcomeMessage}}">
+    <!-- Toggle Floating Button -->
+    <button onclick="window.toggleGoogleAiChatbot(this)" class="google-chat-toggle-btn w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 hover:scale-110 focus:outline-none relative" style="background-color: {{accentColor}};" title="{{agentName}}">
+        <i class="fab fa-google text-2xl text-slate-950"></i>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+    </button>
+
+    <!-- Chat Popup Window -->
+    <div class="google-chat-window hidden absolute bottom-18 {{position === 'bottom-left' ? 'left-0' : 'right-0'}} w-80 md:w-96 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="background-color: {{bgColor}};">
+        <!-- Header -->
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-slate-950 font-black text-sm shadow" style="background-color: {{accentColor}};">
+                    <i class="fab fa-google"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-xs text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <span>{{agentName}}</span>
+                    </h4>
+                    <span class="text-[9px] text-slate-400 font-mono block">Powered by Google AI</span>
+                </div>
+            </div>
+            <button onclick="window.toggleGoogleAiChatbot(this)" class="text-slate-400 hover:text-white transition p-1"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Chat Logs Container -->
+        <div class="google-chat-logs p-4 h-64 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-200">
+            <div class="bg-slate-800/80 border border-slate-700/50 p-3 rounded-xl self-start max-w-[85%] leading-relaxed shadow">
+                {{welcomeMessage}}
+            </div>
+        </div>
+
+        <!-- Dialogflow Messenger Container Container (Used when mode is dialogflow) -->
+        <div class="google-dialogflow-container hidden p-2"></div>
+
+        <!-- Input Form -->
+        <form onsubmit="event.preventDefault(); window.sendGoogleAiChatMessage(this);" class="google-chat-form p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+            <input type="text" name="chat_msg" placeholder="Ask Google AI something..." required class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-sans" />
+            <button type="submit" class="font-bold px-3 py-2 rounded-xl text-xs transition hover:opacity-90 flex items-center justify-center" style="background-color: {{accentColor}}; color: {{bgColor}};">
+                <i class="fas fa-paper-plane text-slate-950"></i>
+            </button>
+        </form>
+    </div>
+</div>`
+    },
+    {
         id: 'cart_mini',
         name: 'Live Mini-Cart Checkout Widget',
         category: 'Pricing',
@@ -1329,6 +1402,116 @@ if (typeof window !== 'undefined') {
             logs.appendChild(aiDiv);
             logs.scrollTop = logs.scrollHeight;
         }, 800);
+    };
+
+    // --- Google AI Chatbot Widget Methods ---
+    window.toggleGoogleAiChatbot = function(btnElement) {
+        const root = btnElement.closest('[data-component="google_chatbot"]');
+        if (!root) return;
+
+        const chatWin = root.querySelector('.google-chat-window');
+        if (!chatWin) return;
+
+        const isHidden = chatWin.classList.contains('hidden');
+        chatWin.classList.toggle('hidden', !isHidden);
+
+        const provider = root.getAttribute('data-provider') || 'demo';
+        const dialogflowId = root.getAttribute('data-dialogflow-id') || '';
+        const dfContainer = root.querySelector('.google-dialogflow-container');
+        const chatLogs = root.querySelector('.google-chat-logs');
+        const chatForm = root.querySelector('.google-chat-form');
+
+        if (provider === 'dialogflow') {
+            if (chatLogs) chatLogs.classList.add('hidden');
+            if (chatForm) chatForm.classList.add('hidden');
+            if (dfContainer) {
+                dfContainer.classList.remove('hidden');
+                if (!dfContainer.dataset.dfLoaded && dialogflowId) {
+                    dfContainer.dataset.dfLoaded = "true";
+                    // Inject Google Dialogflow Messenger Web Component script if needed
+                    if (!document.getElementById('df-messenger-script')) {
+                        const script = document.createElement('script');
+                        script.id = 'df-messenger-script';
+                        script.src = "https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1";
+                        document.head.appendChild(script);
+                    }
+                    dfContainer.innerHTML = `<df-messenger intent="WELCOME" chat-title="${root.getAttribute('data-agent-name') || 'Google Assistant'}" agent-id="${dialogflowId}" language-code="en"></df-messenger>`;
+                } else if (!dialogflowId) {
+                    dfContainer.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs bg-slate-900 border border-slate-800 rounded-xl">Please configure your Google Dialogflow Agent/Project ID in the Page Builder properties panel.</div>`;
+                }
+            }
+        } else {
+            if (chatLogs) chatLogs.classList.remove('hidden');
+            if (chatForm) chatForm.classList.remove('hidden');
+            if (dfContainer) dfContainer.classList.add('hidden');
+        }
+    };
+
+    window.sendGoogleAiChatMessage = function(formElement) {
+        const root = formElement.closest('[data-component="google_chatbot"]');
+        if (!root) return;
+
+        const input = formElement.querySelector("input[name='chat_msg']");
+        const logs = root.querySelector('.google-chat-logs');
+        if (!input || !logs) return;
+
+        const userMsg = input.value.trim();
+        if (!userMsg) return;
+        input.value = '';
+
+        const accentColor = root.querySelector('.google-chat-toggle-btn') ? (root.querySelector('.google-chat-toggle-btn').style.backgroundColor || '#14b8a6') : '#14b8a6';
+
+        // Append User Message bubble
+        const userDiv = document.createElement('div');
+        userDiv.className = "p-2.5 rounded-xl self-end max-w-[85%] leading-relaxed font-bold text-xs text-slate-950 shadow";
+        userDiv.style.backgroundColor = accentColor;
+        userDiv.innerText = userMsg;
+        logs.appendChild(userDiv);
+        logs.scrollTop = logs.scrollHeight;
+
+        // Typing indicator bubble
+        const typingDiv = document.createElement('div');
+        typingDiv.className = "google-typing-indicator bg-slate-800/80 border border-slate-700/50 p-2.5 rounded-xl self-start max-w-[85%] text-slate-400 italic text-[11px] flex items-center gap-2";
+        typingDiv.innerHTML = `<i class="fab fa-google text-teal-400 animate-spin"></i> <span>Google AI is thinking...</span>`;
+        logs.appendChild(typingDiv);
+        logs.scrollTop = logs.scrollHeight;
+
+        const provider = root.getAttribute('data-provider') || 'demo';
+        const apiKey = root.getAttribute('data-gemini-key') || '';
+        const model = root.getAttribute('data-gemini-model') || 'gemini-1.5-flash';
+
+        fetch('api.php?action=google_chat_proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: userMsg,
+                provider: provider,
+                api_key: apiKey,
+                model: model
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            typingDiv.remove();
+            const aiDiv = document.createElement('div');
+            aiDiv.className = "bg-slate-800/80 border border-slate-700/50 p-3 rounded-xl self-start max-w-[85%] leading-relaxed shadow text-slate-200 text-xs";
+
+            if (data.success && data.reply) {
+                aiDiv.innerText = data.reply;
+            } else {
+                aiDiv.innerText = data.error || "Sorry, Google AI encountered an error processing your query.";
+            }
+            logs.appendChild(aiDiv);
+            logs.scrollTop = logs.scrollHeight;
+        })
+        .catch(err => {
+            typingDiv.remove();
+            const aiDiv = document.createElement('div');
+            aiDiv.className = "bg-red-950/80 border border-red-800/50 p-3 rounded-xl self-start max-w-[85%] leading-relaxed text-red-300 text-xs";
+            aiDiv.innerText = "Connection to Google AI service failed. Please check network connectivity.";
+            logs.appendChild(aiDiv);
+            logs.scrollTop = logs.scrollHeight;
+        });
     };
 
     window.toggleNuvisFaqAccordion = function(buttonElement) {
