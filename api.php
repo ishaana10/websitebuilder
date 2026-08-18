@@ -9,7 +9,7 @@ require_once __DIR__ . '/config.php';
 header('Content-Type: application/json');
 
 // Ensure public action context is resolved safely
-$public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots', 'get_site_submissions', 'save_site_smtp'];
+$public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots', 'get_site_submissions', 'save_site_smtp', 'google_chat_proxy'];
 $action_query = $_GET['action'] ?? '';
 
 if (!in_array($action_query, $public_actions)) {
@@ -1044,6 +1044,81 @@ switch ($action) {
         } catch (PDOException $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
+        exit;
+
+    case 'google_chat_proxy':
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Method Not Allowed']);
+            exit;
+        }
+
+        $raw_body = file_get_contents('php://input');
+        $payload = json_decode($raw_body, true) ?? [];
+        $user_message = trim($payload['message'] ?? '');
+        $api_key = trim($payload['api_key'] ?? '');
+        $model = trim($payload['model'] ?? 'gemini-1.5-flash');
+
+        if (empty($user_message)) {
+            echo json_encode(['success' => false, 'error' => 'Message is required.']);
+            exit;
+        }
+
+        // If Gemini API Key is provided, proxy request to Google Gemini API
+        if (!empty($api_key)) {
+            $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . urlencode($api_key);
+            $req_data = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $user_message]
+                        ]
+                    ]
+                ]
+            ];
+
+            $ch = curl_init($gemini_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($req_data));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+            $response = curl_exec($ch);
+            $curl_err = curl_error($ch);
+            curl_close($ch);
+
+            if ($curl_err) {
+                echo json_encode(['success' => false, 'error' => 'Gemini API connection error: ' . $curl_err]);
+                exit;
+            }
+
+            $res_decoded = json_decode($response, true);
+            if (isset($res_decoded['candidates'][0]['content']['parts'][0]['text'])) {
+                $bot_reply = $res_decoded['candidates'][0]['content']['parts'][0]['text'];
+                echo json_encode(['success' => true, 'reply' => $bot_reply, 'provider' => 'gemini']);
+                exit;
+            } elseif (isset($res_decoded['error']['message'])) {
+                echo json_encode(['success' => false, 'error' => 'Google Gemini API Error: ' . $res_decoded['error']['message']]);
+                exit;
+            }
+        }
+
+        // Default Intelligent Google AI Demo Assistant Fallback
+        $lower_msg = strtolower($user_message);
+        $reply = "Hello! I am your Google AI agent assistant. I am ready to answer any questions about our products, pricing, and services.";
+
+        if (strpos($lower_msg, 'hello') !== false || strpos($lower_msg, 'hi') !== false || strpos($lower_msg, 'hey') !== false) {
+            $reply = "Hello there! Welcome. How can I assist your operations today?";
+        } elseif (strpos($lower_msg, 'price') !== false || strpos($lower_msg, 'cost') !== false || strpos($lower_msg, 'pricing') !== false) {
+            $reply = "Our service plans are highly competitive and flexible, starting with free developer sandboxes and affordable enterprise tiers.";
+        } elseif (strpos($lower_msg, 'contact') !== false || strpos($lower_msg, 'email') !== false || strpos($lower_msg, 'support') !== false) {
+            $reply = "You can easily reach out to our dedicated support team using the contact form on this page.";
+        } elseif (strpos($lower_msg, 'google') !== false || strpos($lower_msg, 'gemini') !== false || strpos($lower_msg, 'dialogflow') !== false) {
+            $reply = "I am powered by Google AI integration! You can configure my parameters with Google Gemini or Dialogflow Messenger in the Page Builder properties panel.";
+        }
+
+        echo json_encode(['success' => true, 'reply' => $reply, 'provider' => 'demo']);
         exit;
 
     default:

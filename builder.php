@@ -1265,6 +1265,15 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*showLine\s*\?\s*'block'\s*:\s*'none'\s*}}/g, displayVal);
                 }
 
+                // Dynamic compiler for google_chatbot position placement
+                if (sec.type.toLowerCase() === 'google_chatbot') {
+                    const pos = sec.props.position || 'bottom-right';
+                    const posClass = pos === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6';
+                    const winPosClass = pos === 'bottom-left' ? 'left-0' : 'right-0';
+                    compiledHtml = compiledHtml.replace(/{{\s*position\s*===\s*'bottom-left'\s*\?\s*'bottom-6 left-6'\s*:\s*'bottom-6 right-6'\s*}}/g, posClass);
+                    compiledHtml = compiledHtml.replace(/{{\s*position\s*===\s*'bottom-left'\s*\?\s*'left-0'\s*:\s*'right-0'\s*}}/g, winPosClass);
+                }
+
                 // Always inject section id as root ID
                 const temp = document.createElement('div');
                 temp.innerHTML = compiledHtml;
