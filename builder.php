@@ -549,6 +549,7 @@ $csrf_token = generate_csrf_token();
                 setActivePage("index");
                 commitToHistory(updatedPages);
                 showToast("Page Deleted", `Page "${pageName}" has been deleted.`);
+                saveProject(true, updatedPages);
             };
 
             const handleCreateCustomComponentSubmit = (e) => {
@@ -751,7 +752,8 @@ $csrf_token = generate_csrf_token();
                                     ...s,
                                     props: { ...updatedNavbar.props },
                                     bg_color_override: updatedNavbar.bg_color_override,
-                                    bg_image_override: updatedNavbar.bg_image_override
+                                    bg_image_override: updatedNavbar.bg_image_override,
+                                    element_overrides: updatedNavbar.element_overrides
                                 };
                             }
                             if (updatedFooter && s.type && s.type.toLowerCase() === 'footer') {
@@ -760,7 +762,8 @@ $csrf_token = generate_csrf_token();
                                     ...s,
                                     props: { ...updatedFooter.props },
                                     bg_color_override: updatedFooter.bg_color_override,
-                                    bg_image_override: updatedFooter.bg_image_override
+                                    bg_image_override: updatedFooter.bg_image_override,
+                                    element_overrides: updatedFooter.element_overrides
                                 };
                             }
                             return s;
@@ -921,7 +924,8 @@ $csrf_token = generate_csrf_token();
             };
 
             // --- Serializing layout data for Save ---
-            const serializeCanvas = () => {
+            const serializeCanvas = (customPages = null) => {
+                const targetPages = customPages || pages;
                 const compileBlocksForPage = (pageSects) => {
                     return (pageSects || []).map(sec => ({
                         id:            sec.id,
@@ -938,11 +942,11 @@ $csrf_token = generate_csrf_token();
                     }));
                 };
 
-                const indexSections = pages["index"] || [];
+                const indexSections = targetPages["index"] || [];
                 const blocks = compileBlocksForPage(indexSections);
 
                 return JSON.stringify({
-                    pages:      pages,
+                    pages:      targetPages,
                     activePage: activePage,
                     sections:   indexSections,   // index fallback
                     blocks:     blocks,          // index fallback
@@ -988,9 +992,9 @@ $csrf_token = generate_csrf_token();
             };
 
             // --- Save / Publish / Export Requests ---
-            const saveProject = (silent = false) => {
+            const saveProject = (silent = false, customPages = null) => {
                 if (!silent) setIsSaving(true);
-                const contentJson = serializeCanvas();
+                const contentJson = serializeCanvas(customPages);
                 const payload = {
                     project_id:   PROJECT_ID,
                     name:         PROJECT_NAME,
@@ -1003,7 +1007,16 @@ $csrf_token = generate_csrf_token();
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
                     body: JSON.stringify(payload),
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(data => {
+                            throw new Error(data.error || "Session expired or unauthorized. Please login first.");
+                        }).catch(() => {
+                            throw new Error("Session expired or unauthorized. Please login first.");
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         if (!silent) showToast("Draft Saved", "Workspace saved successfully.");
@@ -1014,7 +1027,10 @@ $csrf_token = generate_csrf_token();
                         throw new Error(data.error);
                     }
                 })
-                .catch(err => showToast("Network Error", err.message))
+                .catch(err => {
+                    showToast("Network Error", err.message);
+                    throw err; // Propagate rejection
+                })
                 .finally(() => setIsSaving(false));
             };
 
@@ -1047,7 +1063,7 @@ $csrf_token = generate_csrf_token();
                     if (showBrandText) {
                         const isNavbar = sec.type.toLowerCase() === 'navbar';
                         const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black text-white";
-                        brandTextHtml = `<div class="${brandClass}" style="color: ${brandColor};">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
+                        brandTextHtml = `<div class="${brandClass}" style="color: ${brandColor};" data-brand-text="true">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
                     }
 
                     let logoHtml = '';
@@ -1214,6 +1230,34 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*tabContents\s*}}/g, tabContentsHtml);
                 }
 
+                // Dynamic compiler for faq component
+                if (sec.type.toLowerCase() === 'faq') {
+                    const faqs = sec.props.faqs || [
+                        {
+                            q: sec.props.q1 || 'How does the local compiling mechanism operate?',
+                            a: sec.props.a1 || 'Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly.'
+                        }
+                    ];
+
+                    const cardBg = sec.props.cardBg || '#020617';
+                    const headingColor = sec.props.headingColor || '#ffffff';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+
+                    const faqsHtml = faqs.map((faq, idx) => `
+                        <div class="border rounded-lg overflow-hidden border-slate-800" style="background-color: ${cardBg};">
+                            <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center transition" style="color: ${headingColor};">
+                                <span>${faq.q}</span>
+                                <i class="fas fa-chevron-down opacity-60"></i>
+                            </button>
+                            <div class="faq-accordion-content hidden px-6 pb-5 text-xs border-t border-slate-900 pt-3 leading-relaxed" style="color: ${accentColor};">
+                                ${faq.a}
+                            </div>
+                        </div>
+                    `).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*faqsList\s*}}/g, faqsHtml);
+                }
+
                 // Dynamic fix for spacer_divider showLine conditional expression
                 if (sec.type.toLowerCase() === 'spacer_divider') {
                     const showLine = sec.props.showLine !== undefined ? sec.props.showLine : true;
@@ -1243,7 +1287,7 @@ $csrf_token = generate_csrf_token();
 
                 // --- ELEMENT-LEVEL SELECTION AND OVERRIDES ENHANCEMENT ---
                 // Query all potentially editable sub-elements in sequential order
-                const selectables = temp.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, img, i, button, a, [data-el-path]');
+                const selectables = temp.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, img, i, button, a, [data-brand-text], [data-el-path]');
 
                 selectables.forEach((el, index) => {
                     const path = `el-${index}`;
@@ -1913,6 +1957,60 @@ $csrf_token = generate_csrf_token();
                                                                 </label>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC FAQ EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'faq' && (() => {
+                                                const currentFaqs = selectedSection.props.faqs || [
+                                                    {
+                                                        q: selectedSection.props.q1 || 'How does the local compiling mechanism operate?',
+                                                        a: selectedSection.props.a1 || 'Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly.'
+                                                    }
+                                                ];
+
+                                                const handleFaqsChange = (newFaqs) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, faqs: newFaqs } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addFaq = () => {
+                                                    handleFaqsChange([...currentFaqs, { q: 'New Question', a: 'New answer goes here...' }]);
+                                                };
+
+                                                const removeFaq = (fIdx) => {
+                                                    handleFaqsChange(currentFaqs.filter((_, idx) => idx !== fIdx));
+                                                };
+
+                                                const updateFaq = (fIdx, key, val) => {
+                                                    const updatedFaqs = currentFaqs.map((faq, idx) => idx === fIdx ? { ...faq, [key]: val } : faq);
+                                                    handleFaqsChange(updatedFaqs);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-question-circle"></i> Manage FAQ Items
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {currentFaqs.map((faq, fIdx) => (
+                                                                <div key={fIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                    <div className="flex justify-between items-center gap-2">
+                                                                        <input type="text" value={faq.q} onChange={(e) => updateFaq(fIdx, 'q', e.target.value)} placeholder="Question" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                        <button onClick={() => removeFaq(fIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove FAQ">
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <textarea rows={3} value={faq.a} onChange={(e) => updateFaq(fIdx, 'a', e.target.value)} placeholder="Answer" className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white" />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={addFaq} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
+                                                            <i className="fas fa-plus mr-1"></i> Add New FAQ
+                                                        </button>
                                                     </div>
                                                 );
                                             })()}

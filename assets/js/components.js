@@ -638,8 +638,6 @@ const UI_COMPONENTS = [
         icon: 'fas fa-question-circle',
         schema: [
             { key: 'heading', label: 'FAQ Title', type: 'text', default: 'Frequently Asked Questions' },
-            { key: 'q1', label: 'Question 1', type: 'text', default: 'How does the local compiling mechanism operate?' },
-            { key: 'a1', label: 'Answer 1', type: 'textarea', default: 'Our platform compiles visual assets into highly optimized, fully responsive static HTML output instantly.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#020617' },
             { key: 'headingColor', label: 'Header Text Color', type: 'color', default: '#ffffff' },
@@ -651,15 +649,7 @@ const UI_COMPONENTS = [
         <h2 class="text-3xl font-extrabold text-center tracking-tight mb-10" style="color: {{headingColor}};">{{heading}}</h2>
 
         <div class="space-y-4">
-            <div class="border rounded-lg overflow-hidden border-slate-800" style="background-color: {{cardBg}};">
-                <button onclick="window.toggleNuvisFaqAccordion(this)" class="w-full text-left px-6 py-4 font-bold text-sm flex justify-between items-center transition" style="color: {{headingColor}};">
-                    <span>{{q1}}</span>
-                    <i class="fas fa-chevron-down opacity-60"></i>
-                </button>
-                <div class="faq-accordion-content hidden px-6 pb-5 text-xs border-t border-slate-900 pt-3 leading-relaxed" style="color: {{accentColor}};">
-                    {{a1}}
-                </div>
-            </div>
+            {{faqsList}}
         </div>
     </div>
 </section>`
@@ -1027,6 +1017,7 @@ const UI_COMPONENTS = [
         icon: 'fas fa-share-alt',
         schema: [
             { key: 'heading', label: 'Heading Label', type: 'text', default: 'Follow our digital accounts' },
+            { key: 'facebookUrl', label: 'Facebook URL', type: 'text', default: 'https://facebook.com' },
             { key: 'twitterUrl', label: 'Twitter/X URL', type: 'text', default: 'https://twitter.com' },
             { key: 'githubUrl', label: 'GitHub URL', type: 'text', default: 'https://github.com' },
             { key: 'linkedinUrl', label: 'LinkedIn URL', type: 'text', default: 'https://linkedin.com' },
@@ -1038,6 +1029,9 @@ const UI_COMPONENTS = [
     <div class="max-w-md mx-auto space-y-4">
         <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">{{heading}}</h4>
         <div class="flex justify-center items-center gap-4">
+            <a href="{{facebookUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
+                <i class="fab fa-facebook-f"></i>
+            </a>
             <a href="{{twitterUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
                 <i class="fab fa-twitter"></i>
             </a>

@@ -695,6 +695,16 @@ switch ($action) {
 
         // Dynamically bundle any uploaded media/logos referenced in pages to the zip
         $referenced_uploads = [];
+
+        // Scan the entire content_json which holds the raw pages, blocks, logos, and overrides
+        if (!empty($project['content_json'])) {
+            if (preg_match_all('/uploads\/[a-zA-Z0-9._-]+/', $project['content_json'], $matches)) {
+                foreach ($matches[0] as $match) {
+                    $referenced_uploads[$match] = true;
+                }
+            }
+        }
+
         if ($decoded_pages !== null && is_array($decoded_pages)) {
             foreach ($decoded_pages as $html_content) {
                 if (preg_match_all('/uploads\/[a-zA-Z0-9._-]+/', $html_content, $matches)) {
