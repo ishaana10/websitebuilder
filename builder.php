@@ -502,12 +502,12 @@ $csrf_token = generate_csrf_token();
                     return;
                 }
 
-                // Try to copy existing index navbar & footer if they exist
-                const indexSects = pages["index"] || [];
-                const indexNavbar = indexSects.find(s => s.type === 'navbar');
-                const indexFooter = indexSects.find(s => s.type === 'footer');
+                // Try to copy existing navbar & footer from active page or index if they exist
+                const currentSects = pages[activePage] || pages["index"] || [];
+                const existingNavbar = currentSects.find(s => s.type && s.type.toLowerCase() === 'navbar') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'navbar');
+                const existingFooter = currentSects.find(s => s.type && s.type.toLowerCase() === 'footer') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'footer');
 
-                const newNavbar = indexNavbar ? JSON.parse(JSON.stringify(indexNavbar)) : {
+                const newNavbar = existingNavbar ? JSON.parse(JSON.stringify(existingNavbar)) : {
                     id: 'sec-navbar-' + Date.now(),
                     type: 'navbar',
                     props: { brandText: 'Nuvis Webidesigner', logoUrl: '', links: [], bgColor: '#0f172a', textColor: '#ffffff', accentColor: '#14b8a6' },
@@ -515,7 +515,7 @@ $csrf_token = generate_csrf_token();
                 };
                 newNavbar.id = 'sec-navbar-' + Date.now();
 
-                const newFooter = indexFooter ? JSON.parse(JSON.stringify(indexFooter)) : {
+                const newFooter = existingFooter ? JSON.parse(JSON.stringify(existingFooter)) : {
                     id: 'sec-footer-' + Date.now(),
                     type: 'footer',
                     props: { brandText: 'Nuvis Webidesigner', logoUrl: '', copyright: 'Nuvis Webidesigner. All rights reserved.', links: [], bgColor: '#020617', textColor: '#94a3b8', accentColor: '#14b8a6' },
@@ -750,20 +750,20 @@ $csrf_token = generate_csrf_token();
                                 pageUpdated = true;
                                 return {
                                     ...s,
-                                    props: { ...updatedNavbar.props },
+                                    props: JSON.parse(JSON.stringify(updatedNavbar.props)),
                                     bg_color_override: updatedNavbar.bg_color_override,
                                     bg_image_override: updatedNavbar.bg_image_override,
-                                    element_overrides: updatedNavbar.element_overrides
+                                    element_overrides: updatedNavbar.element_overrides ? JSON.parse(JSON.stringify(updatedNavbar.element_overrides)) : undefined
                                 };
                             }
                             if (updatedFooter && s.type && s.type.toLowerCase() === 'footer') {
                                 pageUpdated = true;
                                 return {
                                     ...s,
-                                    props: { ...updatedFooter.props },
+                                    props: JSON.parse(JSON.stringify(updatedFooter.props)),
                                     bg_color_override: updatedFooter.bg_color_override,
                                     bg_image_override: updatedFooter.bg_image_override,
-                                    element_overrides: updatedFooter.element_overrides
+                                    element_overrides: updatedFooter.element_overrides ? JSON.parse(JSON.stringify(updatedFooter.element_overrides)) : undefined
                                 };
                             }
                             return s;
@@ -1057,13 +1057,13 @@ $csrf_token = generate_csrf_token();
                     const showLogo = sec.props.showLogo !== undefined ? sec.props.showLogo : true;
                     const showBrandText = sec.props.showBrandText !== undefined ? sec.props.showBrandText : true;
                     const accentColor = sec.props.accentColor || '#14b8a6';
-                    const brandColor = sec.props.brandColor || accentColor;
+                    const brandColor = sec.props.brandColor || '#14b8a6';
 
                     let brandTextHtml = '';
                     if (showBrandText) {
                         const isNavbar = sec.type.toLowerCase() === 'navbar';
-                        const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black text-white";
-                        brandTextHtml = `<div class="${brandClass}" style="color: ${brandColor};" data-brand-text="true">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
+                        const brandClass = isNavbar ? "text-xl font-extrabold tracking-wider" : "text-lg font-black";
+                        brandTextHtml = `<div class="${brandClass}" style="color: ${brandColor};" data-brand-text="true" data-el-path="el-brand">${sec.props.brandText || 'Nuvis Webidesigner'}</div>`;
                     }
 
                     let logoHtml = '';
@@ -1078,7 +1078,7 @@ $csrf_token = generate_csrf_token();
                         } else {
                             radiusStyle = 'border-radius: 0;';
                         }
-                        logoHtml = `<img src="${sec.props.logoUrl}" style="${widthStyle} ${heightStyle} ${radiusStyle} object-fit: contain;" alt="Logo" />`;
+                        logoHtml = `<img src="${sec.props.logoUrl}" style="${widthStyle} ${heightStyle} ${radiusStyle} object-fit: contain;" alt="Logo" data-el-path="el-logo" />`;
                     }
 
                     const isRight = sec.props.logoPosition === 'right-of-text';
@@ -1121,19 +1121,19 @@ $csrf_token = generate_csrf_token();
                                 if (isDesktop) {
                                     return `
                                     <div class="relative group dropdown-item inline-block text-left">
-                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">
+                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}">
                                             <span>${link.text}</span>
                                             <i class="fas fa-chevron-down text-[9px] opacity-70 transition-transform duration-200 group-hover:rotate-180"></i>
                                         </button>
                                         <!-- Absolute Dropdown Panel with modern sliding transitions -->
                                         <div class="absolute top-full left-0 mt-2 w-48 rounded-lg shadow-xl py-2 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50 border border-slate-800/80" style="background-color: ${sec.props.bgColor || '#0f172a'};">
-                                            ${children.map(child => {
+                                            ${children.map((child, cIdx) => {
                                                 let cUrl = child.url || '#';
                                                 if (child.type === 'page') {
                                                     cUrl = `?page=${child.pageName || 'index'}`;
                                                 }
                                                 return `
-                                                <a href="${cUrl}" class="block px-4 py-2 text-xs transition duration-200 hover:bg-slate-800/60" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
+                                                <a href="${cUrl}" class="block px-4 py-2 text-xs transition duration-200 hover:bg-slate-800/60" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}-sub-${cIdx}">${child.text}</a>
                                                 `;
                                             }).join('\n')}
                                         </div>
@@ -1162,7 +1162,7 @@ $csrf_token = generate_csrf_token();
                                     `;
                                 }
                             } else {
-                                return `<a href="${url}" class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${link.text}</a>`;
+                                return `<a href="${url}" class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
                             }
                         }).join('\n');
                     };
@@ -1178,9 +1178,9 @@ $csrf_token = generate_csrf_token();
                         let ctaButtonHtml = '';
                         if (showCta) {
                             const btnText = sec.props.btnText || 'Get Started';
-                            const btnBg = sec.props.btnBg || accentColor;
+                        const btnBg = sec.props.btnBg || '#14b8a6';
                             const btnColor = sec.props.btnColor || sec.props.bgColor || '#0f172a';
-                            ctaButtonHtml = `<a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">${btnText}</a>`;
+                        ctaButtonHtml = `<a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
                     }
@@ -1296,14 +1296,21 @@ $csrf_token = generate_csrf_token();
 
                 // --- ELEMENT-LEVEL SELECTION AND OVERRIDES ENHANCEMENT ---
                 // Query all potentially editable sub-elements in sequential order
-                const selectables = temp.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, img, i, button, a, [data-brand-text], [data-el-path]');
+                const selectables = temp.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, img, i, button, a, [data-brand-text], [data-cta-button], [data-el-path]');
 
-                selectables.forEach((el, index) => {
-                    const path = `el-${index}`;
+                let autoIdx = 0;
+                selectables.forEach((el) => {
+                    let path = el.getAttribute('data-el-path');
+                    if (!path) {
+                        path = `el-${autoIdx}`;
+                        autoIdx++;
+                        if (isBuilderMode) {
+                            el.setAttribute('data-el-path', path);
+                        }
+                    }
 
                     // Assign data-el-path attribute for builder identification
                     if (isBuilderMode) {
-                        el.setAttribute('data-el-path', path);
 
                         // Highlight element if selected
                         if (sec.id === activeSectionId && activeElementId === path) {
