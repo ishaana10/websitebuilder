@@ -1154,7 +1154,7 @@ $csrf_token = generate_csrf_token();
                                                     cUrl = `?page=${child.pageName || 'index'}`;
                                                 }
                                                 return `
-                                                <a href="${cUrl}" class="block text-xs py-1 transition duration-200" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
+                                                <a href="${cUrl}" onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');" class="block text-xs py-1 transition duration-200" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
                                                 `;
                                             }).join('\n')}
                                         </div>
@@ -1162,7 +1162,8 @@ $csrf_token = generate_csrf_token();
                                     `;
                                 }
                             } else {
-                                return `<a href="${url}" class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
+                                const closeMobileAttr = isDesktop ? '' : `onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');"`;
+                                return `<a href="${url}" ${closeMobileAttr} class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
                             }
                         }).join('\n');
                     };

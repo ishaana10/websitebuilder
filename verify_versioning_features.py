@@ -47,7 +47,7 @@ def run_verification(page):
 
     # Navigate to Versions tab
     print("Switching to 'Versions' tab...")
-    page.click("button:has-text('Versions')")
+    page.click("button:has-text('Vers')")
     page.wait_for_timeout(1500)
     page.screenshot(path="/home/jules/verification/screenshots/ver_02_versions_tab_loaded.png")
 
