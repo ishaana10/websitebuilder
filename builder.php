@@ -2249,17 +2249,24 @@ $csrf_token = generate_csrf_token();
                                                     const file = e.target.files[0];
                                                     if (!file) return;
                                                     const formData = new FormData();
-                                                    formData.append('file', file);
-                                                    fetch('api.php?action=upload_asset', { method: 'POST', body: formData })
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
                                                         .then(res => res.json())
                                                         .then(data => {
                                                             if (data.success && data.url) {
                                                                 updateImageField(imgIdx, 'url', data.url);
+                                                                showToast("Success", "Gallery image uploaded successfully!");
                                                             } else {
-                                                                alert('Upload failed: ' + (data.error || 'Unknown error'));
+                                                                showToast("Upload Error", data.error || "Failed to upload image.");
                                                             }
                                                         })
-                                                        .catch(err => alert('Upload failed: ' + err));
+                                                        .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
                                                 };
 
                                                 return (
