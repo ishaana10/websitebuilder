@@ -159,6 +159,14 @@ const UI_COMPONENTS = [
                 { value: 'grid-cols-3', label: '3 Columns split' },
                 { value: 'grid-cols-4', label: '4 Columns split' }
             ]},
+            { key: 'cardEffect', label: 'Card Visual / Animation Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'None (Standard Card)' },
+                { value: 'hover-lift', label: 'Hover Lift & Scale' },
+                { value: 'hover-glow', label: 'Hover Border Glow' },
+                { value: 'glassmorphism', label: 'Glassmorphism Blur' },
+                { value: 'gradient-border', label: 'Gradient Border Highlight' },
+                { value: 'fade-in-up', label: 'Fade-In Slide Up' }
+            ]},
             { key: 'heading', label: 'Section Header Title', type: 'text', default: 'Structured Grid Layout' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#1e293b' },
             { key: 'headingColor', label: 'Header Text Color', type: 'color', default: '#ffffff' },

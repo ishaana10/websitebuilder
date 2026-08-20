@@ -1286,9 +1286,23 @@ $csrf_token = generate_csrf_token();
 
                     const cardBgColor = sec.props.cardBgColor || '#0f172a';
                     const textColor = sec.props.textColor || '#94a3b8';
+                    const cardEffect = sec.props.cardEffect || 'none';
+
+                    let effectClasses = '';
+                    if (cardEffect === 'hover-lift') {
+                        effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
+                    } else if (cardEffect === 'hover-glow') {
+                        effectClasses = ' hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 cursor-pointer';
+                    } else if (cardEffect === 'glassmorphism') {
+                        effectClasses = ' backdrop-blur-md bg-opacity-60 border border-white/10 shadow-xl transition-all duration-300';
+                    } else if (cardEffect === 'gradient-border') {
+                        effectClasses = ' border-2 border-teal-500/50 hover:border-teal-400 transition-all duration-300 shadow-md';
+                    } else if (cardEffect === 'fade-in-up') {
+                        effectClasses = ' animate-fadeIn hover:-translate-y-1 transition-all duration-300';
+                    }
 
                     const cardsHtml = cards.map(card => `
-                        <div class="p-6 rounded-lg shadow-lg border border-white/5" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        <div class="p-6 rounded-lg shadow-lg border border-white/5${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
                             ${card.content}
                         </div>
                     `).join('\n');
