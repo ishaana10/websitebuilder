@@ -996,27 +996,29 @@ const UI_COMPONENTS = [
         icon: 'fas fa-images',
         schema: [
             { key: 'heading', label: 'Gallery Heading', type: 'text', default: 'Explore our latest visual designs' },
+            { key: 'layoutMode', label: 'Layout Mode', type: 'select', default: 'grid', options: [
+                { value: 'grid', label: 'Standard Responsive Grid' },
+                { value: 'sidescroll', label: 'Horizontal Side-Scroll' }
+            ] },
+            { key: 'cardWidth', label: 'Card Width (Side Scroll)', type: 'select', default: 'w-72', options: [
+                { value: 'w-64', label: 'Compact (16rem / 256px)' },
+                { value: 'w-72', label: 'Medium (18rem / 288px)' },
+                { value: 'w-80', label: 'Wide (20rem / 320px)' },
+                { value: 'w-96', label: 'Extra Wide (24rem / 384px)' }
+            ] },
+            { key: 'scrollSnap', label: 'Enable Scroll Snap', type: 'checkbox', default: true },
+            { key: 'showScrollbar', label: 'Show Horizontal Scrollbar', type: 'checkbox', default: true },
+            { key: 'enableLightbox', label: 'Enable Image Lightbox Modal', type: 'checkbox', default: true },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
-            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' }
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#0f172a' },
+            { key: 'accentColor', label: 'Accent & Border Color', type: 'color', default: '#14b8a6' }
         ],
         html: `
 <section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}};" data-component="image_gallery">
     <div class="max-w-6xl mx-auto">
         <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-10" style="color: {{headingColor}};">{{heading}}</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group relative cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-500 group-hover:scale-110" alt="Gallery Image 1" />
-                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">View Image</div>
-            </div>
-            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group relative cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-500 group-hover:scale-110" alt="Gallery Image 2" />
-                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">View Image</div>
-            </div>
-            <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group relative cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60" class="w-full h-48 object-cover transition duration-500 group-hover:scale-110" alt="Gallery Image 3" />
-                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest">View Image</div>
-            </div>
-        </div>
+        {{galleryItems}}
     </div>
 </section>`
     },
@@ -2019,6 +2021,45 @@ if (typeof window !== 'undefined') {
         if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Global Image Lightbox Modal trigger
+    window.openNuvisLightbox = function(imgSrc, captionText) {
+        let modal = document.getElementById('nuvis-image-lightbox-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'nuvis-image-lightbox-modal';
+            modal.className = 'fixed inset-0 z-[999999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 transition duration-300 opacity-0 pointer-events-none';
+            modal.innerHTML = `
+                <div class="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center space-y-3 p-2">
+                    <button onclick="window.closeNuvisLightbox()" class="absolute -top-10 right-0 text-white/80 hover:text-white text-2xl p-2 focus:outline-none transition" title="Close Lightbox">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <img id="nuvis-lightbox-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-slate-700/50" />
+                    <p id="nuvis-lightbox-caption" class="text-slate-300 text-sm font-medium text-center px-4 max-w-2xl"></p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) window.closeNuvisLightbox();
+            });
+        }
+
+        const imgEl = modal.querySelector('#nuvis-lightbox-img');
+        const captionEl = modal.querySelector('#nuvis-lightbox-caption');
+        if (imgEl) imgEl.src = imgSrc || '';
+        if (captionEl) captionEl.innerText = captionText || '';
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+    };
+
+    window.closeNuvisLightbox = function() {
+        const modal = document.getElementById('nuvis-image-lightbox-modal');
+        if (modal) {
+            modal.classList.remove('opacity-100', 'pointer-events-auto');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+    };
 
     // Immediate execution fallback for already-loaded document states
     if (document.readyState === 'interactive' || document.readyState === 'complete') {
