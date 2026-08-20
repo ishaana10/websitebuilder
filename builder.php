@@ -667,7 +667,17 @@ $csrf_token = generate_csrf_token();
                     setCustomComponents(initialCustomComponents);
                     let initialPages = { index: [] };
                     if (raw && raw.pages) {
-                        initialPages = raw.pages;
+                        initialPages = {};
+                        Object.keys(raw.pages).forEach(pKey => {
+                            const pageVal = raw.pages[pKey];
+                            if (Array.isArray(pageVal)) {
+                                initialPages[pKey] = pageVal;
+                            } else if (pageVal && Array.isArray(pageVal.sections)) {
+                                initialPages[pKey] = pageVal.sections;
+                            } else {
+                                initialPages[pKey] = [];
+                            }
+                        });
                     } else {
                         initialPages = { index: initialSections };
                     }
@@ -1036,6 +1046,27 @@ $csrf_token = generate_csrf_token();
 
             // DYNAMIC KEY-VALUE TEMPLATING COMPILER
             const compileSectionHtml = (sec, isBuilderMode = true) => {
+            const resolveBtnUrl = (props, prefix = '') => {
+                const linkTypeKey = prefix ? prefix + 'LinkType' : 'btnLinkType';
+                const urlKey = prefix ? prefix + 'Url' : 'btnUrl';
+                const pageKey = prefix ? prefix + 'Page' : 'btnPage';
+                const sectionKey = prefix ? prefix + 'Section' : 'btnSection';
+
+                const linkType = props[linkTypeKey] || 'url';
+                if (linkType === 'page') {
+                    const pageName = props[pageKey] || 'index';
+                    return `?page=${pageName}`;
+                } else if (linkType === 'section') {
+                    const secId = props[sectionKey] || '';
+                    return secId ? `#${secId}` : '#';
+                } else {
+                    return props[urlKey] || '#';
+                }
+            };
+            const resolveBtnTarget = (props, prefix = '') => {
+                const newTabKey = prefix ? prefix + 'NewTab' : 'btnNewTab';
+                return props[newTabKey] ? 'target="_blank" rel="noopener noreferrer"' : '';
+            };
                 const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
                 if (!compDef) return '';
 
@@ -1184,6 +1215,64 @@ $csrf_token = generate_csrf_token();
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
                     }
+                }
+
+                // Dynamic resolvers for CTA buttons
+                if (sec.type.toLowerCase() === 'hero') {
+                    const primaryHref = resolveBtnUrl(sec.props);
+                    const primaryTarget = resolveBtnTarget(sec.props);
+                    const btnBg = sec.props.btnBg || '#14b8a6';
+                    const btnColor = sec.props.btnColor || '#0f172a';
+                    const btnText = sec.props.btnText || 'Start For Free';
+                    const primaryBtnHtml = `<a href="${primaryHref}" ${primaryTarget} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+
+                    const secHref = resolveBtnUrl(sec.props, 'secBtn');
+                    const secTarget = resolveBtnTarget(sec.props, 'secBtn');
+                    const headingColor = sec.props.headingColor || '#ffffff';
+                    const secBtnText = sec.props.secondaryBtnText || 'Learn More';
+                    const secBtnHtml = `<a href="${secHref}" ${secTarget} class="inline-block font-bold px-8 py-4 rounded-lg border transition-all duration-300 hover:bg-white/5" style="border-color: rgba(255,255,255,0.2); color: ${headingColor};">${secBtnText}</a>`;
+
+                    compiledHtml = compiledHtml.replace(/{{\s*primaryCtaBtn\s*}}/g, primaryBtnHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*secondaryCtaBtn\s*}}/g, secBtnHtml);
+                }
+
+                if (sec.type.toLowerCase() === 'cta_banner') {
+                    const href = resolveBtnUrl(sec.props);
+                    const targetAttr = resolveBtnTarget(sec.props);
+                    const btnBg = sec.props.btnBg || '#0f172a';
+                    const btnColor = sec.props.btnColor || '#ffffff';
+                    const btnText = sec.props.btnText || 'Get Started Now';
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
+                }
+
+                if (sec.type.toLowerCase() === 'pricing_comparison') {
+                    const t1Href = resolveBtnUrl(sec.props, 'tier1');
+                    const t1Target = resolveBtnTarget(sec.props, 'tier1');
+                    const t1Text = sec.props.tier1BtnText || 'Choose Starter';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+                    const bgColor = sec.props.bgColor || '#0f172a';
+                    const t1BtnHtml = `<a href="${t1Href}" ${t1Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90" style="background-color: ${accentColor}; color: ${bgColor};">${t1Text}</a>`;
+
+                    const t2Href = resolveBtnUrl(sec.props, 'tier2');
+                    const t2Target = resolveBtnTarget(sec.props, 'tier2');
+                    const t2Text = sec.props.tier2BtnText || 'Get Pro Access';
+                    const t2BtnHtml = `<a href="${t2Href}" ${t2Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90" style="background-color: ${accentColor}; color: ${bgColor};">${t2Text}</a>`;
+
+                    compiledHtml = compiledHtml.replace(/{{\s*tier1Btn\s*}}/g, t1BtnHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*tier2Btn\s*}}/g, t2BtnHtml);
+                }
+
+                if (sec.type.toLowerCase() === 'icon_image_box') {
+                    const btnText = sec.props.btnText;
+                    let boxBtnHtml = '';
+                    if (btnText) {
+                        const href = resolveBtnUrl(sec.props);
+                        const targetAttr = resolveBtnTarget(sec.props);
+                        const accentColor = sec.props.accentColor || '#14b8a6';
+                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 rounded-lg text-xs transition duration-300 hover:opacity-90 mt-2" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
+                    }
+                    compiledHtml = compiledHtml.replace(/{{\s*boxBtn\s*}}/g, boxBtnHtml);
                 }
 
                 // Dynamic compiler for layout_grid component
@@ -1783,6 +1872,36 @@ $csrf_token = generate_csrf_token();
                                                             if (field.type === 'text') {
                                                                 const inputId = field.key === 'heading' ? 'prop-heading-text' : `prop-${field.key}`;
                                                                 const isLogoUrl = field.key.toLowerCase().includes('logo');
+                                                                const isPageSelect = field.key.toLowerCase().endsWith('page');
+                                                                const isSectionSelect = field.key.toLowerCase().endsWith('section');
+
+                                                                if (isPageSelect) {
+                                                                    const pageKeys = Object.keys(pages || {});
+                                                                    return (
+                                                                        <div key={field.key} className="space-y-1.5">
+                                                                            <label className="text-[11px] text-slate-400 block mb-1" htmlFor={inputId}>{field.label}</label>
+                                                                            <select id={inputId} value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-teal-400 font-medium focus:outline-none focus:border-teal-500">
+                                                                                {pageKeys.map(pKey => (
+                                                                                    <option key={pKey} value={pKey}>Page: {pages[pKey].name || pKey} ({pKey})</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                if (isSectionSelect) {
+                                                                    return (
+                                                                        <div key={field.key} className="space-y-1.5">
+                                                                            <label className="text-[11px] text-slate-400 block mb-1" htmlFor={inputId}>{field.label}</label>
+                                                                            <select id={inputId} value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-teal-400 font-medium focus:outline-none focus:border-teal-500">
+                                                                                <option value="">-- Select Section Anchor --</option>
+                                                                                {sections.map(s => (
+                                                                                    <option key={s.id} value={s.id}>#{s.id} ({s.type})</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    );
+                                                                }
 
                                                                 const handleLogoUpload = (e) => {
                                                                     const file = e.target.files[0];

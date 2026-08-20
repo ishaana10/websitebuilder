@@ -33,7 +33,12 @@ const UI_COMPONENTS = [
             { key: 'showCta', label: 'Show CTA Button', type: 'checkbox', default: true },
             { key: 'btnText', label: 'CTA Button Text', type: 'text', default: 'Get Started' },
             { key: 'btnBg', label: 'CTA Button Background', type: 'color', default: '#14b8a6' },
-            { key: 'btnColor', label: 'CTA Button Text Color', type: 'color', default: '#0f172a' }
+            { key: 'btnColor', label: 'CTA Button Text Color', type: 'color', default: '#0f172a' },
+            { key: 'btnLinkType', label: 'CTA Link Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnUrl', label: 'CTA Link URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'CTA Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'CTA Select Section', type: 'text', default: '' },
+            { key: 'btnNewTab', label: 'CTA Open in New Tab', type: 'checkbox', default: false }
         ],
         html: `
 <nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
@@ -114,7 +119,17 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
             { key: 'btnBg', label: 'Primary CTA Background', type: 'color', default: '#14b8a6' },
             { key: 'btnColor', label: 'Primary CTA Text Color', type: 'color', default: '#0f172a' },
+            { key: 'btnLinkType', label: 'Primary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnUrl', label: 'Primary CTA URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Primary CTA Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Primary CTA Select Section', type: 'text', default: '' },
+            { key: 'btnNewTab', label: 'Primary CTA Open in New Tab', type: 'checkbox', default: false },
             { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
+            { key: 'secBtnLinkType', label: 'Secondary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'secBtnUrl', label: 'Secondary CTA URL', type: 'text', default: '#' },
+            { key: 'secBtnPage', label: 'Secondary CTA Select Page', type: 'text', default: 'index' },
+            { key: 'secBtnSection', label: 'Secondary CTA Select Section', type: 'text', default: '' },
+            { key: 'secBtnNewTab', label: 'Secondary CTA Open in New Tab', type: 'checkbox', default: false },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
             { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' }
@@ -126,8 +141,8 @@ const UI_COMPONENTS = [
         <h1 class="text-4xl md:text-6xl font-black mt-6 tracking-tight leading-none" style="color: {{headingColor}};">{{heading}}</h1>
         <p class="mt-6 text-lg md:text-xl leading-relaxed" style="color: {{textColor}};">{{text}}</p>
         <div class="mt-10 flex flex-wrap justify-center gap-4">
-            <button class="font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105" style="background-color: {{btnBg}}; color: {{btnColor}};">{{btnText}}</button>
-            <button class="font-bold px-8 py-4 rounded-lg border transition-all duration-300 hover:bg-white/5" style="border-color: rgba(255,255,255,0.2); color: {{headingColor}};">{{secondaryBtnText}}</button>
+            {{primaryCtaBtn}}
+            {{secondaryCtaBtn}}
         </div>
     </div>
 </section>`
@@ -279,8 +294,21 @@ const UI_COMPONENTS = [
         schema: [
             { key: 'tier1Name', label: 'Tier 1 Name', type: 'text', default: 'Starter' },
             { key: 'tier1Price', label: 'Tier 1 Price', type: 'text', default: '$19' },
+            { key: 'tier1BtnText', label: 'Tier 1 Button Text', type: 'text', default: 'Get Started' },
+            { key: 'tier1LinkType', label: 'Tier 1 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'tier1Url', label: 'Tier 1 URL', type: 'text', default: '#' },
+            { key: 'tier1Page', label: 'Tier 1 Select Page', type: 'text', default: 'index' },
+            { key: 'tier1Section', label: 'Tier 1 Select Section', type: 'text', default: '' },
+            { key: 'tier1NewTab', label: 'Tier 1 Open in New Tab', type: 'checkbox', default: false },
+
             { key: 'tier2Name', label: 'Tier 2 Name', type: 'text', default: 'Professional' },
             { key: 'tier2Price', label: 'Tier 2 Price', type: 'text', default: '$49' },
+            { key: 'tier2BtnText', label: 'Tier 2 Button Text', type: 'text', default: 'Go Pro' },
+            { key: 'tier2LinkType', label: 'Tier 2 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'tier2Url', label: 'Tier 2 URL', type: 'text', default: '#' },
+            { key: 'tier2Page', label: 'Tier 2 Select Page', type: 'text', default: 'index' },
+            { key: 'tier2Section', label: 'Tier 2 Select Section', type: 'text', default: '' },
+            { key: 'tier2NewTab', label: 'Tier 2 Open in New Tab', type: 'checkbox', default: false },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Accent Border', type: 'color', default: '#14b8a6' },
@@ -847,7 +875,12 @@ const UI_COMPONENTS = [
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#14b8a6' },
             { key: 'textColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
-            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' }
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false }
         ],
         html: `
 <section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="cta_banner">
@@ -855,7 +888,7 @@ const UI_COMPONENTS = [
         <h2 class="text-3xl md:text-5xl font-black tracking-tight" style="color: {{textColor}};">{{heading}}</h2>
         <p class="text-base md:text-lg max-w-2xl mx-auto opacity-90" style="color: {{textColor}};">{{text}}</p>
         <div class="pt-4">
-            <button class="font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105" style="background-color: {{btnBg}}; color: {{btnColor}};">{{btnText}}</button>
+            {{bannerBtn}}
         </div>
     </div>
 </section>`
@@ -1030,6 +1063,12 @@ const UI_COMPONENTS = [
             { key: 'text', label: 'Box Description', type: 'textarea', default: 'Combine beautiful icons or direct image uploads into clean card containers that match your theme perfectly.' },
             { key: 'iconClass', label: 'FontAwesome Icon', type: 'text', default: 'fas fa-cubes' },
             { key: 'imageUrl', label: 'Image URL (Optional)', type: 'text', default: '' },
+            { key: 'btnText', label: 'Button Text (Optional)', type: 'text', default: 'Learn More' },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
             { key: 'bgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Icon Accent Color', type: 'color', default: '#14b8a6' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' }
