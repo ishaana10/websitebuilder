@@ -1334,6 +1334,88 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*tabContents\s*}}/g, tabContentsHtml);
                 }
 
+                // Dynamic compiler for image_gallery component
+                if (sec.type.toLowerCase() === 'image_gallery') {
+                    const defaultImages = [
+                        {
+                            url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60',
+                            title: 'Visual Dashboard',
+                            caption: 'Modern data visualization and UI architecture',
+                            overlay: 'View Image',
+                            link: '#'
+                        },
+                        {
+                            url: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60',
+                            title: 'Analytics Engine',
+                            caption: 'Real-time telemetry and metrics auditing',
+                            overlay: 'View Image',
+                            link: '#'
+                        },
+                        {
+                            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60',
+                            title: 'Cloud Infrastructure',
+                            caption: 'High-density scalable network services',
+                            overlay: 'View Image',
+                            link: '#'
+                        }
+                    ];
+
+                    const images = (Array.isArray(sec.props.images) && sec.props.images.length > 0) ? sec.props.images : defaultImages;
+                    const layoutMode = sec.props.layoutMode || 'grid';
+                    const cardWidth = sec.props.cardWidth || 'w-72';
+                    const scrollSnap = sec.props.scrollSnap !== undefined ? sec.props.scrollSnap : true;
+                    const showScrollbar = sec.props.showScrollbar !== undefined ? sec.props.showScrollbar : true;
+                    const enableLightbox = sec.props.enableLightbox !== undefined ? sec.props.enableLightbox : true;
+                    const cardBg = sec.props.cardBg || '#0f172a';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+
+                    let itemsHtml = '';
+
+                    const cardItems = images.map((imgItem, idx) => {
+                        const imgUrl = imgItem.url || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop&q=60';
+                        const titleText = imgItem.title || '';
+                        const captionText = imgItem.caption || '';
+                        const overlayText = imgItem.overlay !== undefined && imgItem.overlay !== '' ? imgItem.overlay : 'View Image';
+                        const customLink = imgItem.link || '';
+
+                        const safeCaptionEscaped = (captionText || titleText || 'Image').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        const lightboxOnClick = enableLightbox ? `onclick="window.openNuvisLightbox('${imgUrl}', '${safeCaptionEscaped}')"` : '';
+                        const flexClass = layoutMode === 'sidescroll' ? `flex-shrink-0 ${cardWidth} ${scrollSnap ? 'snap-start' : ''}` : '';
+
+                        return `
+                        <div class="overflow-hidden rounded-xl border border-slate-800 shadow-lg group relative cursor-pointer ${flexClass}" style="background-color: ${cardBg}; border-color: ${accentColor}33;">
+                            <div class="relative overflow-hidden aspect-video">
+                                <img src="${imgUrl}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110" alt="${titleText || 'Gallery Image'}" />
+                                <div ${lightboxOnClick} class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col items-center justify-center p-4 text-center">
+                                    <span class="text-white text-xs font-bold uppercase tracking-widest bg-teal-500/20 border border-teal-500/40 px-3 py-1.5 rounded-full shadow-lg hover:bg-teal-500 hover:text-slate-950 transition">${overlayText}</span>
+                                    ${customLink && customLink !== '#' ? `<a href="${customLink}" target="_blank" onclick="event.stopPropagation();" class="mt-2 text-[10px] text-teal-300 hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Visit Link</a>` : ''}
+                                </div>
+                            </div>
+                            ${(titleText || captionText) ? `
+                            <div class="p-4 space-y-1">
+                                ${titleText ? `<h4 class="text-sm font-bold text-white line-clamp-1">${titleText}</h4>` : ''}
+                                ${captionText ? `<p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">${captionText}</p>` : ''}
+                            </div>` : ''}
+                        </div>`;
+                    }).join('\n');
+
+                    if (layoutMode === 'sidescroll') {
+                        const scrollbarStyle = !showScrollbar ? 'style="scrollbar-width: none; -ms-overflow-style: none;"' : '';
+                        const snapStyle = scrollSnap ? 'snap-x snap-mandatory' : '';
+                        itemsHtml = `
+                        <div class="flex gap-6 overflow-x-auto pb-4 pt-1 px-1 ${snapStyle}" ${scrollbarStyle}>
+                            ${cardItems}
+                        </div>`;
+                    } else {
+                        itemsHtml = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            ${cardItems}
+                        </div>`;
+                    }
+
+                    compiledHtml = compiledHtml.replace(/{{\s*galleryItems\s*}}/g, itemsHtml);
+                }
+
                 // Dynamic compiler for faq component
                 if (sec.type.toLowerCase() === 'faq') {
                     const faqs = sec.props.faqs || [
@@ -2107,6 +2189,127 @@ $csrf_token = generate_csrf_token();
                                                                 </label>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC IMAGE GALLERY EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'image_gallery' && (() => {
+                                                const defaultImages = [
+                                                    {
+                                                        url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=60',
+                                                        title: 'Visual Dashboard',
+                                                        caption: 'Modern data visualization and UI architecture',
+                                                        overlay: 'View Image',
+                                                        link: '#'
+                                                    },
+                                                    {
+                                                        url: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&auto=format&fit=crop&q=60',
+                                                        title: 'Analytics Engine',
+                                                        caption: 'Real-time telemetry and metrics auditing',
+                                                        overlay: 'View Image',
+                                                        link: '#'
+                                                    },
+                                                    {
+                                                        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=60',
+                                                        title: 'Cloud Infrastructure',
+                                                        caption: 'High-density scalable network services',
+                                                        overlay: 'View Image',
+                                                        link: '#'
+                                                    }
+                                                ];
+
+                                                const currentImages = (Array.isArray(selectedSection.props.images) && selectedSection.props.images.length > 0) ? selectedSection.props.images : defaultImages;
+
+                                                const handleImagesChange = (newImages) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, images: newImages } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addImage = () => {
+                                                    handleImagesChange([...currentImages, {
+                                                        url: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&auto=format&fit=crop&q=60',
+                                                        title: 'New Gallery Item',
+                                                        caption: 'Add description or caption here...',
+                                                        overlay: 'View Image',
+                                                        link: '#'
+                                                    }]);
+                                                };
+
+                                                const removeImage = (imgIdx) => {
+                                                    handleImagesChange(currentImages.filter((_, idx) => idx !== imgIdx));
+                                                };
+
+                                                const updateImageField = (imgIdx, field, val) => {
+                                                    const updatedImages = currentImages.map((img, idx) => idx === imgIdx ? { ...img, [field]: val } : img);
+                                                    handleImagesChange(updatedImages);
+                                                };
+
+                                                const handleFileUpload = (imgIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('file', file);
+                                                    fetch('api.php?action=upload_asset', { method: 'POST', body: formData })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            if (data.success && data.url) {
+                                                                updateImageField(imgIdx, 'url', data.url);
+                                                            } else {
+                                                                alert('Upload failed: ' + (data.error || 'Unknown error'));
+                                                            }
+                                                        })
+                                                        .catch(err => alert('Upload failed: ' + err));
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-images"></i> Manage Gallery Images
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            {currentImages.map((img, imgIdx) => (
+                                                                <div key={imgIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
+                                                                    <div className="flex justify-between items-center gap-2">
+                                                                        <span className="text-[10px] font-bold text-slate-400">Image #{imgIdx + 1}</span>
+                                                                        <button onClick={() => removeImage(imgIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Image">
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="space-y-1.5">
+                                                                        <label className="text-[10px] text-slate-400 font-semibold block">Image Source URL</label>
+                                                                        <div className="flex gap-1.5">
+                                                                            <input type="text" value={img.url || ''} onChange={(e) => updateImageField(imgIdx, 'url', e.target.value)} placeholder="Image URL" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-300 px-2.5 py-1 rounded cursor-pointer flex items-center justify-center border border-slate-700 text-xs" title="Upload Direct Image">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(imgIdx, e)} className="hidden" />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div>
+                                                                            <label className="text-[10px] text-slate-400 font-semibold block">Title</label>
+                                                                            <input type="text" value={img.title || ''} onChange={(e) => updateImageField(imgIdx, 'title', e.target.value)} placeholder="Title" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-[10px] text-slate-400 font-semibold block">Button Overlay Label</label>
+                                                                            <input type="text" value={img.overlay || ''} onChange={(e) => updateImageField(imgIdx, 'overlay', e.target.value)} placeholder="View Image" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[10px] text-slate-400 font-semibold block">Description / Caption</label>
+                                                                        <textarea rows={2} value={img.caption || ''} onChange={(e) => updateImageField(imgIdx, 'caption', e.target.value)} placeholder="Caption details..." className="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-[10px] text-slate-400 font-semibold block">Custom URL Link (Optional)</label>
+                                                                        <input type="text" value={img.link || ''} onChange={(e) => updateImageField(imgIdx, 'link', e.target.value)} placeholder="#" className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white" />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={addImage} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
+                                                            <i className="fas fa-plus mr-1"></i> Add New Image Item
+                                                        </button>
                                                     </div>
                                                 );
                                             })()}
