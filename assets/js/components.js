@@ -46,13 +46,13 @@ const UI_COMPONENTS = [
         </div>
 
         <div class="flex items-center gap-4">
-            <!-- CTA Button -->
-            {{ctaButton}}
-
             <!-- Mobile Burger Toggle -->
             <button onclick="const m = this.closest('[data-component]').querySelector('.mobile-menu'); m.classList.toggle('hidden');" class="md:hidden text-xl focus:outline-none" style="color: {{textColor}};">
                 <i class="fas fa-bars"></i>
             </button>
+
+            <!-- CTA Button -->
+            {{ctaButton}}
         </div>
     </div>
 
