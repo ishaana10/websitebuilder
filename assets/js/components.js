@@ -38,7 +38,16 @@ const UI_COMPONENTS = [
             { key: 'btnUrl', label: 'CTA Link URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'CTA Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'CTA Select Section', type: 'text', default: '' },
-            { key: 'btnNewTab', label: 'CTA Open in New Tab', type: 'checkbox', default: false }
+            { key: 'btnNewTab', label: 'CTA Open in New Tab', type: 'checkbox', default: false },
+            { key: 'btnEffect', label: 'CTA Button Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] }
         ],
         html: `
 <nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
@@ -124,6 +133,15 @@ const UI_COMPONENTS = [
             { key: 'btnPage', label: 'Primary CTA Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Primary CTA Select Section', type: 'text', default: '' },
             { key: 'btnNewTab', label: 'Primary CTA Open in New Tab', type: 'checkbox', default: false },
+            { key: 'btnEffect', label: 'Primary CTA Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] },
             { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
             { key: 'secBtnLinkType', label: 'Secondary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
             { key: 'secBtnUrl', label: 'Secondary CTA URL', type: 'text', default: '#' },
@@ -317,6 +335,24 @@ const UI_COMPONENTS = [
             { key: 'tier2Page', label: 'Tier 2 Select Page', type: 'text', default: 'index' },
             { key: 'tier2Section', label: 'Tier 2 Select Section', type: 'text', default: '' },
             { key: 'tier2NewTab', label: 'Tier 2 Open in New Tab', type: 'checkbox', default: false },
+            { key: 'tier1Effect', label: 'Tier 1 Button Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] },
+            { key: 'tier2Effect', label: 'Tier 2 Button Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Accent Border', type: 'color', default: '#14b8a6' },
@@ -888,7 +924,16 @@ const UI_COMPONENTS = [
             { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
-            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false }
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
+            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] }
         ],
         html: `
 <section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="cta_banner">
@@ -1079,6 +1124,15 @@ const UI_COMPONENTS = [
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
             { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
+            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] },
             { key: 'bgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Icon Accent Color', type: 'color', default: '#14b8a6' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' }

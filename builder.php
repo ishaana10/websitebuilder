@@ -1067,6 +1067,26 @@ $csrf_token = generate_csrf_token();
                 const newTabKey = prefix ? prefix + 'NewTab' : 'btnNewTab';
                 return props[newTabKey] ? 'target="_blank" rel="noopener noreferrer"' : '';
             };
+            const resolveBtnEffectClass = (props, prefix = '') => {
+                const effectKey = prefix ? prefix + 'Effect' : 'btnEffect';
+                const effect = props[effectKey] || 'none';
+                switch (effect) {
+                    case 'glow':
+                        return 'shadow-[0_0_25px_rgba(20,184,166,0.7)] hover:shadow-[0_0_35px_rgba(20,184,166,1)] transition-shadow duration-300';
+                    case 'pulse_alert':
+                        return 'animate-pulse ring-4 ring-rose-500/60 shadow-lg shadow-rose-500/30';
+                    case 'bounce_alert':
+                        return 'animate-bounce shadow-lg shadow-amber-500/30';
+                    case 'gradient_flow':
+                        return 'bg-gradient-to-r from-teal-500 via-emerald-400 to-cyan-500 hover:brightness-110 shadow-lg';
+                    case 'scale_lift':
+                        return 'transform hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl';
+                    case 'ring_pulse':
+                        return 'ring-4 ring-teal-400/50 animate-pulse';
+                    default:
+                        return '';
+                }
+            };
                 const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
                 if (!compDef) return '';
 
@@ -1211,8 +1231,11 @@ $csrf_token = generate_csrf_token();
                         if (showCta) {
                             const btnText = sec.props.btnText || 'Get Started';
                         const btnBg = sec.props.btnBg || '#14b8a6';
-                            const btnColor = sec.props.btnColor || sec.props.bgColor || '#0f172a';
-                        ctaButtonHtml = `<a href="#get-started" class="font-bold px-4 py-2 rounded transition duration-300 text-sm" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
+                        const btnColor = sec.props.btnColor || sec.props.bgColor || '#0f172a';
+                        const btnEffectClass = resolveBtnEffectClass(sec.props);
+                        const ctaHref = resolveBtnUrl(sec.props);
+                        const ctaTarget = resolveBtnTarget(sec.props);
+                        ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="font-bold px-4 py-2 rounded transition duration-300 text-sm ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
                     }
@@ -1225,7 +1248,8 @@ $csrf_token = generate_csrf_token();
                     const btnBg = sec.props.btnBg || '#14b8a6';
                     const btnColor = sec.props.btnColor || '#0f172a';
                     const btnText = sec.props.btnText || 'Start For Free';
-                    const primaryBtnHtml = `<a href="${primaryHref}" ${primaryTarget} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const btnEffectClass = resolveBtnEffectClass(sec.props);
+                    const primaryBtnHtml = `<a href="${primaryHref}" ${primaryTarget} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
 
                     const secHref = resolveBtnUrl(sec.props, 'secBtn');
                     const secTarget = resolveBtnTarget(sec.props, 'secBtn');
@@ -1243,7 +1267,8 @@ $csrf_token = generate_csrf_token();
                     const btnBg = sec.props.btnBg || '#0f172a';
                     const btnColor = sec.props.btnColor || '#ffffff';
                     const btnText = sec.props.btnText || 'Get Started Now';
-                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const btnEffectClass = resolveBtnEffectClass(sec.props);
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
                     compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
                 }
 
@@ -1253,12 +1278,14 @@ $csrf_token = generate_csrf_token();
                     const t1Text = sec.props.tier1BtnText || 'Choose Starter';
                     const accentColor = sec.props.accentColor || '#14b8a6';
                     const bgColor = sec.props.bgColor || '#0f172a';
-                    const t1BtnHtml = `<a href="${t1Href}" ${t1Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90" style="background-color: ${accentColor}; color: ${bgColor};">${t1Text}</a>`;
+                    const t1EffectClass = resolveBtnEffectClass(sec.props, 'tier1');
+                    const t1BtnHtml = `<a href="${t1Href}" ${t1Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90 ${t1EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t1Text}</a>`;
 
                     const t2Href = resolveBtnUrl(sec.props, 'tier2');
                     const t2Target = resolveBtnTarget(sec.props, 'tier2');
                     const t2Text = sec.props.tier2BtnText || 'Get Pro Access';
-                    const t2BtnHtml = `<a href="${t2Href}" ${t2Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90" style="background-color: ${accentColor}; color: ${bgColor};">${t2Text}</a>`;
+                    const t2EffectClass = resolveBtnEffectClass(sec.props, 'tier2');
+                    const t2BtnHtml = `<a href="${t2Href}" ${t2Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90 ${t2EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t2Text}</a>`;
 
                     compiledHtml = compiledHtml.replace(/{{\s*tier1Btn\s*}}/g, t1BtnHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*tier2Btn\s*}}/g, t2BtnHtml);
@@ -1271,7 +1298,8 @@ $csrf_token = generate_csrf_token();
                         const href = resolveBtnUrl(sec.props);
                         const targetAttr = resolveBtnTarget(sec.props);
                         const accentColor = sec.props.accentColor || '#14b8a6';
-                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 rounded-lg text-xs transition duration-300 hover:opacity-90 mt-2" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
+                        const btnEffectClass = resolveBtnEffectClass(sec.props);
+                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 rounded-lg text-xs transition duration-300 hover:opacity-90 mt-2 ${btnEffectClass}" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
                     }
                     compiledHtml = compiledHtml.replace(/{{\s*boxBtn\s*}}/g, boxBtnHtml);
                 }
