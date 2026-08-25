@@ -1079,6 +1079,8 @@ $csrf_token = generate_csrf_token();
                         return 'animate-bounce shadow-lg shadow-amber-500/30';
                     case 'gradient_flow':
                         return 'bg-gradient-to-r from-teal-500 via-emerald-400 to-cyan-500 hover:brightness-110 shadow-lg';
+                    case 'lime_gradient':
+                        return 'bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-600 text-slate-950 hover:brightness-110 shadow-lg shadow-lime-500/20';
                     case 'scale_lift':
                         return 'transform hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl';
                     case 'ring_pulse':
@@ -1214,7 +1216,8 @@ $csrf_token = generate_csrf_token();
                                 }
                             } else {
                                 const closeMobileAttr = isDesktop ? '' : `onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');"`;
-                                return `<a href="${url}" ${closeMobileAttr} class="font-bold transition duration-300" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
+                                const classAttr = isDesktop ? 'font-bold transition duration-300' : 'block py-1.5 font-bold transition duration-300';
+                                return `<a href="${url}" ${closeMobileAttr} class="${classAttr}" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
                             }
                         }).join('\n');
                     };
@@ -1330,12 +1333,19 @@ $csrf_token = generate_csrf_token();
                     }
 
                     const cardsHtml = cards.map(card => `
-                        <div class="p-6 rounded-lg shadow-lg border border-white/5${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
                             ${card.content}
                         </div>
                     `).join('\n');
 
                     compiledHtml = compiledHtml.replace(/{{\s*gridCards\s*}}/g, cardsHtml);
+
+                    let rawCol = sec.props.colCount || 'grid-cols-3';
+                    let desktopColClass = rawCol.startsWith('md:') ? rawCol : `md:${rawCol}`;
+                    let mobileColClass = sec.props.mobileColCount || 'grid-cols-2';
+
+                    compiledHtml = compiledHtml.replace(/{{\s*colCount\s*}}/g, `${mobileColClass} ${desktopColClass}`);
+                    compiledHtml = compiledHtml.replace(/{{\s*mobileColCount\s*}}/g, '');
                 }
 
                 // Dynamic compiler for interactive_tabs component
@@ -1656,6 +1666,10 @@ $csrf_token = generate_csrf_token();
                         }
                         .canvas-inner-html section, .canvas-inner-html nav, .canvas-inner-html footer {
                             font-family: ${themeFontFamily} !important;
+                        }
+                        .canvas-inner-html * {
+                            overflow-wrap: break-word;
+                            word-break: break-word;
                         }
                     ` }} />
 
@@ -3081,6 +3095,29 @@ $csrf_token = generate_csrf_token();
                                             <i className="fas fa-palette"></i> Design Tokens & Themes
                                         </h4>
                                         <p className="text-[11px] text-slate-400">Configure global layout variables, font face, and spacing scales dynamically.</p>
+
+                                        {/* Quick Gradient Theme Presets */}
+                                        <div className="space-y-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                            <label className="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">Gradient Theme Presets</label>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                <button onClick={() => { setThemePrimaryColor('#84cc16'); setThemeBgColor('#052e16'); showToast("Lime Green Gradient Theme Applied", "Set Accent to Lime Green and Page BG to Forest Dark."); }} className="p-2.5 rounded-lg bg-gradient-to-r from-lime-400 via-lime-500 to-emerald-600 text-slate-950 font-black text-xs text-left shadow flex justify-between items-center hover:scale-[1.01] transition">
+                                                    <span>Lime Green Energy</span>
+                                                    <i className="fas fa-magic"></i>
+                                                </button>
+                                                <button onClick={() => { setThemePrimaryColor('#14b8a6'); setThemeBgColor('#0f172a'); showToast("Emerald Teal Gradient Theme Applied", "Set Accent to Emerald Teal."); }} className="p-2.5 rounded-lg bg-gradient-to-r from-teal-500 via-emerald-400 to-cyan-500 text-slate-950 font-black text-xs text-left shadow flex justify-between items-center hover:scale-[1.01] transition">
+                                                    <span>Emerald Teal Flow</span>
+                                                    <i className="fas fa-magic"></i>
+                                                </button>
+                                                <button onClick={() => { setThemePrimaryColor('#f97316'); setThemeBgColor('#1c1917'); showToast("Sunset Amber Gradient Theme Applied", "Set Accent to Sunset Orange."); }} className="p-2.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 text-white font-black text-xs text-left shadow flex justify-between items-center hover:scale-[1.01] transition">
+                                                    <span>Sunset Flame & Amber</span>
+                                                    <i className="fas fa-magic"></i>
+                                                </button>
+                                                <button onClick={() => { setThemePrimaryColor('#a855f7'); setThemeBgColor('#0f0728'); showToast("Cyberpunk Neon Theme Applied", "Set Accent to Purple Pink Neon."); }} className="p-2.5 rounded-lg bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 text-white font-black text-xs text-left shadow flex justify-between items-center hover:scale-[1.01] transition">
+                                                    <span>Cyberpunk Neon</span>
+                                                    <i className="fas fa-magic"></i>
+                                                </button>
+                                            </div>
+                                        </div>
 
                                         {/* Primary Branding Color */}
                                         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
