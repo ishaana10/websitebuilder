@@ -17,8 +17,7 @@ def test_mobile_and_gradients():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        # Desktop viewport for builder editing
-        context = browser.new_context(viewport={'width': 1280, 'height': 800})
+        context = browser.new_context()
         page = context.new_page()
 
         print("Navigating to index.php?action=register...")
@@ -37,19 +36,25 @@ def test_mobile_and_gradients():
         page.fill("input[name='username_or_email']", username)
         page.fill("input[name='password']", password)
         page.click("button[type='submit']")
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(1500)
 
         # Onboard template
         print("Switching to Templates Library...")
         page.click("button:has-text('Templates Library')")
         page.wait_for_timeout(1000)
+
+        print("Clicking Use Template Theme...")
         page.click("button:has-text('Use Template Theme')")
         page.wait_for_timeout(3000)
+
+        print("Clicking hero component on canvas...")
+        page.click("div[data-component-instance='hero']")
+        page.wait_for_timeout(1000)
 
         # Switch to Theme tab and test Lime Green Gradient Theme Preset
         print("Testing Theme Presets in Control Center...")
         page.click("button:has-text('Theme')")
-        page.wait_for_timeout(500)
+        page.wait_for_timeout(1000)
         page.click("button:has-text('Lime Green Energy')")
         page.wait_for_timeout(1000)
 
@@ -96,6 +101,11 @@ def test_mobile_and_gradients():
         # Check that mobile menu links are visible and stacked
         mobile_menu = mob_page.locator(".mobile-menu")
         assert mobile_menu.is_visible(), "Mobile menu should be visible after burger click"
+
+        # Check contact link visibility
+        contact_link = mob_page.locator(".mobile-menu a", has_text="Contact").first
+        assert contact_link.is_visible(), "Contact link should be visible in mobile menu"
+        print("Contact link is VISIBLE in mobile menu!")
 
         pub_screenshot_path = "/home/jules/verification/screenshots/mobile_view_published.png"
         mob_page.screenshot(path=pub_screenshot_path)
