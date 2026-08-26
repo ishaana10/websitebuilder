@@ -1098,6 +1098,19 @@ $csrf_token = generate_csrf_token();
                 const newTabKey = prefix ? prefix + 'NewTab' : 'btnNewTab';
                 return props[newTabKey] ? 'target="_blank" rel="noopener noreferrer"' : '';
             };
+            const resolveBtnShapeClass = (props, prefix = '') => {
+                const shapeKey = prefix ? prefix + 'Shape' : 'btnShape';
+                const shape = props[shapeKey] || 'pill';
+                switch (shape) {
+                    case 'pill':
+                        return 'rounded-full';
+                    case 'square':
+                        return 'rounded-none';
+                    case 'rounded':
+                    default:
+                        return 'rounded-lg';
+                }
+            };
             const resolveBtnEffectClass = (props, prefix = '') => {
                 const effectKey = prefix ? prefix + 'Effect' : 'btnEffect';
                 const effect = props[effectKey] || 'none';
@@ -1267,10 +1280,11 @@ $csrf_token = generate_csrf_token();
                             const btnText = sec.props.btnText || 'Get Started';
                         const btnBg = sec.props.btnBg || '#14b8a6';
                         const btnColor = sec.props.btnColor || sec.props.bgColor || '#0f172a';
+                        const btnShapeClass = resolveBtnShapeClass(sec.props);
                         const btnEffectClass = resolveBtnEffectClass(sec.props);
                         const ctaHref = resolveBtnUrl(sec.props);
                         const ctaTarget = resolveBtnTarget(sec.props);
-                        ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="font-bold px-4 py-2 rounded transition duration-300 text-sm ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
+                        ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="font-bold px-6 py-2.5 ${btnShapeClass} transition duration-300 text-sm ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
                     }
@@ -1283,14 +1297,16 @@ $csrf_token = generate_csrf_token();
                     const btnBg = sec.props.btnBg || '#14b8a6';
                     const btnColor = sec.props.btnColor || '#0f172a';
                     const btnText = sec.props.btnText || 'Start For Free';
+                    const btnShapeClass = resolveBtnShapeClass(sec.props);
                     const btnEffectClass = resolveBtnEffectClass(sec.props);
-                    const primaryBtnHtml = `<a href="${primaryHref}" ${primaryTarget} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const primaryBtnHtml = `<a href="${primaryHref}" ${primaryTarget} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition-all duration-300 transform hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
 
                     const secHref = resolveBtnUrl(sec.props, 'secBtn');
                     const secTarget = resolveBtnTarget(sec.props, 'secBtn');
                     const headingColor = sec.props.headingColor || '#ffffff';
                     const secBtnText = sec.props.secondaryBtnText || 'Learn More';
-                    const secBtnHtml = `<a href="${secHref}" ${secTarget} class="inline-block font-bold px-8 py-4 rounded-lg border transition-all duration-300 hover:bg-white/5" style="border-color: rgba(255,255,255,0.2); color: ${headingColor};">${secBtnText}</a>`;
+                    const secBtnShapeClass = resolveBtnShapeClass(sec.props, 'secBtn');
+                    const secBtnHtml = `<a href="${secHref}" ${secTarget} class="inline-block font-bold px-8 py-4 ${secBtnShapeClass} border transition-all duration-300 hover:bg-white/5" style="border-color: rgba(255,255,255,0.2); color: ${headingColor};">${secBtnText}</a>`;
 
                     compiledHtml = compiledHtml.replace(/{{\s*primaryCtaBtn\s*}}/g, primaryBtnHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*secondaryCtaBtn\s*}}/g, secBtnHtml);
@@ -1302,8 +1318,9 @@ $csrf_token = generate_csrf_token();
                     const btnBg = sec.props.btnBg || '#0f172a';
                     const btnColor = sec.props.btnColor || '#ffffff';
                     const btnText = sec.props.btnText || 'Get Started Now';
+                    const btnShapeClass = resolveBtnShapeClass(sec.props);
                     const btnEffectClass = resolveBtnEffectClass(sec.props);
-                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 rounded-lg shadow-lg transition duration-300 hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition duration-300 hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
                     compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
                 }
 
@@ -1313,14 +1330,16 @@ $csrf_token = generate_csrf_token();
                     const t1Text = sec.props.tier1BtnText || 'Choose Starter';
                     const accentColor = sec.props.accentColor || '#14b8a6';
                     const bgColor = sec.props.bgColor || '#0f172a';
+                    const t1ShapeClass = resolveBtnShapeClass(sec.props, 'tier1');
                     const t1EffectClass = resolveBtnEffectClass(sec.props, 'tier1');
-                    const t1BtnHtml = `<a href="${t1Href}" ${t1Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90 ${t1EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t1Text}</a>`;
+                    const t1BtnHtml = `<a href="${t1Href}" ${t1Target} class="block text-center w-full font-extrabold py-3 ${t1ShapeClass} transition duration-300 hover:opacity-90 ${t1EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t1Text}</a>`;
 
                     const t2Href = resolveBtnUrl(sec.props, 'tier2');
                     const t2Target = resolveBtnTarget(sec.props, 'tier2');
                     const t2Text = sec.props.tier2BtnText || 'Get Pro Access';
+                    const t2ShapeClass = resolveBtnShapeClass(sec.props, 'tier2');
                     const t2EffectClass = resolveBtnEffectClass(sec.props, 'tier2');
-                    const t2BtnHtml = `<a href="${t2Href}" ${t2Target} class="block text-center w-full font-extrabold py-3 rounded-lg transition duration-300 hover:opacity-90 ${t2EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t2Text}</a>`;
+                    const t2BtnHtml = `<a href="${t2Href}" ${t2Target} class="block text-center w-full font-extrabold py-3 ${t2ShapeClass} transition duration-300 hover:opacity-90 ${t2EffectClass}" style="background-color: ${accentColor}; color: ${bgColor};">${t2Text}</a>`;
 
                     compiledHtml = compiledHtml.replace(/{{\s*tier1Btn\s*}}/g, t1BtnHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*tier2Btn\s*}}/g, t2BtnHtml);
@@ -1333,8 +1352,9 @@ $csrf_token = generate_csrf_token();
                         const href = resolveBtnUrl(sec.props);
                         const targetAttr = resolveBtnTarget(sec.props);
                         const accentColor = sec.props.accentColor || '#14b8a6';
+                        const btnShapeClass = resolveBtnShapeClass(sec.props);
                         const btnEffectClass = resolveBtnEffectClass(sec.props);
-                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 rounded-lg text-xs transition duration-300 hover:opacity-90 mt-2 ${btnEffectClass}" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
+                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 ${btnShapeClass} text-xs transition duration-300 hover:opacity-90 mt-2 ${btnEffectClass}" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
                     }
                     compiledHtml = compiledHtml.replace(/{{\s*boxBtn\s*}}/g, boxBtnHtml);
                 }
@@ -1552,6 +1572,18 @@ $csrf_token = generate_csrf_token();
 
                 // --- ELEMENT-LEVEL SELECTION AND OVERRIDES ENHANCEMENT ---
                 // Query all potentially editable sub-elements in sequential order
+                if (isBuilderMode) {
+                    const allLinksAndBtns = temp.querySelectorAll('a, button, [onclick]');
+                    allLinksAndBtns.forEach(el => {
+                        el.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); return false;');
+                        if (el.tagName === 'A') {
+                            el.setAttribute('data-href', el.getAttribute('href') || '');
+                            el.setAttribute('href', 'javascript:void(0)');
+                            el.removeAttribute('target');
+                        }
+                    });
+                }
+
                 const selectables = temp.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, img, i, button, a, [data-brand-text], [data-cta-button], [data-el-path]');
 
                 let autoIdx = 0;
@@ -1574,11 +1606,13 @@ $csrf_token = generate_csrf_token();
                         }
 
                         // Prevent click action e.g. links/form buttons inside builder
-                        if (el.tagName === 'A' || el.tagName === 'BUTTON') {
-                            el.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            });
+                        if (el.tagName === 'A' || el.tagName === 'BUTTON' || el.getAttribute('onclick') || el.closest('a') || el.closest('button')) {
+                            el.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); return false;');
+                            if (el.tagName === 'A') {
+                                el.setAttribute('data-href', el.getAttribute('href') || '');
+                                el.setAttribute('href', 'javascript:void(0)');
+                                el.removeAttribute('target');
+                            }
                         }
                     }
 
