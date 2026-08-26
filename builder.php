@@ -1202,18 +1202,18 @@ $csrf_token = generate_csrf_token();
                                     // Mobile dropdown
                                     return `
                                     <div class="w-full">
-                                        <button onclick="const sub = this.nextElementSibling; sub.classList.toggle('hidden'); const icon = this.querySelector('.fa-chevron-down'); icon.classList.toggle('rotate-180');" class="flex justify-between items-center w-full font-bold py-1.5 transition text-left" style="color: ${textColor};">
+                                        <button onclick="const sub = this.nextElementSibling; sub.classList.toggle('hidden'); const icon = this.querySelector('.fa-chevron-down'); icon.classList.toggle('rotate-180');" class="flex justify-between items-center w-full font-bold py-1.5 transition text-left" style="color: ${textColor};" data-el-path="el-navlink-mobile-${lIdx}">
                                             <span>${link.text}</span>
                                             <i class="fas fa-chevron-down text-[10px] opacity-70 transition-transform duration-200"></i>
                                         </button>
                                         <div class="hidden flex flex-col space-y-2 pl-4 border-l border-slate-800/80 mt-1 pb-2">
-                                            ${children.map(child => {
+                                            ${children.map((child, cIdx) => {
                                                 let cUrl = child.url || '#';
                                                 if (child.type === 'page') {
                                                     cUrl = `?page=${child.pageName || 'index'}`;
                                                 }
                                                 return `
-                                                <a href="${cUrl}" onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');" class="block text-xs py-1 transition duration-200" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'">${child.text}</a>
+                                                <a href="${cUrl}" onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');" class="block text-xs py-1 transition duration-200" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-mobile-${lIdx}-sub-${cIdx}">${child.text}</a>
                                                 `;
                                             }).join('\n')}
                                         </div>
@@ -1223,7 +1223,8 @@ $csrf_token = generate_csrf_token();
                             } else {
                                 const closeMobileAttr = isDesktop ? '' : `onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');"`;
                                 const classAttr = isDesktop ? 'font-bold transition duration-300' : 'block py-1.5 font-bold transition duration-300';
-                                return `<a href="${url}" ${closeMobileAttr} class="${classAttr}" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${isDesktop ? `data-el-path="el-navlink-${lIdx}"` : ''}>${link.text}</a>`;
+                                const elPathAttr = isDesktop ? `data-el-path="el-navlink-${lIdx}"` : `data-el-path="el-navlink-mobile-${lIdx}"`;
+                                return `<a href="${url}" ${closeMobileAttr} class="${classAttr}" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${elPathAttr}>${link.text}</a>`;
                             }
                         }).join('\n');
                     };
@@ -1557,19 +1558,24 @@ $csrf_token = generate_csrf_token();
                     }
 
                     // Apply saved element level overrides if any
-                    if (sec.element_overrides && sec.element_overrides[path]) {
-                        const override = sec.element_overrides[path];
-
-                        // Hide element option
-                        if (override.hidden) {
-                            if (isBuilderMode) {
-                                el.style.opacity = '0.3';
-                                el.style.outline = '1px dashed #ef4444';
-                                el.title = 'Hidden in Production';
-                            } else {
-                                el.style.display = 'none';
-                            }
+                    if (sec.element_overrides) {
+                        let override = sec.element_overrides[path];
+                        if (!override && path.startsWith('el-navlink-mobile-')) {
+                            const desktopPath = path.replace('el-navlink-mobile-', 'el-navlink-');
+                            override = sec.element_overrides[desktopPath];
                         }
+
+                        if (override) {
+                            // Hide element option
+                            if (override.hidden) {
+                                if (isBuilderMode) {
+                                    el.style.opacity = '0.3';
+                                    el.style.outline = '1px dashed #ef4444';
+                                    el.title = 'Hidden in Production';
+                                } else {
+                                    el.style.display = 'none';
+                                }
+                            }
 
                         // Text / HTML / Src content overrides
                         if (override.text !== undefined) {
@@ -1590,6 +1596,7 @@ $csrf_token = generate_csrf_token();
                                 el.style[styleKey] = override.styles[styleKey];
                             });
                         }
+                    }
                     }
                 });
 
