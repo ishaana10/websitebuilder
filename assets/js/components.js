@@ -34,6 +34,11 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'CTA Button Text', type: 'text', default: 'Get Started' },
             { key: 'btnBg', label: 'CTA Button Background', type: 'color', default: '#14b8a6' },
             { key: 'btnColor', label: 'CTA Button Text Color', type: 'color', default: '#0f172a' },
+            { key: 'btnShape', label: 'CTA Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'btnLinkType', label: 'CTA Link Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'CTA Link URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'CTA Select Page', type: 'text', default: 'index' },
@@ -131,6 +136,11 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
             { key: 'btnBg', label: 'Primary CTA Background', type: 'color', default: '#14b8a6' },
             { key: 'btnColor', label: 'Primary CTA Text Color', type: 'color', default: '#0f172a' },
+            { key: 'btnShape', label: 'Primary CTA Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'btnLinkType', label: 'Primary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Primary CTA URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Primary CTA Select Page', type: 'text', default: 'index' },
@@ -149,6 +159,11 @@ const UI_COMPONENTS = [
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
             { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
+            { key: 'secBtnShape', label: 'Secondary CTA Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'secBtnLinkType', label: 'Secondary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'secBtnUrl', label: 'Secondary CTA URL', type: 'text', default: '#' },
             { key: 'secBtnPage', label: 'Secondary CTA Select Page', type: 'text', default: 'index' },
@@ -352,6 +367,11 @@ const UI_COMPONENTS = [
             { key: 'tier2WaPhone', label: 'Tier 2 WhatsApp Phone', type: 'text', default: '15551234567' },
             { key: 'tier2WaMsg', label: 'Tier 2 WhatsApp Message', type: 'text', default: 'I would like to get started with Tier 2 Pro plan.' },
             { key: 'tier2NewTab', label: 'Tier 2 Open in New Tab', type: 'checkbox', default: false },
+            { key: 'tier1Shape', label: 'Tier 1 Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'tier1Effect', label: 'Tier 1 Button Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
@@ -362,6 +382,11 @@ const UI_COMPONENTS = [
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
+            { key: 'tier2Shape', label: 'Tier 2 Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'tier2Effect', label: 'Tier 2 Button Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
@@ -1046,6 +1071,11 @@ const UI_COMPONENTS = [
             { key: 'textColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
             { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
+            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
@@ -1248,6 +1278,11 @@ const UI_COMPONENTS = [
             { key: 'iconClass', label: 'FontAwesome Icon', type: 'text', default: 'fas fa-cubes' },
             { key: 'imageUrl', label: 'Image URL (Optional)', type: 'text', default: '' },
             { key: 'btnText', label: 'Button Text (Optional)', type: 'text', default: 'Learn More' },
+            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
             { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
