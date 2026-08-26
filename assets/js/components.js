@@ -34,10 +34,12 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'CTA Button Text', type: 'text', default: 'Get Started' },
             { key: 'btnBg', label: 'CTA Button Background', type: 'color', default: '#14b8a6' },
             { key: 'btnColor', label: 'CTA Button Text Color', type: 'color', default: '#0f172a' },
-            { key: 'btnLinkType', label: 'CTA Link Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnLinkType', label: 'CTA Link Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'CTA Link URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'CTA Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'CTA Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number (with Country Code)', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am reaching out from your website.' },
             { key: 'btnNewTab', label: 'CTA Open in New Tab', type: 'checkbox', default: false },
             { key: 'btnEffect', label: 'CTA Button Special Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
@@ -129,10 +131,12 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
             { key: 'btnBg', label: 'Primary CTA Background', type: 'color', default: '#14b8a6' },
             { key: 'btnColor', label: 'Primary CTA Text Color', type: 'color', default: '#0f172a' },
-            { key: 'btnLinkType', label: 'Primary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnLinkType', label: 'Primary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Primary CTA URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Primary CTA Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Primary CTA Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number (with Country Code)', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am interested in learning more.' },
             { key: 'btnNewTab', label: 'Primary CTA Open in New Tab', type: 'checkbox', default: false },
             { key: 'btnEffect', label: 'Primary CTA Special Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
@@ -145,10 +149,12 @@ const UI_COMPONENTS = [
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
             { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
-            { key: 'secBtnLinkType', label: 'Secondary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'secBtnLinkType', label: 'Secondary CTA Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'secBtnUrl', label: 'Secondary CTA URL', type: 'text', default: '#' },
             { key: 'secBtnPage', label: 'Secondary CTA Select Page', type: 'text', default: 'index' },
             { key: 'secBtnSection', label: 'Secondary CTA Select Section', type: 'text', default: '' },
+            { key: 'secBtnWaPhone', label: 'Secondary WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'secBtnWaMsg', label: 'Secondary WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I need help.' },
             { key: 'secBtnNewTab', label: 'Secondary CTA Open in New Tab', type: 'checkbox', default: false },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
@@ -328,19 +334,23 @@ const UI_COMPONENTS = [
             { key: 'tier1Name', label: 'Tier 1 Name', type: 'text', default: 'Starter' },
             { key: 'tier1Price', label: 'Tier 1 Price', type: 'text', default: '$19' },
             { key: 'tier1BtnText', label: 'Tier 1 Button Text', type: 'text', default: 'Get Started' },
-            { key: 'tier1LinkType', label: 'Tier 1 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'tier1LinkType', label: 'Tier 1 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'tier1Url', label: 'Tier 1 URL', type: 'text', default: '#' },
             { key: 'tier1Page', label: 'Tier 1 Select Page', type: 'text', default: 'index' },
             { key: 'tier1Section', label: 'Tier 1 Select Section', type: 'text', default: '' },
+            { key: 'tier1WaPhone', label: 'Tier 1 WhatsApp Phone', type: 'text', default: '15551234567' },
+            { key: 'tier1WaMsg', label: 'Tier 1 WhatsApp Message', type: 'text', default: 'I would like to get started with Tier 1 plan.' },
             { key: 'tier1NewTab', label: 'Tier 1 Open in New Tab', type: 'checkbox', default: false },
 
             { key: 'tier2Name', label: 'Tier 2 Name', type: 'text', default: 'Professional' },
             { key: 'tier2Price', label: 'Tier 2 Price', type: 'text', default: '$49' },
             { key: 'tier2BtnText', label: 'Tier 2 Button Text', type: 'text', default: 'Go Pro' },
-            { key: 'tier2LinkType', label: 'Tier 2 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'tier2LinkType', label: 'Tier 2 Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'tier2Url', label: 'Tier 2 URL', type: 'text', default: '#' },
             { key: 'tier2Page', label: 'Tier 2 Select Page', type: 'text', default: 'index' },
             { key: 'tier2Section', label: 'Tier 2 Select Section', type: 'text', default: '' },
+            { key: 'tier2WaPhone', label: 'Tier 2 WhatsApp Phone', type: 'text', default: '15551234567' },
+            { key: 'tier2WaMsg', label: 'Tier 2 WhatsApp Message', type: 'text', default: 'I would like to get started with Tier 2 Pro plan.' },
             { key: 'tier2NewTab', label: 'Tier 2 Open in New Tab', type: 'checkbox', default: false },
             { key: 'tier1Effect', label: 'Tier 1 Button Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
@@ -658,6 +668,113 @@ const UI_COMPONENTS = [
 </div>`
     },
     {
+        id: 'whatsapp_chatbot',
+        name: 'WhatsApp Business Floating Widget',
+        category: 'Advanced',
+        icon: 'fab fa-whatsapp',
+        schema: [
+            { key: 'agentName', label: 'Business Name / Title', type: 'text', default: 'WhatsApp Support' },
+            { key: 'subtitle', label: 'Status Subtitle', type: 'text', default: 'Typically replies in a few minutes' },
+            { key: 'phoneNumber', label: 'WhatsApp Phone Number (with Country Code)', type: 'text', default: '15551234567' },
+            { key: 'welcomeMessage', label: 'Welcome Prompt Message', type: 'textarea', default: 'Hello! 👋 How can we help you on WhatsApp today?' },
+            { key: 'defaultMessage', label: 'Default Pre-filled Message', type: 'text', default: 'Hello! I have a question about your products and services.' },
+            { key: 'position', label: 'Screen Position', type: 'select', default: 'bottom-right', options: [
+                { value: 'bottom-right', label: 'Bottom Right' },
+                { value: 'bottom-left', label: 'Bottom Left' }
+            ]},
+            { key: 'accentColor', label: 'WhatsApp Brand Color', type: 'color', default: '#25D366' },
+            { key: 'bgColor', label: 'Chat Popup Background', type: 'color', default: '#0f172a' }
+        ],
+        html: `
+<div class="fixed {{position === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6'}} z-50 font-sans whatsapp-chatbot-root" data-component="whatsapp_chatbot" data-phone="{{phoneNumber}}" data-default-msg="{{defaultMessage}}">
+    <!-- Floating WhatsApp Button -->
+    <button onclick="window.toggleWhatsAppChatbot(this)" class="whatsapp-chat-toggle-btn w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 hover:scale-110 focus:outline-none relative" style="background-color: {{accentColor}};" title="Chat with {{agentName}} on WhatsApp">
+        <i class="fab fa-whatsapp text-3xl text-white"></i>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-slate-900 animate-ping"></span>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+    </button>
+
+    <!-- Chat Popup Card -->
+    <div class="whatsapp-chat-window hidden absolute bottom-18 {{position === 'bottom-left' ? 'left-0' : 'right-0'}} w-80 md:w-96 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="background-color: {{bgColor}};">
+        <!-- Header -->
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center" style="background-color: #075e54;">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-xl shadow">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-sm text-white flex items-center gap-1.5">
+                        <span>{{agentName}}</span>
+                    </h4>
+                    <span class="text-[10px] text-emerald-200 font-medium block">{{subtitle}}</span>
+                </div>
+            </div>
+            <button onclick="window.toggleWhatsAppChatbot(this)" class="text-white/80 hover:text-white transition p-1"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Chat Body / Welcome Message -->
+        <div class="p-4 space-y-3 text-xs text-slate-200 bg-slate-950/60">
+            <div class="bg-slate-800/90 border border-slate-700/60 p-3.5 rounded-2xl rounded-tl-none max-w-[90%] leading-relaxed shadow-md">
+                {{welcomeMessage}}
+            </div>
+        </div>
+
+        <!-- Quick Launch Form -->
+        <form onsubmit="event.preventDefault(); window.sendWhatsAppChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+            <input type="text" name="custom_msg" value="{{defaultMessage}}" placeholder="Type message for WhatsApp..." required class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-sans" />
+            <button type="submit" class="font-bold px-4 py-2 rounded-xl text-xs text-white transition hover:brightness-110 flex items-center justify-center gap-1.5 shadow" style="background-color: {{accentColor}};">
+                <i class="fab fa-whatsapp text-sm"></i>
+                <span>Open</span>
+            </button>
+        </form>
+    </div>
+</div>`
+    },
+    {
+        id: 'whatsapp_business_block',
+        name: 'WhatsApp Business Callout Section',
+        category: 'Features',
+        icon: 'fab fa-whatsapp-square',
+        schema: [
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'Connect with us directly on WhatsApp' },
+            { key: 'text', label: 'Description Text', type: 'textarea', default: 'Get instant answers to your questions, request quotes, or chat live with our support team on WhatsApp.' },
+            { key: 'phoneNumber', label: 'WhatsApp Phone Number (with Country Code)', type: 'text', default: '15551234567' },
+            { key: 'defaultMessage', label: 'Pre-filled Message', type: 'text', default: 'Hello! I am reaching out from your website for quick support.' },
+            { key: 'btnText', label: 'Button CTA Text', type: 'text', default: 'Chat on WhatsApp' },
+            { key: 'showQr', label: 'Show QR Code for Mobile Scanning', type: 'checkbox', default: true },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#075e54' },
+            { key: 'cardBg', label: 'Card Container Background', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Text Detail Color', type: 'color', default: '#e2e8f0' },
+            { key: 'btnBg', label: 'Button Background Color', type: 'color', default: '#25D366' },
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-2xl" style="background-color: {{bgColor}};" data-component="whatsapp_business_block">
+    <div class="max-w-4xl mx-auto bg-slate-900/90 p-8 md:p-12 rounded-2xl border border-emerald-500/30 shadow-2xl text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8" style="background-color: {{cardBg}};">
+        <div class="flex-1 space-y-4">
+            <span class="inline-flex items-center gap-2 font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <i class="fab fa-whatsapp text-sm"></i> WhatsApp Business Instant Chat
+            </span>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{{heading}}</h2>
+            <p class="text-sm leading-relaxed" style="color: {{textColor}};">{{text}}</p>
+            <div class="pt-2">
+                <a href="https://wa.me/{{phoneNumber}}?text={{encodeURIComponent(defaultMessage)}}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition duration-300 transform hover:scale-105 shadow-xl" style="background-color: {{btnBg}}; color: {{btnColor}};">
+                    <i class="fab fa-whatsapp text-lg"></i>
+                    <span>{{btnText}}</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center justify-center p-4 bg-slate-950 rounded-2xl border border-slate-800 shrink-0" style="display: {{showQr ? 'flex' : 'none'}};">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fwa.me%2F{{phoneNumber}}%3Ftext%3D{{encodeURIComponent(defaultMessage)}}" alt="Scan WhatsApp QR Code" class="w-32 h-32 rounded-lg border border-slate-800 shadow" />
+            <span class="text-[10px] text-slate-400 font-mono mt-2 flex items-center gap-1">
+                <i class="fas fa-qrcode text-emerald-400"></i> Scan to chat on mobile
+            </span>
+        </div>
+    </div>
+</section>`
+    },
+    {
         id: 'google_chatbot',
         name: 'Google AI Agent Chatbot',
         category: 'Advanced',
@@ -929,10 +1046,12 @@ const UI_COMPONENTS = [
             { key: 'textColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
             { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
-            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am ready to accelerate my workflow.' },
             { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
             { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
@@ -1129,10 +1248,12 @@ const UI_COMPONENTS = [
             { key: 'iconClass', label: 'FontAwesome Icon', type: 'text', default: 'fas fa-cubes' },
             { key: 'imageUrl', label: 'Image URL (Optional)', type: 'text', default: '' },
             { key: 'btnText', label: 'Button Text (Optional)', type: 'text', default: 'Learn More' },
-            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}] },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
             { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
             { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
             { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am interested in this spotlight feature.' },
             { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
             { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
@@ -1510,6 +1631,31 @@ if (typeof window !== 'undefined') {
             logs.appendChild(aiDiv);
             logs.scrollTop = logs.scrollHeight;
         }, 800);
+    };
+
+    // --- WhatsApp Floating Widget Methods ---
+    window.toggleWhatsAppChatbot = function(btnElement) {
+        const root = btnElement.closest('[data-component="whatsapp_chatbot"]');
+        if (!root) return;
+
+        const chatWin = root.querySelector('.whatsapp-chat-window');
+        if (!chatWin) return;
+
+        chatWin.classList.toggle('hidden');
+    };
+
+    window.sendWhatsAppChatMessage = function(formElement) {
+        const root = formElement.closest('[data-component="whatsapp_chatbot"]');
+        if (!root) return;
+
+        const phone = root.getAttribute('data-phone') || '15551234567';
+        const customMsgInput = formElement.querySelector("input[name='custom_msg']");
+        const msgText = customMsgInput ? customMsgInput.value.trim() : (root.getAttribute('data-default-msg') || 'Hello!');
+
+        const cleanPhone = phone.replace(/[^\d+]/g, '');
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgText)}`;
+
+        window.open(waUrl, '_blank', 'noopener,noreferrer');
     };
 
     // --- Google AI Chatbot Widget Methods ---
