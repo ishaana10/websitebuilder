@@ -115,6 +115,10 @@ if (!$is_published || empty($body_content)) {
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: #020617; /* Default fallback dark background */
         }
+        main * {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
     </style>
     <?php if (!empty($custom_css)): ?>
     <style>

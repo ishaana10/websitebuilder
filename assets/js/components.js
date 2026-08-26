@@ -45,6 +45,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] }
@@ -71,7 +72,7 @@ const UI_COMPONENTS = [
     </div>
 
     <!-- Mobile Menu dropdown -->
-    <div class="mobile-menu hidden md:hidden flex flex-col space-y-3 mt-4 pt-4 border-t border-slate-700/50">
+    <div class="mobile-menu hidden md:hidden flex flex-col space-y-2 mt-4 pt-4 border-t border-slate-700/50 w-full">
         {{links}}
     </div>
 </nav>`
@@ -139,6 +140,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
@@ -171,11 +173,16 @@ const UI_COMPONENTS = [
         category: 'Hero',
         icon: 'fas fa-th',
         schema: [
-            { key: 'colCount', label: 'Column Layout Count', type: 'select', default: 'grid-cols-3', options: [
-                { value: 'grid-cols-1', label: '1 Column Span' },
-                { value: 'grid-cols-2', label: '2 Columns split' },
-                { value: 'grid-cols-3', label: '3 Columns split' },
-                { value: 'grid-cols-4', label: '4 Columns split' }
+            { key: 'colCount', label: 'Desktop Column Count', type: 'select', default: 'grid-cols-3', options: [
+                { value: 'grid-cols-1', label: '1 Column Span (Desktop)' },
+                { value: 'grid-cols-2', label: '2 Columns split (Desktop)' },
+                { value: 'grid-cols-3', label: '3 Columns split (Desktop)' },
+                { value: 'grid-cols-4', label: '4 Columns split (Desktop)' }
+            ]},
+            { key: 'mobileColCount', label: 'Mobile Column Count', type: 'select', default: 'grid-cols-2', options: [
+                { value: 'grid-cols-1', label: '1 Column (Mobile)' },
+                { value: 'grid-cols-2', label: '2 Columns (Mobile)' },
+                { value: 'grid-cols-3', label: '3 Columns (Mobile)' }
             ]},
             { key: 'cardEffect', label: 'Card Visual / Animation Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'None (Standard Card)' },
@@ -341,6 +348,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
@@ -350,6 +358,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
@@ -931,6 +940,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] }
@@ -1130,6 +1140,7 @@ const UI_COMPONENTS = [
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
