@@ -1051,6 +1051,8 @@ $csrf_token = generate_csrf_token();
                 const urlKey = prefix ? prefix + 'Url' : 'btnUrl';
                 const pageKey = prefix ? prefix + 'Page' : 'btnPage';
                 const sectionKey = prefix ? prefix + 'Section' : 'btnSection';
+                const waPhoneKey = prefix ? prefix + 'WaPhone' : 'btnWaPhone';
+                const waMsgKey = prefix ? prefix + 'WaMsg' : 'btnWaMsg';
 
                 const linkType = props[linkTypeKey] || 'url';
                 if (linkType === 'page') {
@@ -1059,6 +1061,10 @@ $csrf_token = generate_csrf_token();
                 } else if (linkType === 'section') {
                     const secId = props[sectionKey] || '';
                     return secId ? `#${secId}` : '#';
+                } else if (linkType === 'whatsapp') {
+                    const phone = (props[waPhoneKey] || '15551234567').replace(/[^\d+]/g, '');
+                    const msg = props[waMsgKey] || '';
+                    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
                 } else {
                     return props[urlKey] || '#';
                 }
@@ -1489,8 +1495,8 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*showLine\s*\?\s*'block'\s*:\s*'none'\s*}}/g, displayVal);
                 }
 
-                // Dynamic compiler for google_chatbot position placement
-                if (sec.type.toLowerCase() === 'google_chatbot') {
+                // Dynamic compiler for google_chatbot & whatsapp_chatbot position placement
+                if (sec.type.toLowerCase() === 'google_chatbot' || sec.type.toLowerCase() === 'whatsapp_chatbot') {
                     const pos = sec.props.position || 'bottom-right';
                     const posClass = pos === 'bottom-left' ? 'bottom-6 left-6' : 'bottom-6 right-6';
                     const winPosClass = pos === 'bottom-left' ? 'left-0' : 'right-0';
