@@ -681,6 +681,31 @@ $csrf_token = generate_csrf_token();
                     } else {
                         initialPages = { index: initialSections };
                     }
+                    // Sanitize navbar/footer element overrides in initialPages to remove stale link hidden overrides
+                    Object.keys(initialPages).forEach(pKey => {
+                        let pageSects = initialPages[pKey] || [];
+                        pageSects = pageSects.map(sec => {
+                            if ((sec.type.toLowerCase() === 'navbar' || sec.type.toLowerCase() === 'footer') && sec.element_overrides && Array.isArray(sec.props.links)) {
+                                const newOverrides = { ...sec.element_overrides };
+                                sec.props.links.forEach((linkObj, lIdx) => {
+                                    if (!linkObj.hidden) {
+                                        ['el-navlink-' + lIdx, 'el-navlink-mobile-' + lIdx, 'el-' + lIdx].forEach(k => {
+                                            if (newOverrides[k]) {
+                                                if (newOverrides[k].hidden) delete newOverrides[k].hidden;
+                                                if (newOverrides[k].styles && newOverrides[k].styles.display === 'none') {
+                                                    delete newOverrides[k].styles.display;
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                                return { ...sec, element_overrides: newOverrides };
+                            }
+                            return sec;
+                        });
+                        initialPages[pKey] = pageSects;
+                    });
+
                     setPages(initialPages);
                     setActivePage(raw.activePage || "index");
                     setCustomCss(initialCss);
@@ -1557,6 +1582,24 @@ $csrf_token = generate_csrf_token();
                         if (!override && path.startsWith('el-navlink-mobile-')) {
                             const desktopPath = path.replace('el-navlink-mobile-', 'el-navlink-');
                             override = sec.element_overrides[desktopPath];
+                        }
+
+                        // For navbar and footer links, link visibility is governed by linkObj.hidden in sec.props.links
+                        if (path.startsWith('el-navlink-') || path.startsWith('el-navlink-mobile-')) {
+                            const linkMatch = path.match(/el-navlink-(?:mobile-)?(\d+)/);
+                            if (linkMatch && sec.props && Array.isArray(sec.props.links)) {
+                                const lIdx = parseInt(linkMatch[1], 10);
+                                const linkObj = sec.props.links[lIdx];
+                                if (linkObj && !linkObj.hidden) {
+                                    if (override) {
+                                        override = { ...override, hidden: false };
+                                        if (override.styles && override.styles.display === 'none') {
+                                            override.styles = { ...override.styles };
+                                            delete override.styles.display;
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         if (override) {
@@ -2438,7 +2481,23 @@ $csrf_token = generate_csrf_token();
                                                 ]);
 
                                                 const handleLinksChange = (newLinks) => {
-                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, links: newLinks } } : s);
+                                                    const updated = sections.map(s => {
+                                                        if (s.id !== selectedSection.id) return s;
+                                                        const cleanOverrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                        newLinks.forEach((linkObj, lIdx) => {
+                                                            if (!linkObj.hidden) {
+                                                                ['el-navlink-' + lIdx, 'el-navlink-mobile-' + lIdx, 'el-' + lIdx].forEach(k => {
+                                                                    if (cleanOverrides[k]) {
+                                                                        if (cleanOverrides[k].hidden) delete cleanOverrides[k].hidden;
+                                                                        if (cleanOverrides[k].styles && cleanOverrides[k].styles.display === 'none') {
+                                                                            delete cleanOverrides[k].styles.display;
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                        return { ...s, props: { ...s.props, links: newLinks }, element_overrides: cleanOverrides };
+                                                    });
                                                     updateSectionsWithHistory(updated);
                                                 };
 
