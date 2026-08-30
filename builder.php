@@ -220,6 +220,7 @@ $csrf_token = generate_csrf_token();
             const [seoTitle, setSeoTitle] = useState(PROJECT_NAME);
             const [seoMetaDesc, setSeoMetaDesc] = useState('Elegantly compiled web properties, pre-cached for sub-millisecond visual layouts.');
             const [seoOgImage, setSeoOgImage] = useState('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600');
+            const [seoFavicon, setSeoFavicon] = useState('');
             const [seoRobotsTxt, setSeoRobotsTxt] = useState('User-agent: *\nAllow: /\nSitemap: /sitemap.xml');
             const [seoStructuredData, setSeoStructuredData] = useState(JSON.stringify({
                 "@context": "https://schema.org",
@@ -710,6 +711,7 @@ $csrf_token = generate_csrf_token();
                         setSeoTitle(raw.seo_settings.title || PROJECT_NAME);
                         setSeoMetaDesc(raw.seo_settings.meta_desc || '');
                         setSeoOgImage(raw.seo_settings.og_image || '');
+                        setSeoFavicon(raw.seo_settings.favicon || '');
                         setSeoRobotsTxt(raw.seo_settings.robots_txt || 'User-agent: *\nAllow: /');
                         setSeoStructuredData(raw.seo_settings.structured_data || '');
                     }
@@ -990,6 +992,7 @@ $csrf_token = generate_csrf_token();
                         title: seoTitle,
                         meta_desc: seoMetaDesc,
                         og_image: seoOgImage,
+                        favicon: seoFavicon,
                         robots_txt: seoRobotsTxt,
                         structured_data: seoStructuredData
                     },
@@ -3213,7 +3216,68 @@ $csrf_token = generate_csrf_token();
                                         {/* Open Graph Image URL */}
                                         <div>
                                             <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Open Graph / Social Card Image</label>
-                                            <input type="text" value={seoOgImage} onChange={(e) => setSeoOgImage(e.target.value)} placeholder="https://example.com/social-og.jpg" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono" />
+                                            <input type="text" value={seoOgImage} onChange={(e) => setSeoOgImage(e.target.value)} placeholder="https://example.com/social-og.jpg" className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono" />
+                                        </div>
+
+                                        {/* Website Favicon */}
+                                        <div className="space-y-1.5 border-t border-b border-slate-800/80 py-3 my-2">
+                                            <label className="text-[10px] font-bold text-teal-400 uppercase block flex items-center justify-between">
+                                                <span><i className="fas fa-icons mr-1"></i> Website Favicon</span>
+                                                {seoFavicon && (
+                                                    <span className="text-[9px] text-slate-400 font-normal">Active</span>
+                                                )}
+                                            </label>
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    type="text"
+                                                    value={seoFavicon}
+                                                    onChange={(e) => setSeoFavicon(e.target.value)}
+                                                    placeholder="Favicon URL or upload image..."
+                                                    id="seo-favicon-input"
+                                                    className="flex-1 bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+                                                />
+                                                <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-teal-400 border border-teal-500/30 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap">
+                                                    <i className="fas fa-upload"></i>
+                                                    <span>Upload</span>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (!file) return;
+                                                            const formData = new FormData();
+                                                            formData.append('image', file);
+                                                            fetch('api.php?action=upload_image', {
+                                                                method: 'POST',
+                                                                body: formData
+                                                            })
+                                                            .then(res => res.json())
+                                                            .then(data => {
+                                                                if (data.url) {
+                                                                    setSeoFavicon(data.url);
+                                                                    showToast("Favicon Uploaded", "Favicon image saved successfully.");
+                                                                } else {
+                                                                    showToast("Upload Failed", data.error || "Could not upload image.");
+                                                                }
+                                                            })
+                                                            .catch(err => showToast("Error", err.message));
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                            {seoFavicon && (
+                                                <div className="flex items-center gap-3 bg-slate-950/60 p-2 rounded border border-slate-800/80">
+                                                    <img src={seoFavicon} alt="Favicon Preview" className="w-6 h-6 object-contain rounded bg-white/10 p-0.5 border border-slate-700" onError={(e) => { e.target.style.display = 'none'; }} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[10px] text-slate-300 truncate font-mono">{seoFavicon}</p>
+                                                    </div>
+                                                    <button onClick={() => setSeoFavicon('')} className="text-slate-500 hover:text-red-400 text-xs px-1.5 py-0.5" title="Remove Favicon">
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <span className="text-[9px] text-slate-500 block">Recommended format: .ico, .png, or .svg icon displayed in browser tabs.</span>
                                         </div>
 
                                         {/* Robots.txt code block */}

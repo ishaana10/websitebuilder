@@ -180,6 +180,7 @@ switch ($action) {
             $seo_title = null;
             $seo_desc = null;
             $seo_og = null;
+            $seo_favicon = null;
             $seo_robots = null;
             $seo_structured = null;
 
@@ -188,13 +189,14 @@ switch ($action) {
                 $seo_title = $content_decoded['seo_settings']['title'] ?? null;
                 $seo_desc = $content_decoded['seo_settings']['meta_desc'] ?? null;
                 $seo_og = $content_decoded['seo_settings']['og_image'] ?? null;
+                $seo_favicon = $content_decoded['seo_settings']['favicon'] ?? null;
                 $seo_robots = $content_decoded['seo_settings']['robots_txt'] ?? null;
                 $seo_structured = $content_decoded['seo_settings']['structured_data'] ?? null;
             }
 
-            $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ?, seo_title = ?, seo_meta_desc = ?, seo_og_image = ?, seo_robots_txt = ?, seo_structured_data = ? WHERE id = ?");
+            $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ?, seo_title = ?, seo_meta_desc = ?, seo_og_image = ?, seo_favicon = ?, seo_robots_txt = ?, seo_structured_data = ? WHERE id = ?");
             try {
-                $stmt_update->execute([$name, $slug, $description, $content_json, $seo_title, $seo_desc, $seo_og, $seo_robots, $seo_structured, $project_id]);
+                $stmt_update->execute([$name, $slug, $description, $content_json, $seo_title, $seo_desc, $seo_og, $seo_favicon, $seo_robots, $seo_structured, $project_id]);
 
                 // Create a page version snapshot
                 $version_label = trim($input['version_label'] ?? '');
@@ -554,13 +556,18 @@ switch ($action) {
 
         $custom_css = '';
         $custom_js = '';
+        $export_favicon = $project['seo_favicon'] ?? '';
         if (!empty($project['content_json'])) {
             $parsed_json = json_decode($project['content_json'], true);
             if ($parsed_json && is_array($parsed_json) && !isset($parsed_json[0])) {
                 $custom_css = $parsed_json['custom_css'] ?? '';
                 $custom_js = $parsed_json['custom_js'] ?? '';
+                if (empty($export_favicon) && !empty($parsed_json['seo_settings']['favicon'])) {
+                    $export_favicon = $parsed_json['seo_settings']['favicon'];
+                }
             }
         }
+        $favicon_tag = !empty($export_favicon) ? '<link rel="icon" href="' . sanitize_output($export_favicon) . '"><link rel="shortcut icon" href="' . sanitize_output($export_favicon) . '">' : '';
 
         // Load content of assets/js/components.js to bundle inside zip
         $components_js_path = __DIR__ . '/assets/js/components.js';
@@ -589,6 +596,7 @@ switch ($action) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>' . sanitize_output($project['name']) . ' - ' . sanitize_output($pageKey) . '</title>
+    ' . $favicon_tag . '
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -664,6 +672,7 @@ switch ($action) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>' . sanitize_output($project['name']) . '</title>
+    ' . $favicon_tag . '
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->

@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS `projects` (
     `seo_title` VARCHAR(255) NULL,
     `seo_meta_desc` VARCHAR(255) NULL,
     `seo_og_image` VARCHAR(255) NULL,
+    `seo_favicon` VARCHAR(255) NULL,
     `seo_robots_txt` TEXT NULL,
     `seo_structured_data` TEXT NULL,
 

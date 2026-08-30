@@ -84,6 +84,10 @@ if (!$is_published || empty($body_content)) {
     $seo_title = !empty($project['seo_title']) ? $project['seo_title'] : $project['name'];
     $seo_desc = !empty($project['seo_meta_desc']) ? $project['seo_meta_desc'] : ($project['description'] ?? '');
     $seo_og_image = !empty($project['seo_og_image']) ? $project['seo_og_image'] : '';
+    $seo_favicon = !empty($project['seo_favicon']) ? $project['seo_favicon'] : '';
+    if (empty($seo_favicon) && !empty($content_json_data['seo_settings']['favicon'])) {
+        $seo_favicon = $content_json_data['seo_settings']['favicon'];
+    }
     $seo_structured = !empty($project['seo_structured_data']) ? $project['seo_structured_data'] : '';
     ?>
     <title><?php echo sanitize_output($seo_title); ?></title>
@@ -95,6 +99,12 @@ if (!$is_published || empty($body_content)) {
     <meta property="og:description" content="<?php echo sanitize_output($seo_desc); ?>">
     <?php if (!empty($seo_og_image)): ?>
     <meta property="og:image" content="<?php echo sanitize_output($seo_og_image); ?>">
+    <?php endif; ?>
+
+    <!-- Website Favicon -->
+    <?php if (!empty($seo_favicon)): ?>
+    <link rel="icon" href="<?php echo sanitize_output($seo_favicon); ?>">
+    <link rel="shortcut icon" href="<?php echo sanitize_output($seo_favicon); ?>">
     <?php endif; ?>
 
     <!-- Dynamic robots sitemap indicators link -->
