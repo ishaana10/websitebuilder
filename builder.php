@@ -1124,6 +1124,8 @@ $csrf_token = generate_csrf_token();
                         return 'animate-pulse ring-4 ring-rose-500/60 shadow-lg shadow-rose-500/30';
                     case 'bounce_alert':
                         return 'animate-bounce shadow-lg shadow-amber-500/30';
+                    case 'blink_alert':
+                        return 'animate-btn-blink ring-4 ring-rose-500/80 shadow-xl shadow-rose-500/50';
                     case 'gradient_flow':
                         return 'bg-gradient-to-r from-teal-500 via-emerald-400 to-cyan-500 hover:brightness-110 shadow-lg';
                     case 'lime_gradient':
@@ -1578,11 +1580,14 @@ $csrf_token = generate_csrf_token();
                 if (isBuilderMode) {
                     const allLinksAndBtns = temp.querySelectorAll('a, button, [onclick]');
                     allLinksAndBtns.forEach(el => {
-                        el.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); return false;');
+                        el.removeAttribute('onclick');
                         if (el.tagName === 'A') {
                             el.setAttribute('data-href', el.getAttribute('href') || '');
                             el.setAttribute('href', 'javascript:void(0)');
                             el.removeAttribute('target');
+                        }
+                        if (el.tagName === 'BUTTON') {
+                            el.setAttribute('type', 'button');
                         }
                     });
                 }
@@ -1608,14 +1613,11 @@ $csrf_token = generate_csrf_token();
                             el.classList.add('element-highlighted');
                         }
 
-                        // Prevent click action e.g. links/form buttons inside builder
-                        if (el.tagName === 'A' || el.tagName === 'BUTTON' || el.getAttribute('onclick') || el.closest('a') || el.closest('button')) {
-                            el.setAttribute('onclick', 'event.preventDefault(); event.stopPropagation(); return false;');
-                            if (el.tagName === 'A') {
-                                el.setAttribute('data-href', el.getAttribute('href') || '');
-                                el.setAttribute('href', 'javascript:void(0)');
-                                el.removeAttribute('target');
-                            }
+                        // Prevent default navigation for builder edit mode
+                        if (el.tagName === 'A') {
+                            el.setAttribute('data-href', el.getAttribute('href') || '');
+                            el.setAttribute('href', 'javascript:void(0)');
+                            el.removeAttribute('target');
                         }
                     }
 
@@ -1750,6 +1752,13 @@ $csrf_token = generate_csrf_token();
                 <div className="h-full flex flex-col overflow-hidden bg-slate-950">
                     <style dangerouslySetInnerHTML={{ __html: previewingVersionId ? previewingCss : customCss }} />
                     <style dangerouslySetInnerHTML={{ __html: `
+                        @keyframes btnBlinkKeyframes {
+                            0%, 100% { opacity: 1; filter: brightness(1); }
+                            50% { opacity: 0.2; filter: brightness(1.5); }
+                        }
+                        .animate-btn-blink {
+                            animation: btnBlinkKeyframes 0.8s infinite ease-in-out !important;
+                        }
                         :root {
                             --primary-color: ${themePrimaryColor} !important;
                             --bg-color: ${themeBgColor} !important;
@@ -1953,7 +1962,7 @@ $csrf_token = generate_csrf_token();
                             </div>
 
                             {/* Adaptive Screen Size Frame / Bezel simulation */}
-                            <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] bg-slate-900 rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
+                            <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} style={{ backgroundColor: themeBgColor }} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
 
                                 {/* PREVIEW BANNER OVERLAY */}
                                 {previewingVersionId !== null && (
@@ -3232,7 +3241,7 @@ $csrf_token = generate_csrf_token();
                                         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                                             <span className="text-[11px] text-slate-400 font-bold uppercase">Accent Color</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-mono text-slate-500">${themePrimaryColor}</span>
+                                                <span className="text-[10px] font-mono text-slate-500">{themePrimaryColor}</span>
                                                 <input type="color" value={themePrimaryColor} onChange={(e) => setThemePrimaryColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
                                             </div>
                                         </div>
@@ -3241,7 +3250,7 @@ $csrf_token = generate_csrf_token();
                                         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                                             <span className="text-[11px] text-slate-400 font-bold uppercase">Page Base BG</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-mono text-slate-500">${themeBgColor}</span>
+                                                <span className="text-[10px] font-mono text-slate-500">{themeBgColor}</span>
                                                 <input type="color" value={themeBgColor} onChange={(e) => setThemeBgColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
                                             </div>
                                         </div>
