@@ -1916,7 +1916,7 @@ $csrf_token = generate_csrf_token();
                             </div>
 
                             {/* Adaptive Screen Size Frame / Bezel simulation */}
-                            <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] bg-slate-900 rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
+                            <div className={`${canvasView === 'mobile' ? 'device-bezel-mobile' : canvasView === 'tablet' ? 'device-bezel-tablet' : 'w-full'} min-h-[500px] rounded-xl transition-all duration-300 relative border-2 border-slate-800 p-4`} style={{ backgroundColor: themeBgColor }} onDragOver={(e) => e.preventDefault()} onDrop={handleCanvasDrop} onClick={(e) => e.stopPropagation()}>
 
                                 {/* PREVIEW BANNER OVERLAY */}
                                 {previewingVersionId !== null && (
@@ -3179,7 +3179,7 @@ $csrf_token = generate_csrf_token();
                                         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                                             <span className="text-[11px] text-slate-400 font-bold uppercase">Accent Color</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-mono text-slate-500">${themePrimaryColor}</span>
+                                                <span className="text-[10px] font-mono text-slate-500">{themePrimaryColor}</span>
                                                 <input type="color" value={themePrimaryColor} onChange={(e) => setThemePrimaryColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
                                             </div>
                                         </div>
@@ -3188,7 +3188,7 @@ $csrf_token = generate_csrf_token();
                                         <div className="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                                             <span className="text-[11px] text-slate-400 font-bold uppercase">Page Base BG</span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-mono text-slate-500">${themeBgColor}</span>
+                                                <span className="text-[10px] font-mono text-slate-500">{themeBgColor}</span>
                                                 <input type="color" value={themeBgColor} onChange={(e) => setThemeBgColor(e.target.value)} className="w-8 h-8 rounded border-0 bg-transparent cursor-pointer" />
                                             </div>
                                         </div>
