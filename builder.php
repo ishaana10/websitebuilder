@@ -281,10 +281,18 @@ $csrf_token = generate_csrf_token();
 
             const fetchVersions = () => {
                 fetch(`api.php?action=get_versions&project_id=${PROJECT_ID}`)
-                .then(res => res.json())
+                .then(res => {
+                    const contentType = res.headers.get("content-type");
+                    if (!res.ok || (contentType && !contentType.includes("application/json"))) {
+                        return res.text().then(text => {
+                            throw new Error("Server returned non-JSON response: " + text.substring(0, 100));
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    if (data.success) {
-                        setVersions(data.versions);
+                    if (data && data.success) {
+                        setVersions(data.versions || []);
                     }
                 })
                 .catch(err => console.error("Error fetching versions: ", err));
@@ -292,7 +300,15 @@ $csrf_token = generate_csrf_token();
 
             const previewVersion = (versionId, label) => {
                 fetch(`api.php?action=get_version_content&version_id=${versionId}`)
-                .then(res => res.json())
+                .then(res => {
+                    const contentType = res.headers.get("content-type");
+                    if (!res.ok || (contentType && !contentType.includes("application/json"))) {
+                        return res.text().then(text => {
+                            throw new Error(text.substring(0, 100));
+                        });
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.success) {
                         let raw = data.content_json;
