@@ -1061,15 +1061,19 @@ $csrf_token = generate_csrf_token();
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
                     body: JSON.stringify(payload),
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.json().then(data => {
-                            throw new Error(data.error || "Session expired or unauthorized. Please login first.");
-                        }).catch(() => {
-                            throw new Error("Session expired or unauthorized. Please login first.");
-                        });
+                .then(async res => {
+                    const text = await res.text();
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        const cleanMsg = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                        throw new Error(cleanMsg || "Server returned an invalid non-JSON response.");
                     }
-                    return res.json();
+                    if (!res.ok || (data && data.success === false)) {
+                        throw new Error((data && data.error) || "Session expired or save rejected.");
+                    }
+                    return data;
                 })
                 .then(data => {
                     if (data.success) {
@@ -1082,7 +1086,7 @@ $csrf_token = generate_csrf_token();
                     }
                 })
                 .catch(err => {
-                    showToast("Network Error", err.message);
+                    showToast("Save Error", err.message || "Save rejected.");
                     throw err; // Propagate rejection
                 })
                 .finally(() => setIsSaving(false));
@@ -1722,7 +1726,20 @@ $csrf_token = generate_csrf_token();
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
                         body: JSON.stringify(payload),
                     })
-                    .then(res => res.json())
+                    .then(async res => {
+                        const text = await res.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch (e) {
+                            const cleanMsg = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                            throw new Error(cleanMsg || "Server returned an invalid non-JSON response.");
+                        }
+                        if (!res.ok || (data && data.success === false)) {
+                            throw new Error((data && data.error) || "Publish rejected.");
+                        }
+                        return data;
+                    })
                     .then(data => {
                         if (data.success) {
                             setProjectStatus('published');

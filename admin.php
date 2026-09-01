@@ -2618,7 +2618,20 @@ $csrf_token = generate_csrf_token();
                     csrf_token: '<?php echo $csrf_token; ?>'
                 })
             })
-            .then(res => res.json())
+            .then(async res => {
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    const cleanMsg = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                    throw new Error(cleanMsg || "Server returned an invalid non-JSON response.");
+                }
+                if (!res.ok || (data && data.success === false)) {
+                    throw new Error((data && data.error) || "Template initialization failed.");
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
                     window.location.href = 'builder.php?project_id=' + data.project_id;

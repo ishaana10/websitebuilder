@@ -3,11 +3,28 @@
  * Nuvis Webidesigner REST API Endpoints
  * Supports secure operations for saving, retrieving, publishing, exporting, and deleting websites
  */
+// Start output buffering and suppress raw HTML error output during API responses
+ob_start();
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/config.php';
+
+// Safe JSON response helper that clears output buffers before responding
+function json_response($data, $code = 200) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code($code);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
 
 // Set JSON header
 header('Content-Type: application/json');
 
+try {
 // Ensure public action context is resolved safely
 $public_actions = ['get_blog_posts', 'get_ecommerce_products', 'create_ecommerce_order', 'create_booking', 'sitemap', 'robots', 'get_site_submissions', 'save_site_smtp', 'google_chat_proxy'];
 $action_query = $_GET['action'] ?? '';
@@ -15,9 +32,7 @@ $action_query = $_GET['action'] ?? '';
 if (!in_array($action_query, $public_actions)) {
     // Ensure the user is logged in
     if (!is_logged_in()) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized. Please login first.']);
-        exit;
+        json_response(['error' => 'Unauthorized. Please login first.'], 401);
     }
 }
 
@@ -740,6 +755,9 @@ switch ($action) {
         $zip->close();
 
         // Clear output buffer and override headers to send zip file down
+        if (ob_get_length()) {
+            ob_clean();
+        }
         header_remove();
         header('Content-Type: application/zip');
         header('Content-Disposition: attachment; filename="' . $project['slug'] . '-export.zip"');
@@ -906,6 +924,9 @@ switch ($action) {
         exit;
 
     case 'sitemap':
+        if (ob_get_length()) {
+            ob_clean();
+        }
         header('Content-Type: application/xml; charset=utf-8');
         $p_id = (int)($_GET['project_id'] ?? 1);
         try {
@@ -930,6 +951,9 @@ switch ($action) {
         exit;
 
     case 'robots':
+        if (ob_get_length()) {
+            ob_clean();
+        }
         header('Content-Type: text/plain; charset=utf-8');
         echo "User-agent: *\n";
         echo "Allow: /\n";
@@ -1134,4 +1158,16 @@ switch ($action) {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid or unspecified API endpoint action.']);
         break;
+}
+} catch (Throwable $e) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    error_log("API Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    write_system_log('error', "API Exception caught: " . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => "Server error processing request: " . $e->getMessage()
+    ]);
 }
