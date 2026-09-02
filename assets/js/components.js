@@ -564,6 +564,71 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
+        id: 'contact_shelf',
+        name: 'Contact & Info Shelf',
+        category: 'Forms',
+        icon: 'fas fa-address-card',
+        schema: [
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'Get In Touch' },
+            { key: 'text', label: 'Subtitle / Description', type: 'textarea', default: 'Reach out directly via phone, email, or visit our office location.' },
+            { key: 'email', label: 'Email Address', type: 'text', default: 'contact@example.com' },
+            { key: 'phone', label: 'Phone Number', type: 'text', default: '+1 (555) 234-5678' },
+            { key: 'address', label: 'Physical Address', type: 'text', default: '123 Business Avenue, Suite 400, New York, NY 10001' },
+            { key: 'hours', label: 'Working / Business Hours', type: 'text', default: 'Mon - Fri: 9:00 AM - 6:00 PM' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
+            { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
+            { key: 'accentColor', label: 'Highlight / Icon Color', type: 'color', default: '#14b8a6' },
+            { key: 'textColor', label: 'Text Detail Color', type: 'color', default: '#e2e8f0' }
+        ],
+        html: `
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="contact_shelf">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight" style="color: {{accentColor}};">{{heading}}</h2>
+            <p class="text-slate-400 mt-3 text-sm leading-relaxed">{{text}}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Email Shelf Card -->
+            <a href="mailto:{{email}}" class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+                    <i class="fas fa-envelope text-xl"></i>
+                </div>
+                <h4 class="font-bold text-base text-white mb-1">Email Us</h4>
+                <p class="text-xs text-slate-400 break-all font-mono">{{email}}</p>
+            </a>
+
+            <!-- Phone Shelf Card -->
+            <a href="tel:{{phone}}" class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+                    <i class="fas fa-phone-alt text-xl"></i>
+                </div>
+                <h4 class="font-bold text-base text-white mb-1">Call Us</h4>
+                <p class="text-xs text-slate-400 font-mono">{{phone}}</p>
+            </a>
+
+            <!-- Address Shelf Card -->
+            <div class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+                    <i class="fas fa-map-marker-alt text-xl"></i>
+                </div>
+                <h4 class="font-bold text-base text-white mb-1">Visit Office</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">{{address}}</p>
+            </div>
+
+            <!-- Hours Shelf Card -->
+            <div class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+                    <i class="fas fa-clock text-xl"></i>
+                </div>
+                <h4 class="font-bold text-base text-white mb-1">Working Hours</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">{{hours}}</p>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
         id: 'newsletter_signup',
         name: 'Newsletter Subscription Banner',
         category: 'Forms',
