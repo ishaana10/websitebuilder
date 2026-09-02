@@ -51,7 +51,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
@@ -154,7 +154,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
@@ -379,7 +379,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
@@ -395,7 +395,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
@@ -420,7 +420,7 @@ const UI_COMPONENTS = [
                         <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> Absolute raw HTML export</li>
                     </ul>
                 </div>
-                <button class="w-full py-3 rounded-lg font-bold" style="background-color: {{accentColor}}; color: {{bgColor}};">Get Started</button>
+                {{tier1Btn}}
             </div>
             <div class="p-8 rounded-2xl border-2 text-center flex flex-col justify-between hover:scale-105 transition" style="background-color: {{cardBg}}; border-color: {{accentColor}};">
                 <div>
@@ -431,7 +431,7 @@ const UI_COMPONENTS = [
                         <li><i class="fas fa-check mr-2" style="color: {{accentColor}};"></i> AI Assistant Modules</li>
                     </ul>
                 </div>
-                <button class="w-full py-3 rounded-lg font-bold text-slate-950" style="background-color: {{accentColor}};">Go Pro</button>
+                {{tier2Btn}}
             </div>
         </div>
     </div>
@@ -1092,7 +1092,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
@@ -1300,7 +1300,7 @@ const UI_COMPONENTS = [
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
                 { value: 'pulse_alert', label: 'Attention Pulse Alert' },
                 { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking Alert (Blink)' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
                 { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
