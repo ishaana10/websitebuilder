@@ -4,6 +4,10 @@
  * High Security, Modular Architecture compatible with PHP 8.1+ and MySQL/MariaDB
  */
 
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 // Load Environment Variables if .env exists
 function load_env_variables($file_path) {
     if (!file_exists($file_path)) {
@@ -93,6 +97,9 @@ function get_db_connection() {
             if ($is_page_load) {
                 die("Database connection failed. Please check the system logs.");
             } else {
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => false,
