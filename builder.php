@@ -3385,11 +3385,27 @@ $csrf_token = generate_csrf_token();
                                                             if (!file) return;
                                                             const formData = new FormData();
                                                             formData.append('image', file);
+                                                            formData.append('csrf_token', CSRF_TOKEN);
+                                                            showToast("Uploading Favicon...", "Transmitting icon resource to server.");
                                                             fetch('api.php?action=upload_image', {
                                                                 method: 'POST',
+                                                                headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
                                                                 body: formData
                                                             })
-                                                            .then(res => res.json())
+                                                            .then(async res => {
+                                                                const text = await res.text();
+                                                                let data;
+                                                                try {
+                                                                    data = JSON.parse(text);
+                                                                } catch (err) {
+                                                                    const cleanMsg = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                                                                    throw new Error(cleanMsg || "Invalid response from server.");
+                                                                }
+                                                                if (!res.ok || (data && data.success === false)) {
+                                                                    throw new Error((data && data.error) || "Could not upload image.");
+                                                                }
+                                                                return data;
+                                                            })
                                                             .then(data => {
                                                                 if (data.url) {
                                                                     setSeoFavicon(data.url);
@@ -3398,7 +3414,7 @@ $csrf_token = generate_csrf_token();
                                                                     showToast("Upload Failed", data.error || "Could not upload image.");
                                                                 }
                                                             })
-                                                            .catch(err => showToast("Error", err.message));
+                                                            .catch(err => showToast("Upload Failed", err.message));
                                                         }}
                                                     />
                                                 </label>
