@@ -3378,7 +3378,7 @@ $csrf_token = generate_csrf_token();
                                                     <span>Upload</span>
                                                     <input
                                                         type="file"
-                                                        accept="image/*"
+                                                        accept="image/*,.ico,image/x-icon,image/vnd.microsoft.icon"
                                                         className="hidden"
                                                         onChange={(e) => {
                                                             const file = e.target.files[0];
