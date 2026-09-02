@@ -209,9 +209,15 @@ switch ($action) {
                 $seo_structured = $content_decoded['seo_settings']['structured_data'] ?? null;
             }
 
-            $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ?, seo_title = ?, seo_meta_desc = ?, seo_og_image = ?, seo_favicon = ?, seo_robots_txt = ?, seo_structured_data = ? WHERE id = ?");
             try {
-                $stmt_update->execute([$name, $slug, $description, $content_json, $seo_title, $seo_desc, $seo_og, $seo_favicon, $seo_robots, $seo_structured, $project_id]);
+                try {
+                    $stmt_update = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ?, seo_title = ?, seo_meta_desc = ?, seo_og_image = ?, seo_favicon = ?, seo_robots_txt = ?, seo_structured_data = ? WHERE id = ?");
+                    $stmt_update->execute([$name, $slug, $description, $content_json, $seo_title, $seo_desc, $seo_og, $seo_favicon, $seo_robots, $seo_structured, $project_id]);
+                } catch (PDOException $ex_full) {
+                    // Fallback to core columns if database schema lacks optional SEO columns
+                    $stmt_fallback = $db->prepare("UPDATE projects SET name = ?, slug = ?, description = ?, content_json = ? WHERE id = ?");
+                    $stmt_fallback->execute([$name, $slug, $description, $content_json, $project_id]);
+                }
 
                 // Create a page version snapshot
                 $version_label = trim($input['version_label'] ?? '');
@@ -222,15 +228,14 @@ switch ($action) {
                 $stmt_version = $db->prepare("INSERT INTO project_versions (project_id, label, content_json, version_type) VALUES (?, ?, ?, ?)");
                 $stmt_version->execute([$project_id, $version_label, $content_json, $version_type]);
 
-                echo json_encode([
+                json_response([
                     'success' => true,
                     'message' => 'Project saved successfully.',
                     'project_id' => $project_id,
                     'slug' => $slug
                 ]);
             } catch (PDOException $e) {
-                http_response_code(500);
-                echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+                json_response(['error' => 'Database error: ' . $e->getMessage()], 500);
             }
         } else {
             // Create a brand new project

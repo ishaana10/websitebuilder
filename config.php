@@ -87,6 +87,26 @@ function get_db_connection() {
             } catch (Exception $col_ex) {
                 // Ignore if table doesn't exist yet (e.g. during install.php)
             }
+
+            // Ensure projects table has SEO columns
+            try {
+                $proj_cols_to_add = [
+                    'seo_title' => 'VARCHAR(255) NULL',
+                    'seo_meta_desc' => 'VARCHAR(255) NULL',
+                    'seo_og_image' => 'VARCHAR(255) NULL',
+                    'seo_favicon' => 'VARCHAR(255) NULL',
+                    'seo_robots_txt' => 'TEXT NULL',
+                    'seo_structured_data' => 'TEXT NULL'
+                ];
+                foreach ($proj_cols_to_add as $col => $definition) {
+                    $stmt_check = $pdo->query("SHOW COLUMNS FROM `projects` LIKE '{$col}'");
+                    if ($stmt_check->rowCount() === 0) {
+                        $pdo->exec("ALTER TABLE `projects` ADD COLUMN `{$col}` {$definition}");
+                    }
+                }
+            } catch (Exception $col_ex) {
+                // Ignore if table doesn't exist yet
+            }
         } catch (PDOException $e) {
             // Securely log errors or display a safe error message
             error_log("DB connection error: " . $e->getMessage());
