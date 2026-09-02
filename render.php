@@ -129,6 +129,13 @@ if (!$is_published || empty($body_content)) {
             overflow-wrap: break-word;
             word-break: break-word;
         }
+        @keyframes btnBlinkKeyframes {
+            0%, 100% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.2; filter: brightness(1.5); }
+        }
+        .animate-btn-blink {
+            animation: btnBlinkKeyframes 0.8s infinite ease-in-out !important;
+        }
     </style>
     <?php if (!empty($custom_css)): ?>
     <style>

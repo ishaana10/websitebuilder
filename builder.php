@@ -1420,8 +1420,10 @@ $csrf_token = generate_csrf_token();
                     let rawCol = sec.props.colCount || 'grid-cols-3';
                     let desktopColClass = rawCol.startsWith('md:') ? rawCol : `md:${rawCol}`;
                     let mobileColClass = sec.props.mobileColCount || 'grid-cols-2';
+                    const combinedCols = `${mobileColClass} ${desktopColClass}`;
 
-                    compiledHtml = compiledHtml.replace(/{{\s*colCount\s*}}/g, `${mobileColClass} ${desktopColClass}`);
+                    compiledHtml = compiledHtml.replace(/{{\s*colCount\s*}}/g, combinedCols);
+                    compiledHtml = compiledHtml.replace(new RegExp(`\\b${rawCol}\\b`, 'g'), combinedCols);
                     compiledHtml = compiledHtml.replace(/{{\s*mobileColCount\s*}}/g, '');
                 }
 
