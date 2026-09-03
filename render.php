@@ -146,7 +146,7 @@ if (!$is_published || empty($body_content)) {
 <body class="min-h-screen">
 
     <!-- MASTER CONTAINER FOR CACHED BUILDER OUTPUT -->
-    <main class="space-y-4">
+    <main class="w-full">
         <?php echo $body_content; ?>
     </main>
 

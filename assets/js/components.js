@@ -204,6 +204,8 @@ const UI_COMPONENTS = [
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
             { key: 'secondaryBtnText', label: 'Secondary CTA Text', type: 'text', default: 'Learn More' },
+            { key: 'secBtnBg', label: 'Secondary CTA Background', type: 'color', default: 'transparent' },
+            { key: 'secBtnColor', label: 'Secondary CTA Text Color', type: 'color', default: '#ffffff' },
             { key: 'secBtnShape', label: 'Secondary CTA Button Shape', type: 'select', default: 'pill', options: [
                 { value: 'pill', label: 'Pill / Fully Rounded' },
                 { value: 'rounded', label: 'Rounded Corners' },
@@ -216,6 +218,17 @@ const UI_COMPONENTS = [
             { key: 'secBtnWaPhone', label: 'Secondary WhatsApp Phone Number', type: 'text', default: '15551234567' },
             { key: 'secBtnWaMsg', label: 'Secondary WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I need help.' },
             { key: 'secBtnNewTab', label: 'Secondary CTA Open in New Tab', type: 'checkbox', default: false },
+            { key: 'secBtnEffect', label: 'Secondary CTA Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
+                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
+            ] },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
             { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' }
