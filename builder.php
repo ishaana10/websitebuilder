@@ -1173,6 +1173,19 @@ $csrf_token = generate_csrf_token();
                     });
                 }
 
+                // Calculate inline top margin style to override parent space-y-4 CSS specificity
+                const topMarginPxMap = {
+                    'mt-0': '0px',
+                    'mt-2': '8px',
+                    'mt-4': '16px',
+                    'mt-6': '24px',
+                    'mt-8': '32px'
+                };
+                const rawTopMargin = sec.props.topMargin || 'mt-0';
+                const topMarginPx = topMarginPxMap[rawTopMargin] || (rawTopMargin.includes('px') ? rawTopMargin : '0px');
+                const topMarginStyle = `margin-top: ${topMarginPx} !important;`;
+                compiledHtml = compiledHtml.replace(/{{\s*topMarginStyle\s*}}/g, topMarginStyle);
+
                 // Dynamic custom compilers for links in Navigation bar and Footer
                 if (sec.type.toLowerCase() === 'navbar' || sec.type.toLowerCase() === 'footer') {
                     // Compile Brand and Logo Area
