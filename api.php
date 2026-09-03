@@ -81,14 +81,14 @@ switch ($action) {
             exit;
         }
 
-        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/ico', 'image/icon', 'application/ico'];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mime_type = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
 
         if (!in_array($mime_type, $allowed_types)) {
             http_response_code(400);
-            echo json_encode(['error' => 'Invalid file type. Allowed: JPG, PNG, WEBP, GIF, SVG.']);
+            echo json_encode(['error' => 'Invalid file type. Allowed: JPG, PNG, WEBP, GIF, SVG, ICO.']);
             exit;
         }
 
@@ -105,7 +105,12 @@ switch ($action) {
                 'image/png' => 'png',
                 'image/webp' => 'webp',
                 'image/gif' => 'gif',
-                'image/svg+xml' => 'svg'
+                'image/svg+xml' => 'svg',
+                'image/x-icon' => 'ico',
+                'image/vnd.microsoft.icon' => 'ico',
+                'image/ico' => 'ico',
+                'image/icon' => 'ico',
+                'application/ico' => 'ico'
             ];
             $extension = $ext_map[$mime_type] ?? 'bin';
         }

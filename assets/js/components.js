@@ -56,10 +56,11 @@ const UI_COMPONENTS = [
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
-            ] }
+            ] },
+            { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: false }
         ],
         html: `
-<nav class="py-4 px-6 shadow-md rounded-lg relative" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
+<nav class="py-4 px-6 shadow-md rounded-lg {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
     <div class="flex justify-between items-center">
         {{brandLogoArea}}
 
@@ -84,6 +85,44 @@ const UI_COMPONENTS = [
         {{links}}
     </div>
 </nav>`
+    },
+    {
+        id: 'top_bar_shelf',
+        name: 'Top Utility Bar Shelf',
+        category: 'Headers',
+        icon: 'fas fa-bars-staggered',
+        schema: [
+            { key: 'phone', label: 'Phone Number Text', type: 'text', default: 'Call us at +1 (647) 493-4972' },
+            { key: 'phoneUrl', label: 'Phone Call Link', type: 'text', default: 'tel:+16474934972' },
+            { key: 'email', label: 'Email Address Text', type: 'text', default: 'sales@nuvistechnologies.com' },
+            { key: 'emailUrl', label: 'Email Link', type: 'text', default: 'mailto:sales@nuvistechnologies.com' },
+            { key: 'ctaText', label: 'Right CTA Link Text', type: 'text', default: 'Subscribe to our News Letter' },
+            { key: 'ctaUrl', label: 'Right CTA Link URL', type: 'text', default: '#newsletter' },
+            { key: 'showSocial', label: 'Show Social Media Icons', type: 'checkbox', default: true },
+            { key: 'facebookUrl', label: 'Facebook Link', type: 'text', default: '#' },
+            { key: 'twitterUrl', label: 'Twitter / X Link', type: 'text', default: '#' },
+            { key: 'youtubeUrl', label: 'YouTube Link', type: 'text', default: '#' },
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#061a23' },
+            { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
+            { key: 'accentColor', label: 'Icon Highlight Color', type: 'color', default: '#38bdf8' },
+            { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: false }
+        ],
+        html: `
+<div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="top_bar_shelf">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+        <!-- Left / Center Contact Info -->
+        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 md:gap-8 font-medium">
+            {{phoneArea}}
+            {{emailArea}}
+        </div>
+
+        <!-- Right Side: Social Media & CTA Link -->
+        <div class="flex items-center gap-4 sm:gap-6">
+            {{socialArea}}
+            {{ctaArea}}
+        </div>
+    </div>
+</div>`
     },
     {
         id: 'footer',
