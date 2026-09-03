@@ -1658,10 +1658,31 @@ $csrf_token = generate_csrf_token();
                         rootNode.style.backgroundImage = 'none';
                     }
                     if (sec.bg_image_override) {
-                        rootNode.style.backgroundImage = `url('${sec.bg_image_override}')`;
-                        rootNode.style.backgroundSize = 'cover';
-                        rootNode.style.backgroundPosition = 'center';
-                        rootNode.style.backgroundRepeat = 'no-repeat';
+                        const bgSize = sec.bg_size_override || 'cover';
+                        const bgPos = sec.bg_position_override || 'center';
+                        const bgRepeat = sec.bg_repeat_override || 'no-repeat';
+                        const bgAttach = sec.bg_attachment_override || 'scroll';
+                        const overlayOpacity = parseFloat(sec.bg_overlay_opacity || '0');
+                        const overlayColor = sec.bg_overlay_color || '#000000';
+
+                        if (overlayOpacity > 0) {
+                            // Convert hex to rgba for gradient layer
+                            let r = 0, g = 0, b = 0;
+                            if (overlayColor.length === 7) {
+                                r = parseInt(overlayColor.slice(1, 3), 16);
+                                g = parseInt(overlayColor.slice(3, 5), 16);
+                                b = parseInt(overlayColor.slice(5, 7), 16);
+                            }
+                            const rgba = `rgba(${r}, ${g}, ${b}, ${overlayOpacity})`;
+                            rootNode.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${sec.bg_image_override}')`;
+                        } else {
+                            rootNode.style.backgroundImage = `url('${sec.bg_image_override}')`;
+                        }
+
+                        rootNode.style.backgroundSize = bgSize;
+                        rootNode.style.backgroundPosition = bgPos;
+                        rootNode.style.backgroundRepeat = bgRepeat;
+                        rootNode.style.backgroundAttachment = bgAttach;
                     }
                 }
 
@@ -2434,6 +2455,111 @@ $csrf_token = generate_csrf_token();
                                                                         className="hidden"
                                                                     />
                                                                 </label>
+
+                                                                {/* Extended Background Image Options */}
+                                                                {selectedSection.bg_image_override && (
+                                                                    <div className="pt-2 border-t border-slate-800/80 space-y-2 mt-2">
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Bg Size</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_size_override || 'cover'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_size_override: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                                                                    <option value="cover">Cover (Fit full)</option>
+                                                                                    <option value="contain">Contain (Fit inside)</option>
+                                                                                    <option value="auto">Auto (Original)</option>
+                                                                                    <option value="100% 100%">100% 100% (Stretch)</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Bg Position</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_position_override || 'center'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_position_override: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                                                                    <option value="center">Center Center</option>
+                                                                                    <option value="top">Top Center</option>
+                                                                                    <option value="bottom">Bottom Center</option>
+                                                                                    <option value="left">Left Center</option>
+                                                                                    <option value="right">Right Center</option>
+                                                                                    <option value="top left">Top Left</option>
+                                                                                    <option value="top right">Top Right</option>
+                                                                                    <option value="bottom left">Bottom Left</option>
+                                                                                    <option value="bottom right">Bottom Right</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Bg Repeat</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_repeat_override || 'no-repeat'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_repeat_override: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                                                                    <option value="no-repeat">No Repeat</option>
+                                                                                    <option value="repeat">Repeat Both</option>
+                                                                                    <option value="repeat-x">Repeat Horizontal</option>
+                                                                                    <option value="repeat-y">Repeat Vertical</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Bg Attachment</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_attachment_override || 'scroll'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_attachment_override: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                                                                    <option value="scroll">Scroll (Normal)</option>
+                                                                                    <option value="fixed">Fixed (Parallax)</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-2 gap-2 items-center">
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Overlay Opacity</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_overlay_opacity !== undefined ? selectedSection.bg_overlay_opacity : '0'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_overlay_opacity: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
+                                                                                    <option value="0">None (0%)</option>
+                                                                                    <option value="0.2">Light (20%)</option>
+                                                                                    <option value="0.4">Medium (40%)</option>
+                                                                                    <option value="0.6">Dark (60%)</option>
+                                                                                    <option value="0.8">Heavy (80%)</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="text-[10px] text-slate-400 block mb-1">Overlay Color</label>
+                                                                                <input
+                                                                                    type="color"
+                                                                                    value={selectedSection.bg_overlay_color || '#000000'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_overlay_color: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
