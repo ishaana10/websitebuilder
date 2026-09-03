@@ -1346,8 +1346,13 @@ $csrf_token = generate_csrf_token();
                     const secTarget = resolveBtnTarget(sec.props, 'secBtn');
                     const headingColor = sec.props.headingColor || '#ffffff';
                     const secBtnText = sec.props.secondaryBtnText || 'Learn More';
+                    const secBtnBg = sec.props.secBtnBg || 'transparent';
+                    const secBtnColor = sec.props.secBtnColor || headingColor;
                     const secBtnShapeClass = resolveBtnShapeClass(sec.props, 'secBtn');
-                    const secBtnHtml = `<a href="${secHref}" ${secTarget} class="inline-block font-bold px-8 py-4 ${secBtnShapeClass} border transition-all duration-300 hover:bg-white/5" style="border-color: rgba(255,255,255,0.2); color: ${headingColor};">${secBtnText}</a>`;
+                    const secBtnEffectClass = resolveBtnEffectClass(sec.props, 'secBtn');
+                    const isOutline = !secBtnBg || secBtnBg === 'transparent' || secBtnBg === 'rgba(0, 0, 0, 0)';
+                    const borderStyle = isOutline ? `border-color: rgba(255,255,255,0.2);` : `border-color: ${secBtnBg};`;
+                    const secBtnHtml = `<a href="${secHref}" ${secTarget} class="inline-block font-bold px-8 py-4 ${secBtnShapeClass} border transition-all duration-300 hover:opacity-90 ${secBtnEffectClass}" style="background-color: ${secBtnBg}; ${borderStyle} color: ${secBtnColor};">${secBtnText}</a>`;
 
                     compiledHtml = compiledHtml.replace(/{{\s*primaryCtaBtn\s*}}/g, primaryBtnHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*secondaryCtaBtn\s*}}/g, secBtnHtml);
