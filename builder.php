@@ -1312,6 +1312,9 @@ $csrf_token = generate_csrf_token();
                         ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="font-bold px-6 py-2.5 ${btnShapeClass} transition duration-300 text-sm ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
+
+                        const isSticky = sec.props.isSticky === true;
+                        compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50' : 'relative z-40');
                     }
                 }
 
@@ -1335,6 +1338,53 @@ $csrf_token = generate_csrf_token();
 
                     compiledHtml = compiledHtml.replace(/{{\s*primaryCtaBtn\s*}}/g, primaryBtnHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*secondaryCtaBtn\s*}}/g, secBtnHtml);
+                }
+
+                if (sec.type.toLowerCase() === 'top_bar_shelf') {
+                    const phoneText = sec.props.phone || 'Call us at +1 (647) 493-4972';
+                    const phoneUrl = sec.props.phoneUrl || 'tel:+16474934972';
+                    const emailText = sec.props.email || 'sales@nuvistechnologies.com';
+                    const emailUrl = sec.props.emailUrl || 'mailto:sales@nuvistechnologies.com';
+                    const ctaText = sec.props.ctaText || 'Subscribe to our News Letter';
+                    const ctaUrl = sec.props.ctaUrl || '#newsletter';
+                    const showSocial = sec.props.showSocial !== undefined ? sec.props.showSocial : true;
+                    const fbUrl = sec.props.facebookUrl || '#';
+                    const twUrl = sec.props.twitterUrl || '#';
+                    const ytUrl = sec.props.youtubeUrl || '#';
+                    const accentColor = sec.props.accentColor || '#38bdf8';
+
+                    let phoneHtml = '';
+                    if (phoneText) {
+                        phoneHtml = `<a href="${phoneUrl}" class="flex items-center gap-2 hover:opacity-80 transition" style="color: inherit;"><i class="fas fa-phone-alt text-[11px]" style="color: ${accentColor};"></i><span>${phoneText}</span></a>`;
+                    }
+
+                    let emailHtml = '';
+                    if (emailText) {
+                        emailHtml = `<a href="${emailUrl}" class="flex items-center gap-2 hover:opacity-80 transition" style="color: inherit;"><i class="fas fa-envelope text-[11px]" style="color: ${accentColor};"></i><span>${emailText}</span></a>`;
+                    }
+
+                    let socialHtml = '';
+                    if (showSocial) {
+                        socialHtml = `
+                        <div class="flex items-center gap-2">
+                            ${fbUrl ? `<a href="${fbUrl}" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-blue-600/80 hover:bg-blue-600 text-white flex items-center justify-center text-[10px] transition"><i class="fab fa-facebook-f"></i></a>` : ''}
+                            ${twUrl ? `<a href="${twUrl}" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-sky-500/80 hover:bg-sky-500 text-white flex items-center justify-center text-[10px] transition"><i class="fab fa-twitter"></i></a>` : ''}
+                            ${ytUrl ? `<a href="${ytUrl}" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center text-[10px] transition"><i class="fab fa-youtube"></i></a>` : ''}
+                        </div>`;
+                    }
+
+                    let ctaHtml = '';
+                    if (ctaText) {
+                        ctaHtml = `<a href="${ctaUrl}" class="font-semibold hover:underline transition" style="color: inherit;">${ctaText}</a>`;
+                    }
+
+                    compiledHtml = compiledHtml.replace(/{{\s*phoneArea\s*}}/g, phoneHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*emailArea\s*}}/g, emailHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*socialArea\s*}}/g, socialHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*ctaArea\s*}}/g, ctaHtml);
+
+                    const isSticky = sec.props.isSticky === true;
+                    compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50 shadow-md'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40');
                 }
 
                 if (sec.type.toLowerCase() === 'cta_banner') {
