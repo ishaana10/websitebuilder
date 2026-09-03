@@ -62,7 +62,7 @@ const UI_COMPONENTS = [
             { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: false }
         ],
         html: `
-<nav class="py-4 px-6 shadow-md {{topMargin}} {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
+<nav class="py-4 px-6 shadow-md {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="navbar">
     <div class="flex justify-between items-center">
         {{brandLogoArea}}
 
@@ -112,7 +112,7 @@ const UI_COMPONENTS = [
             { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: false }
         ],
         html: `
-<div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{topMargin}} {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="top_bar_shelf">
+<div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="top_bar_shelf">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
         <!-- Left / Center Contact Info -->
         <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 md:gap-8 font-medium">
@@ -626,7 +626,7 @@ const UI_COMPONENTS = [
             { key: 'cornerRadius', label: 'Card Corner Shape', type: 'select', default: 'rounded-2xl', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }, { value: 'rounded-3xl', label: 'Capsule / Pill (24px)' }] }
         ],
         html: `
-<section class="py-16 px-8 {{topMargin}} rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="contact_shelf">
+<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="contact_shelf">
     <div class="max-w-6xl mx-auto">
         <div class="text-center max-w-2xl mx-auto mb-12">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight" style="color: {{accentColor}};">{{heading}}</h2>
