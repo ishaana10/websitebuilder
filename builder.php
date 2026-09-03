@@ -2091,7 +2091,7 @@ $csrf_token = generate_csrf_token();
                                 )}
 
                                 {/* RENDER CANVAS SECTIONS */}
-                                <div className="space-y-4">
+                                <div className="w-full">
                                     {(previewingVersionId ? previewingSections : sections).map((sec, idx) => {
                                         const isActive = (sec.id === activeSectionId);
                                         return (
