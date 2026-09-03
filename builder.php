@@ -128,6 +128,8 @@ $csrf_token = generate_csrf_token();
         const LOADED_CONTENT_STATE = <?php echo json_encode($project['content_json'] ?? '[]'); ?>;
         const PROJECT_NAME = "<?php echo addslashes($project['name']); ?>";
         const PROJECT_STATUS = "<?php echo addslashes($project['status']); ?>";
+        const PROJECT_SLUG = "<?php echo addslashes($project['slug']); ?>";
+        const USERNAME = "<?php echo addslashes($_SESSION['username'] ?? ''); ?>";
     </script>
 
     <!-- COMPONENTS DICTIONARY SOURCE -->
@@ -1778,6 +1780,15 @@ $csrf_token = generate_csrf_token();
                             <button onClick={downloadZip} className="bg-slate-850 hover:bg-slate-800 text-slate-200 font-bold px-4 py-2 rounded text-xs flex items-center gap-1.5 transition border border-slate-800" title="Download standalone code ZIP archive">
                                 <i className="fas fa-file-archive text-teal-400"></i> ZIP
                             </button>
+                            <a
+                                href={`render.php?slug=${encodeURIComponent(PROJECT_SLUG)}&user=${encodeURIComponent(USERNAME)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-slate-850 hover:bg-slate-800 text-teal-400 font-extrabold px-3.5 py-2 rounded text-xs flex items-center gap-1.5 transition border border-teal-500/30 hover:border-teal-500"
+                                title="Open Live Preview in a new tab"
+                            >
+                                <i className="fas fa-external-link-alt"></i> Live Preview
+                            </a>
                             <button onClick={publishProject} disabled={isPublishing} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-4 py-2 rounded text-xs flex items-center gap-1.5 transition shadow-lg shadow-teal-500/10">
                                 {isPublishing ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-globe"></i>}
                                 Publish Site
