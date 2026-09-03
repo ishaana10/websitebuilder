@@ -57,10 +57,12 @@ const UI_COMPONENTS = [
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
             ] },
+            { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
+            { key: 'cornerRadius', label: 'Header Corner Shape', type: 'select', default: 'rounded-lg', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }, { value: 'rounded-full', label: 'Full Pill / Capsule' }] },
             { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: false }
         ],
         html: `
-<nav class="py-4 px-6 shadow-md rounded-lg {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
+<nav class="py-4 px-6 shadow-md {{topMargin}} {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="navbar">
     <div class="flex justify-between items-center">
         {{brandLogoArea}}
 
@@ -105,10 +107,12 @@ const UI_COMPONENTS = [
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#061a23' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#ffffff' },
             { key: 'accentColor', label: 'Icon Highlight Color', type: 'color', default: '#38bdf8' },
+            { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
+            { key: 'cornerRadius', label: 'Shelf Corner Shape', type: 'select', default: 'rounded-none', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }] },
             { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: false }
         ],
         html: `
-<div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="top_bar_shelf">
+<div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{topMargin}} {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="top_bar_shelf">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
         <!-- Left / Center Contact Info -->
         <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 md:gap-8 font-medium">
@@ -617,10 +621,12 @@ const UI_COMPONENTS = [
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Highlight / Icon Color', type: 'color', default: '#14b8a6' },
-            { key: 'textColor', label: 'Text Detail Color', type: 'color', default: '#e2e8f0' }
+            { key: 'textColor', label: 'Text Detail Color', type: 'color', default: '#e2e8f0' },
+            { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
+            { key: 'cornerRadius', label: 'Card Corner Shape', type: 'select', default: 'rounded-2xl', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }, { value: 'rounded-3xl', label: 'Capsule / Pill (24px)' }] }
         ],
         html: `
-<section class="py-16 px-8 rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="contact_shelf">
+<section class="py-16 px-8 {{topMargin}} rounded-lg" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="contact_shelf">
     <div class="max-w-6xl mx-auto">
         <div class="text-center max-w-2xl mx-auto mb-12">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight" style="color: {{accentColor}};">{{heading}}</h2>
@@ -629,8 +635,8 @@ const UI_COMPONENTS = [
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Email Shelf Card -->
-            <a href="mailto:{{email}}" class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+            <a href="mailto:{{email}}" class="p-6 {{cornerRadius}} border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 {{cornerRadius}} flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
                     <i class="fas fa-envelope text-xl"></i>
                 </div>
                 <h4 class="font-bold text-base text-white mb-1">Email Us</h4>
@@ -638,8 +644,8 @@ const UI_COMPONENTS = [
             </a>
 
             <!-- Phone Shelf Card -->
-            <a href="tel:{{phone}}" class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+            <a href="tel:{{phone}}" class="p-6 {{cornerRadius}} border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 {{cornerRadius}} flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
                     <i class="fas fa-phone-alt text-xl"></i>
                 </div>
                 <h4 class="font-bold text-base text-white mb-1">Call Us</h4>
@@ -647,8 +653,8 @@ const UI_COMPONENTS = [
             </a>
 
             <!-- Address Shelf Card -->
-            <div class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+            <div class="p-6 {{cornerRadius}} border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 {{cornerRadius}} flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
                     <i class="fas fa-map-marker-alt text-xl"></i>
                 </div>
                 <h4 class="font-bold text-base text-white mb-1">Visit Office</h4>
@@ -656,8 +662,8 @@ const UI_COMPONENTS = [
             </div>
 
             <!-- Hours Shelf Card -->
-            <div class="p-6 rounded-2xl border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
+            <div class="p-6 {{cornerRadius}} border border-slate-800 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group" style="background-color: {{cardBg}};">
+                <div class="w-12 h-12 {{cornerRadius}} flex items-center justify-center mb-4 transition duration-300 group-hover:scale-110" style="background-color: rgba(20, 184, 166, 0.1); color: {{accentColor}};">
                     <i class="fas fa-clock text-xl"></i>
                 </div>
                 <h4 class="font-bold text-base text-white mb-1">Working Hours</h4>
