@@ -62,9 +62,9 @@ const UI_COMPONENTS = [
             {{links}}
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 md:gap-4 shrink-0">
             <!-- Mobile Burger Toggle -->
-            <button onclick="const m = this.closest('[data-component]').querySelector('.mobile-menu'); m.classList.toggle('hidden');" class="md:hidden text-xl focus:outline-none" style="color: {{textColor}};">
+            <button onclick="const m = this.closest('[data-component]').querySelector('.mobile-menu'); m.classList.toggle('hidden');" class="md:hidden text-xl focus:outline-none shrink-0" style="color: {{textColor}};">
                 <i class="fas fa-bars"></i>
             </button>
 

@@ -1149,7 +1149,7 @@ $csrf_token = generate_csrf_token();
                     const flexDirClass = isRight ? "flex-row-reverse" : "flex-row";
 
                     const brandLogoAreaHtml = `
-                    <div class="flex items-center gap-3 ${flexDirClass}">
+                    <div class="flex items-center gap-3 min-w-0 ${flexDirClass}">
                         ${logoHtml}
                         ${brandTextHtml}
                     </div>
@@ -1250,7 +1250,7 @@ $csrf_token = generate_csrf_token();
                         const btnEffectClass = resolveBtnEffectClass(sec.props);
                         const ctaHref = resolveBtnUrl(sec.props);
                         const ctaTarget = resolveBtnTarget(sec.props);
-                        ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="font-bold px-4 py-2 rounded transition duration-300 text-sm ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
+                        ctaButtonHtml = `<a href="${ctaHref}" ${ctaTarget} class="inline-block font-bold px-4 py-2 rounded transition duration-300 text-sm whitespace-nowrap shrink-0 text-center ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
                     }
