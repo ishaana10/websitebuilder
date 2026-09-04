@@ -1258,21 +1258,23 @@ $csrf_token = generate_csrf_token();
                                 if (isDesktop) {
                                     return `
                                     <div class="relative group dropdown-item inline-block text-left">
-                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}">
+                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none py-1" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}">
                                             <span>${link.text}</span>
                                             <i class="fas fa-chevron-down text-[9px] opacity-70 transition-transform duration-200 group-hover:rotate-180"></i>
                                         </button>
-                                        <!-- Absolute Dropdown Panel with modern sliding transitions -->
-                                        <div class="absolute top-full left-0 mt-2 w-48 rounded-lg shadow-xl py-2 opacity-0 -translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-50 border border-slate-800/80" style="background-color: ${sec.props.bgColor || '#0f172a'};">
-                                            ${children.map((child, cIdx) => {
-                                                let cUrl = child.url || '#';
-                                                if (child.type === 'page') {
-                                                    cUrl = `?page=${child.pageName || 'index'}`;
-                                                }
-                                                return `
-                                                <a href="${cUrl}" class="block px-4 py-2 text-xs transition duration-200 hover:bg-slate-800/60" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}-sub-${cIdx}">${child.text}</a>
-                                                `;
-                                            }).join('\n')}
+                                        <!-- Absolute Dropdown Panel with continuous hover area -->
+                                        <div class="absolute top-full left-0 pt-1 w-52 opacity-0 -translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto transition-all duration-200 z-50">
+                                            <div class="rounded-lg shadow-xl py-2 border border-slate-800/80 overflow-hidden" style="background-color: ${sec.props.bgColor || '#0f172a'};">
+                                                ${children.map((child, cIdx) => {
+                                                    let cUrl = child.url || '#';
+                                                    if (child.type === 'page') {
+                                                        cUrl = `?page=${child.pageName || 'index'}`;
+                                                    }
+                                                    return `
+                                                    <a href="${cUrl}" class="block px-4 py-2 text-xs font-medium transition duration-200 hover:bg-slate-800/60" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}-sub-${cIdx}">${child.text}</a>
+                                                    `;
+                                                }).join('\n')}
+                                            </div>
                                         </div>
                                     </div>
                                     `;
