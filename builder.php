@@ -1454,6 +1454,97 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*boxBtn\s*}}/g, boxBtnHtml);
                 }
 
+
+                // Dynamic compiler for work_description_shelf component
+                if (sec.type.toLowerCase() === 'work_description_shelf') {
+                    const defaultItems = [
+                        {
+                            id: 'item-1',
+                            imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
+                            title: 'Commercial Pest Management',
+                            description: 'Comprehensive pest control solutions engineered for industrial and commercial facilities.'
+                        },
+                        {
+                            id: 'item-2',
+                            imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80',
+                            title: 'Safety & Hygiene Standards',
+                            description: 'Strict adherence to health, access safety, and environmental protection guidelines.'
+                        },
+                        {
+                            id: 'item-3',
+                            imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80',
+                            title: 'Scheduled Service Programs',
+                            description: 'Customized recurring treatment schedules tailored to complex operational demands.'
+                        }
+                    ];
+
+                    const items = (Array.isArray(sec.props.items) && sec.props.items.length > 0) ? sec.props.items : defaultItems;
+                    const activeIndex = Math.min(Math.max(parseInt(sec.props.activeImageIndex || 0, 10), 0), items.length - 1);
+                    const activeItem = items[activeIndex] || items[0];
+
+                    const activeImgUrl = activeItem.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                    const activeTitle = activeItem.title || '';
+                    const activeDesc = activeItem.description || '';
+
+                    const activeImageHtml = `
+                        <img src="${activeImgUrl}" class="main-work-shelf-img w-full h-full object-cover transition-all duration-500" alt="${activeTitle.replace(/"/g, '&quot;')}" />
+                        ${(activeTitle || activeDesc) ? `
+                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent p-5 text-white flex flex-col justify-end">
+                                ${activeTitle ? `<h4 class="main-work-shelf-title text-base font-bold tracking-tight mb-1">${activeTitle}</h4>` : ''}
+                                ${activeDesc ? `<p class="main-work-shelf-desc text-xs text-slate-200 line-clamp-2 leading-relaxed">${activeDesc}</p>` : ''}
+                            </div>
+                        ` : ''}
+                    `;
+
+                    let thumbnailsListHtml = '';
+                    if (items.length > 1) {
+                        const thumbBtns = items.map((item, idx) => {
+                            const imgUrl = item.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                            const titleEsc = (item.title || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
+                            const descEsc = (item.description || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
+                            const isActive = idx === activeIndex;
+                            const activeClasses = isActive ? 'ring-2 ring-emerald-600 border-emerald-600 scale-105' : 'opacity-70 hover:opacity-100';
+
+                            return `<button onclick="window.switchWorkShelfImage(this, '${imgUrl}', '${titleEsc}', '${descEsc}')" class="work-shelf-thumb relative w-20 h-14 rounded-lg overflow-hidden border border-slate-300 shadow-sm transition-all duration-200 flex-shrink-0 ${activeClasses}" title="${titleEsc}">
+                                <img src="${imgUrl}" class="w-full h-full object-cover" alt="Thumbnail ${idx + 1}" />
+                            </button>`;
+                        }).join('');
+
+                        thumbnailsListHtml = `<div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin scrollbar-thumb-slate-300">${thumbBtns}</div>`;
+                    }
+
+                    // Compile Tags List
+                    const tagsRaw = sec.props.tagsList || '';
+                    const tagsArray = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+                    const tagBgColor = sec.props.cardBgColor || '#f1f5f9';
+                    const tagTextColor = sec.props.accentColor || '#065f46';
+
+                    const tagsHtml = tagsArray.map(tag => {
+                        return `<span class="inline-block px-3.5 py-1.5 rounded-full text-xs font-bold transition duration-200 hover:scale-105 border border-slate-200/80 shadow-sm" style="background-color: ${tagBgColor}; color: ${tagTextColor};">${tag}</span>`;
+                    }).join('');
+
+                    // CTA Button Compilation
+                    const btnText = sec.props.btnText || 'Discuss Your Site';
+                    const btnBg = sec.props.btnBg || '#065f46';
+                    const btnColor = sec.props.btnColor || '#ffffff';
+                    const btnShapeClass = resolveBtnShapeClass(sec.props);
+                    const btnEffectClass = resolveBtnEffectClass(sec.props);
+                    const btnHref = resolveBtnUrl(sec.props);
+                    const btnTarget = resolveBtnTarget(sec.props);
+
+                    const workShelfCtaBtn = `<a href="${btnHref}" ${btnTarget} class="inline-block font-bold px-7 py-3 ${btnShapeClass} shadow-md transition duration-300 hover:opacity-90 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+
+                    // Layout Order
+                    const imagePosition = sec.props.imagePosition || 'left';
+                    const imagePositionClass = imagePosition === 'right' ? 'md:flex-row-reverse' : '';
+
+                    compiledHtml = compiledHtml.replace(/{{\s*activeImageHtml\s*}}/g, activeImageHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*thumbnailsListHtml\s*}}/g, thumbnailsListHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*tagsHtml\s*}}/g, tagsHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*workShelfCtaBtn\s*}}/g, workShelfCtaBtn);
+                    compiledHtml = compiledHtml.replace(/{{\s*imagePositionClass\s*}}/g, imagePositionClass);
+                }
+
                 // Dynamic compiler for layout_grid component
                 if (sec.type.toLowerCase() === 'layout_grid') {
                     const cards = sec.props.cards || [
@@ -2573,6 +2664,162 @@ $csrf_token = generate_csrf_token();
                                                                 )}
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+
+                                            {/* CUSTOM DYNAMIC WORK DESCRIPTION PICTURE SHELF ITEM EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'work_description_shelf' && (() => {
+                                                const defaultItems = [
+                                                    {
+                                                        id: 'item-1',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
+                                                        title: 'Commercial Pest Management',
+                                                        description: 'Comprehensive pest control solutions engineered for industrial and commercial facilities.'
+                                                    },
+                                                    {
+                                                        id: 'item-2',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80',
+                                                        title: 'Safety & Hygiene Standards',
+                                                        description: 'Strict adherence to health, access safety, and environmental protection guidelines.'
+                                                    },
+                                                    {
+                                                        id: 'item-3',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80',
+                                                        title: 'Scheduled Service Programs',
+                                                        description: 'Customized recurring treatment schedules tailored to complex operational demands.'
+                                                    }
+                                                ];
+
+                                                const currentItems = (Array.isArray(selectedSection.props.items) && selectedSection.props.items.length > 0) ? selectedSection.props.items : defaultItems;
+
+                                                const handleItemsChange = (newItems) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, items: newItems } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addItem = () => {
+                                                    handleItemsChange([...currentItems, {
+                                                        id: 'item-' + Date.now(),
+                                                        imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
+                                                        title: 'New Service Item',
+                                                        description: 'Add specific details, scope of work, or operational features here...'
+                                                    }]);
+                                                };
+
+                                                const removeItem = (itemIdx) => {
+                                                    handleItemsChange(currentItems.filter((_, idx) => idx !== itemIdx));
+                                                };
+
+                                                const updateItemField = (itemIdx, field, val) => {
+                                                    const updatedItems = currentItems.map((item, idx) => idx === itemIdx ? { ...item, [field]: val } : item);
+                                                    handleItemsChange(updatedItems);
+                                                };
+
+                                                const handleFileUpload = (itemIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            if (data.success && data.url) {
+                                                                updateItemField(itemIdx, 'imageUrl', data.url);
+                                                                showToast("Success", "Work shelf image uploaded successfully!");
+                                                            } else {
+                                                                showToast("Upload Error", data.error || "Failed to upload image.");
+                                                            }
+                                                        })
+                                                        .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-briefcase"></i> Manage Work / Service Items
+                                                        </h4>
+                                                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                                                            Add, reorder, or edit pictures and descriptions for each service area shown on the shelf.
+                                                        </p>
+
+                                                        <div className="space-y-3">
+                                                            {currentItems.map((item, itemIdx) => (
+                                                                <div key={item.id || itemIdx} className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-3 relative group">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
+                                                                            Item #{itemIdx + 1}
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={() => removeItem(itemIdx)}
+                                                                            className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
+                                                                            title="Remove Item"
+                                                                        >
+                                                                            <i className="fas fa-trash-alt"></i>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Title</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={item.title || ''}
+                                                                            onChange={(e) => updateItemField(itemIdx, 'title', e.target.value)}
+                                                                            placeholder="Service / Work Title"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Description</label>
+                                                                        <textarea
+                                                                            value={item.description || ''}
+                                                                            onChange={(e) => updateItemField(itemIdx, 'description', e.target.value)}
+                                                                            placeholder="Detailed description of work or service..."
+                                                                            rows="2"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Image Source</label>
+                                                                        <div className="flex gap-2 items-center">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={item.imageUrl || ''}
+                                                                                onChange={(e) => updateItemField(itemIdx, 'imageUrl', e.target.value)}
+                                                                                placeholder="https://..."
+                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(itemIdx, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {item.imageUrl && (
+                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
+                                                                            <img src={item.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <button
+                                                            onClick={addItem}
+                                                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Service / Work Item
+                                                        </button>
                                                     </div>
                                                 );
                                             })()}
