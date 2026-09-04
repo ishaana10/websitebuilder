@@ -1529,9 +1529,14 @@ $csrf_token = generate_csrf_token();
                         </div>`;
                     }
 
+                    const imageHeightStyle = sec.props.imageHeight || '420px';
+                    const imageWidthStyle = sec.props.imageWidth || '100%';
+
                     compiledHtml = compiledHtml.replace(/{{\s*checklistHtml\s*}}/g, checklistHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*showcaseCtaBtn\s*}}/g, showcaseCtaBtn);
                     compiledHtml = compiledHtml.replace(/{{\s*badgeCardHtml\s*}}/g, badgeCardHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*imageHeightStyle\s*}}/g, imageHeightStyle);
+                    compiledHtml = compiledHtml.replace(/{{\s*imageWidthStyle\s*}}/g, imageWidthStyle);
                 }
 
                 // Dynamic compiler for work_description_shelf component
@@ -2748,6 +2753,102 @@ $csrf_token = generate_csrf_token();
                                             })()}
 
 
+
+
+                                            {/* CUSTOM SHOWCASE IMAGE UPLOAD & RESIZE MANAGER */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'about_feature_showcase' && (() => {
+                                                const currentImg = selectedSection.props.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                                const currentHeight = selectedSection.props.imageHeight || '420px';
+                                                const currentWidth = selectedSection.props.imageWidth || '100%';
+
+                                                const handlePropChange = (key, val) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, [key]: val } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const handleFileUpload = (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            if (data.success && data.url) {
+                                                                handlePropChange('imageUrl', data.url);
+                                                                showToast("Success", "Showcase image uploaded successfully!");
+                                                            } else {
+                                                                showToast("Upload Error", data.error || "Failed to upload image.");
+                                                            }
+                                                        })
+                                                        .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-image"></i> Showcase Image & Dimension Controls
+                                                        </h4>
+                                                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                                                            Directly upload your custom showcase photo and adjust its display height and maximum width.
+                                                        </p>
+
+                                                        <div className="space-y-3 bg-slate-900/90 border border-slate-800 rounded-lg p-3">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-semibold text-slate-300">Upload / Image URL</label>
+                                                                <div className="flex gap-2 items-center">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={currentImg}
+                                                                        onChange={(e) => handlePropChange('imageUrl', e.target.value)}
+                                                                        placeholder="https://..."
+                                                                        className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                    />
+                                                                    <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
+                                                                        <i className="fas fa-upload"></i>
+                                                                        <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-semibold text-slate-300">Image Height</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={currentHeight}
+                                                                        onChange={(e) => handlePropChange('imageHeight', e.target.value)}
+                                                                        placeholder="420px, 350px..."
+                                                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-semibold text-slate-300">Image Max-Width</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={currentWidth}
+                                                                        onChange={(e) => handlePropChange('imageWidth', e.target.value)}
+                                                                        placeholder="100%, 500px..."
+                                                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            {currentImg && (
+                                                                <div className="relative rounded overflow-hidden border border-slate-800 bg-slate-950 p-1 flex justify-center">
+                                                                    <img src={currentImg} className="max-h-36 object-cover rounded" alt="Preview" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* CUSTOM DYNAMIC ICON / IMAGE SPOTLIGHT CARD EDITOR */}
                                             {selectedSection && selectedSection.type.toLowerCase() === 'icon_image_box' && (() => {

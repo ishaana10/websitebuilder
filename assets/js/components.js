@@ -1518,6 +1518,8 @@ const UI_COMPONENTS = [
             { key: 'btnWaMsg', label: 'WhatsApp Message', type: 'text', default: 'Hello! I would like to explore your services.' },
             { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
             { key: 'imageUrl', label: 'Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80' },
+            { key: 'imageHeight', label: 'Image Container Height (e.g. 400px, 350px, auto)', type: 'text', default: '420px' },
+            { key: 'imageWidth', label: 'Image Container Max-Width (e.g. 100%, 500px)', type: 'text', default: '100%' },
             { key: 'badgeTitle', label: 'Floating Badge Title', type: 'text', default: 'Fiji Wide' },
             { key: 'badgeDesc', label: 'Floating Badge Description', type: 'text', default: 'We service homes, businesses, vessels, containers and more.' },
             { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
@@ -1552,7 +1554,7 @@ const UI_COMPONENTS = [
 
         <!-- Image & Floating Badge Column -->
         <div class="w-full md:w-1/2 relative">
-            <div class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80">
+            <div class="relative w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 mx-auto" style="height: {{imageHeightStyle}}; max-width: {{imageWidthStyle}};">
                 <img src="{{imageUrl}}" class="w-full h-full object-cover" alt="Feature Showcase" />
             </div>
 
