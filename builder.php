@@ -1441,19 +1441,98 @@ $csrf_token = generate_csrf_token();
                 }
 
                 if (sec.type.toLowerCase() === 'icon_image_box') {
-                    const btnText = sec.props.btnText;
-                    let boxBtnHtml = '';
-                    if (btnText) {
-                        const href = resolveBtnUrl(sec.props);
-                        const targetAttr = resolveBtnTarget(sec.props);
-                        const accentColor = sec.props.accentColor || '#14b8a6';
-                        const btnShapeClass = resolveBtnShapeClass(sec.props);
-                        const btnEffectClass = resolveBtnEffectClass(sec.props);
-                        boxBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-bold px-4 py-2 ${btnShapeClass} text-xs transition duration-300 hover:opacity-90 mt-2 ${btnEffectClass}" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>`;
-                    }
-                    compiledHtml = compiledHtml.replace(/{{\s*boxBtn\s*}}/g, boxBtnHtml);
+                    const defaultCards = [
+                        {
+                            id: 'card-1',
+                            heading: sec.props.heading || 'High Density Architecture',
+                            text: sec.props.text || 'Combine beautiful icons or direct image uploads into clean card containers.',
+                            iconClass: sec.props.iconClass || 'fas fa-cubes',
+                            imageUrl: sec.props.imageUrl || '',
+                            btnText: sec.props.btnText || 'Learn More',
+                            btnUrl: sec.props.btnUrl || '#'
+                        }
+                    ];
+
+                    const cards = (Array.isArray(sec.props.cards) && sec.props.cards.length > 0) ? sec.props.cards : defaultCards;
+                    const cardBgColor = sec.props.cardBgColor || sec.props.bgColor || '#1e293b';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+                    const headingColor = sec.props.headingColor || '#ffffff';
+                    const textColor = sec.props.textColor || '#cbd5e1';
+                    const columns = sec.props.columns || '3';
+
+                    const cardsHtml = cards.map(card => {
+                        const imgUrl = card.imageUrl || '';
+                        const iconClass = card.iconClass || 'fas fa-cubes';
+                        const titleText = card.heading || '';
+                        const descText = card.text || '';
+                        const btnText = card.btnText || '';
+                        const btnUrl = card.btnUrl || '#';
+
+                        const mediaHtml = imgUrl ?
+                            `<img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl shadow-md border border-slate-700/50" alt="${titleText.replace(/"/g, '&quot;')}" />` :
+                            `<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg" style="background-color: rgba(20, 184, 166, 0.12); color: ${accentColor};"><i class="${iconClass}"></i></div>`;
+
+                        const cardBtnHtml = btnText ?
+                            `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
+
+                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4 hover:border-slate-700 transition duration-300 shadow-xl" style="background-color: ${cardBgColor}; color: ${textColor};">
+                            ${mediaHtml}
+                            <div class="space-y-2">
+                                <h4 class="text-base font-bold" style="color: ${headingColor};">${titleText}</h4>
+                                <p class="text-xs leading-relaxed opacity-85">${descText}</p>
+                            </div>
+                            ${cardBtnHtml}
+                        </div>`;
+                    }).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*cardsHtml\s*}}/g, cardsHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*columns\s*}}/g, columns);
                 }
 
+
+
+                // Dynamic compiler for about_feature_showcase component
+                if (sec.type.toLowerCase() === 'about_feature_showcase') {
+                    const checklistRaw = sec.props.checklist || '';
+                    const checklistItems = checklistRaw.split(',').map(item => item.trim()).filter(Boolean);
+                    const accentColor = sec.props.accentColor || '#065f46';
+                    const textColor = sec.props.textColor || '#475569';
+
+                    const checklistHtml = checklistItems.map(item => {
+                        return `<div class="flex items-center gap-2.5 text-xs font-bold" style="color: ${textColor};">
+                            <span class="font-extrabold text-sm" style="color: ${accentColor};">✓</span>
+                            <span>${item}</span>
+                        </div>`;
+                    }).join('');
+
+                    // CTA Button Compilation
+                    const btnText = sec.props.btnText || 'Explore Our Services';
+                    const btnBg = sec.props.btnBg || '#065f46';
+                    const btnColor = sec.props.btnColor || '#ffffff';
+                    const btnShapeClass = resolveBtnShapeClass(sec.props);
+                    const btnEffectClass = resolveBtnEffectClass(sec.props);
+                    const btnHref = resolveBtnUrl(sec.props);
+                    const btnTarget = resolveBtnTarget(sec.props);
+
+                    const showcaseCtaBtn = `<a href="${btnHref}" ${btnTarget} class="inline-block font-bold px-7 py-3.5 ${btnShapeClass} shadow-lg transition duration-300 hover:opacity-90 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+
+                    // Badge Card Compilation
+                    const badgeTitle = sec.props.badgeTitle || '';
+                    const badgeDesc = sec.props.badgeDesc || '';
+                    const cardBgColor = sec.props.cardBgColor || '#ffffff';
+
+                    let badgeCardHtml = '';
+                    if (badgeTitle || badgeDesc) {
+                        badgeCardHtml = `<div class="absolute -bottom-6 -right-2 md:bottom-6 md:right-6 max-w-xs p-5 rounded-2xl shadow-2xl border border-slate-200/80 backdrop-blur-sm" style="background-color: ${cardBgColor};">
+                            ${badgeTitle ? `<h4 class="text-base font-black mb-1" style="color: ${accentColor};">${badgeTitle}</h4>` : ''}
+                            ${badgeDesc ? `<p class="text-xs leading-relaxed opacity-90" style="color: ${textColor};">${badgeDesc}</p>` : ''}
+                        </div>`;
+                    }
+
+                    compiledHtml = compiledHtml.replace(/{{\s*checklistHtml\s*}}/g, checklistHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*showcaseCtaBtn\s*}}/g, showcaseCtaBtn);
+                    compiledHtml = compiledHtml.replace(/{{\s*badgeCardHtml\s*}}/g, badgeCardHtml);
+                }
 
                 // Dynamic compiler for work_description_shelf component
                 if (sec.type.toLowerCase() === 'work_description_shelf') {
@@ -2668,6 +2747,190 @@ $csrf_token = generate_csrf_token();
                                                 );
                                             })()}
 
+
+
+                                            {/* CUSTOM DYNAMIC ICON / IMAGE SPOTLIGHT CARD EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'icon_image_box' && (() => {
+                                                const defaultCards = [
+                                                    {
+                                                        id: 'card-1',
+                                                        heading: selectedSection.props.heading || 'High Density Architecture',
+                                                        text: selectedSection.props.text || 'Combine beautiful icons or direct image uploads into clean card containers.',
+                                                        iconClass: selectedSection.props.iconClass || 'fas fa-cubes',
+                                                        imageUrl: selectedSection.props.imageUrl || '',
+                                                        btnText: selectedSection.props.btnText || 'Learn More',
+                                                        btnUrl: selectedSection.props.btnUrl || '#'
+                                                    }
+                                                ];
+
+                                                const currentCards = (Array.isArray(selectedSection.props.cards) && selectedSection.props.cards.length > 0) ? selectedSection.props.cards : defaultCards;
+
+                                                const handleCardsChange = (newCards) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, cards: newCards } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addCard = () => {
+                                                    handleCardsChange([...currentCards, {
+                                                        id: 'card-' + Date.now(),
+                                                        heading: 'New Spotlight Item',
+                                                        text: 'Add detailed feature or service description here...',
+                                                        iconClass: 'fas fa-star',
+                                                        imageUrl: '',
+                                                        btnText: 'Learn More',
+                                                        btnUrl: '#'
+                                                    }]);
+                                                };
+
+                                                const removeCard = (cardIdx) => {
+                                                    handleCardsChange(currentCards.filter((_, idx) => idx !== cardIdx));
+                                                };
+
+                                                const updateCardField = (cardIdx, field, val) => {
+                                                    const updatedCards = currentCards.map((card, idx) => idx === cardIdx ? { ...card, [field]: val } : card);
+                                                    handleCardsChange(updatedCards);
+                                                };
+
+                                                const handleFileUpload = (cardIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            if (data.success && data.url) {
+                                                                updateCardField(cardIdx, 'imageUrl', data.url);
+                                                                showToast("Success", "Spotlight card image uploaded successfully!");
+                                                            } else {
+                                                                showToast("Upload Error", data.error || "Failed to upload image.");
+                                                            }
+                                                        })
+                                                        .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-boxes-stacked"></i> Manage Spotlight Cards
+                                                        </h4>
+                                                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                                                            Add, edit, upload pictures, or delete spotlight cards from this component.
+                                                        </p>
+
+                                                        <div className="space-y-3">
+                                                            {currentCards.map((card, cardIdx) => (
+                                                                <div key={card.id || cardIdx} className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-3 relative group">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
+                                                                            Card #{cardIdx + 1}
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={() => removeCard(cardIdx)}
+                                                                            className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
+                                                                            title="Remove Card"
+                                                                        >
+                                                                            <i className="fas fa-trash-alt"></i>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Title</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={card.heading || ''}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'heading', e.target.value)}
+                                                                            placeholder="Card Title"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Description</label>
+                                                                        <textarea
+                                                                            value={card.text || ''}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'text', e.target.value)}
+                                                                            placeholder="Card Description..."
+                                                                            rows="2"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">FontAwesome Icon</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.iconClass || 'fas fa-cubes'}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'iconClass', e.target.value)}
+                                                                                placeholder="fas fa-star"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Button Text</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.btnText || ''}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'btnText', e.target.value)}
+                                                                                placeholder="Learn More"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Button URL</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={card.btnUrl || '#'}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
+                                                                            placeholder="https://..."
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Image Upload / URL</label>
+                                                                        <div className="flex gap-2 items-center">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.imageUrl || ''}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                placeholder="https://..."
+                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {card.imageUrl && (
+                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
+                                                                            <img src={card.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <button
+                                                            onClick={addCard}
+                                                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Spotlight Card
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* CUSTOM DYNAMIC WORK DESCRIPTION PICTURE SHELF ITEM EDITOR */}
                                             {selectedSection && selectedSection.type.toLowerCase() === 'work_description_shelf' && (() => {
