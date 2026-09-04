@@ -1397,50 +1397,27 @@ const UI_COMPONENTS = [
     },
     {
         id: 'icon_image_box',
-        name: 'Icon / Image Spotlight Box',
+        name: 'Icon / Image Spotlight Box Grid',
         category: 'Features',
         icon: 'fas fa-box-open',
         schema: [
-            { key: 'heading', label: 'Box Title', type: 'text', default: 'High Density Architecture' },
-            { key: 'text', label: 'Box Description', type: 'textarea', default: 'Combine beautiful icons or direct image uploads into clean card containers that match your theme perfectly.' },
-            { key: 'iconClass', label: 'FontAwesome Icon', type: 'text', default: 'fas fa-cubes' },
-            { key: 'imageUrl', label: 'Image URL (Optional)', type: 'text', default: '' },
-            { key: 'btnText', label: 'Button Text (Optional)', type: 'text', default: 'Learn More' },
-            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [
-                { value: 'pill', label: 'Pill / Fully Rounded' },
-                { value: 'rounded', label: 'Rounded Corners' },
-                { value: 'square', label: 'Square' }
+            { key: 'columns', label: 'Grid Columns', type: 'select', default: '3', options: [
+                { value: '1', label: '1 Column' },
+                { value: '2', label: '2 Columns' },
+                { value: '3', label: '3 Columns' },
+                { value: '4', label: '4 Columns' }
             ]},
-            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
-            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
-            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
-            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
-            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
-            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am interested in this spotlight feature.' },
-            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
-            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
-                { value: 'none', label: 'Standard (None)' },
-                { value: 'glow', label: 'Outer Neon Glow Effect' },
-                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
-                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
-                { value: 'blink_alert', label: 'Blinking / Flashing Alert (Flash & Blink)' },
-                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' },
-                { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
-                { value: 'scale_lift', label: 'Hover Lift & Scale' },
-                { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
-            ] },
-            { key: 'bgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
+            { key: 'bgColor', label: 'Section Background', type: 'color', default: 'transparent' },
+            { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Icon Accent Color', type: 'color', default: '#14b8a6' },
+            { key: 'headingColor', label: 'Card Title Color', type: 'color', default: '#ffffff' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' }
         ],
-        html: `
-<div class="p-6 rounded-xl border border-slate-800 text-center flex flex-col items-center gap-4 hover:border-slate-700 transition duration-300 shadow-xl max-w-sm mx-auto" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="icon_image_box">
-    {{imageUrl ? '<img src="' + imageUrl + '" class="w-16 h-16 object-cover rounded-lg shadow-md" />' : '<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg" style="background-color: rgba(20, 184, 166, 0.1); color: ' + accentColor + '"><i class="' + iconClass + '"></i></div>'}}
-    <div class="space-y-2">
-        <h4 class="text-base font-bold text-white">{{heading}}</h4>
-        <p class="text-xs leading-relaxed opacity-85">{{text}}</p>
+        html: `<section class="py-8 px-4 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="icon_image_box">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-{{columns}} gap-6">
+        {{cardsHtml}}
     </div>
-</div>`
+</section>`
     },
     {
         id: 'countdown_timer',
@@ -1513,6 +1490,74 @@ const UI_COMPONENTS = [
             <a href="{{linkedinUrl}}" target="_blank" class="w-10 h-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-300 transition duration-300 hover:text-slate-950 hover:scale-110 shadow" style="--hover-bg: {{accentColor}}" onmouseover="this.style.backgroundColor=this.style.getPropertyValue('--hover-bg'); this.style.borderColor=this.style.getPropertyValue('--hover-bg');" onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#1e293b';">
                 <i class="fab fa-linkedin-in"></i>
             </a>
+        </div>
+    </div>
+</section>`
+    },
+    {
+        id: 'about_feature_showcase',
+        name: 'About & Feature Showcase Block',
+        category: 'Features',
+        icon: 'fas fa-shield-halved',
+        schema: [
+            { key: 'overlineText', label: 'Top Category Overline', type: 'text', default: 'ABOUT ALL PEST' },
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'Local service. Professional standards. Fiji-wide coverage.' },
+            { key: 'paragraph1', label: 'First Paragraph', type: 'textarea', default: 'ALL PEST & HYGIENE SOLUTIONS PTE LTD is a Fiji-based pest management and commercial cleaning company established on 12 August 2022. We provide practical, dependable and site-focused solutions for residential, commercial, industrial and marine environments.' },
+            { key: 'paragraph2', label: 'Second Paragraph', type: 'textarea', default: 'From routine pest control to complex fumigation and termite management, our aim is to identify the source of the problem, apply the right treatment and help clients maintain safer, cleaner and better-protected premises.' },
+            { key: 'checklist', label: 'Checklist Bullet Features (Comma-separated)', type: 'text', default: 'Fiji-wide service coverage, Residential & commercial solutions, Industrial and marine capability, Pre & post-construction treatments' },
+            { key: 'btnText', label: 'Button Text', type: 'text', default: 'Explore Our Services' },
+            { key: 'btnBg', label: 'Button Background Color', type: 'color', default: '#065f46' },
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
+            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [{value: 'pill', label: 'Pill / Oval'}, {value: 'rounded', label: 'Rounded'}, {value: 'square', label: 'Square'}] },
+            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [{value: 'none', label: 'None'}, {value: 'glow', label: 'Glow'}, {value: 'scale_lift', label: 'Scale Lift'}] },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Chat'}] },
+            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Message', type: 'text', default: 'Hello! I would like to explore your services.' },
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
+            { key: 'imageUrl', label: 'Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80' },
+            { key: 'badgeTitle', label: 'Floating Badge Title', type: 'text', default: 'Fiji Wide' },
+            { key: 'badgeDesc', label: 'Floating Badge Description', type: 'text', default: 'We service homes, businesses, vessels, containers and more.' },
+            { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
+            { key: 'cardBgColor', label: 'Floating Badge Background', type: 'color', default: '#ffffff' },
+            { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#475569' },
+            { key: 'accentColor', label: 'Accent / Checkmark Color', type: 'color', default: '#065f46' }
+        ],
+        html: `<section class="py-12 px-6 md:px-12 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="about_feature_showcase">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-14">
+        <!-- Content Column -->
+        <div class="w-full md:w-1/2 space-y-6">
+            <div class="space-y-2">
+                <p class="text-xs font-black uppercase tracking-wider opacity-90" style="color: {{accentColor}};">{{overlineText}}</p>
+                <h2 class="text-3xl md:text-4xl font-black leading-tight tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+            </div>
+
+            <div class="space-y-4 text-sm leading-relaxed" style="color: {{textColor}};">
+                <p>{{paragraph1}}</p>
+                <p>{{paragraph2}}</p>
+            </div>
+
+            <!-- Bullet Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
+                {{checklistHtml}}
+            </div>
+
+            <div class="pt-2">
+                {{showcaseCtaBtn}}
+            </div>
+        </div>
+
+        <!-- Image & Floating Badge Column -->
+        <div class="w-full md:w-1/2 relative">
+            <div class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80">
+                <img src="{{imageUrl}}" class="w-full h-full object-cover" alt="Feature Showcase" />
+            </div>
+
+            <!-- Floating Badge Card -->
+            {{badgeCardHtml}}
         </div>
     </div>
 </section>`
