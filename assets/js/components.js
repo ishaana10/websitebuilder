@@ -67,7 +67,7 @@ const UI_COMPONENTS = [
         {{brandLogoArea}}
 
         <!-- Desktop Links -->
-        <div class="hidden md:flex space-x-6">
+        <div class="hidden md:flex space-x-6 items-center">
             {{links}}
         </div>
 

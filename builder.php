@@ -1257,8 +1257,8 @@ $csrf_token = generate_csrf_token();
                                 const children = link.children || [];
                                 if (isDesktop) {
                                     return `
-                                    <div class="relative group dropdown-item inline-block text-left">
-                                        <button class="flex items-center gap-1 font-bold transition duration-300 focus:outline-none py-1" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}">
+                                    <div class="relative group dropdown-item inline-flex items-center text-left">
+                                        <button class="inline-flex items-center gap-1 font-bold transition duration-300 focus:outline-none" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-navlink-${lIdx}">
                                             <span>${link.text}</span>
                                             <i class="fas fa-chevron-down text-[9px] opacity-70 transition-transform duration-200 group-hover:rotate-180"></i>
                                         </button>
@@ -1302,7 +1302,7 @@ $csrf_token = generate_csrf_token();
                                 }
                             } else {
                                 const closeMobileAttr = isDesktop ? '' : `onclick="const m = this.closest('.mobile-menu'); if(m) m.classList.add('hidden');"`;
-                                const classAttr = isDesktop ? 'font-bold transition duration-300' : 'block py-1.5 font-bold transition duration-300';
+                                const classAttr = isDesktop ? 'inline-flex items-center font-bold transition duration-300' : 'block py-1.5 font-bold transition duration-300';
                                 const elPathAttr = isDesktop ? `data-el-path="el-navlink-${lIdx}"` : `data-el-path="el-navlink-mobile-${lIdx}"`;
                                 return `<a href="${url}" ${closeMobileAttr} class="${classAttr}" style="color: ${textColor};" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='${textColor}'" ${elPathAttr}>${link.text}</a>`;
                             }
