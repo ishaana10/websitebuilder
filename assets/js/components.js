@@ -1518,6 +1518,70 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
+        id: 'work_description_shelf',
+        name: 'Work Description Picture Shelf',
+        category: 'Features',
+        icon: 'fas fa-briefcase',
+        schema: [
+            { key: 'overlineText', label: 'Top Overline Category', type: 'text', default: 'COMMERCIAL & INDUSTRIAL' },
+            { key: 'heading', label: 'Main Section Title', type: 'text', default: 'Pest management for demanding work environments' },
+            { key: 'descriptionText', label: 'Primary Description', type: 'text', default: 'All Pest supports businesses that need reliable pest management across complex operating environments, including sites where access, safety, hygiene and service coordination are important.' },
+            { key: 'tagsList', label: 'Service Tags / Badges (Comma-separated)', type: 'text', default: 'Hotels & Resorts, Restaurants, Factories, Warehouses, Construction Sites, Vessels, Shipping Containers, Offices & Retail, Residential Properties, Industrial Facilities' },
+            { key: 'footerText', label: 'Secondary Footer Description', type: 'text', default: 'We can discuss one-off treatments as well as scheduled service programs depending on your site requirements.' },
+            { key: 'btnText', label: 'Button Text', type: 'text', default: 'Discuss Your Site' },
+            { key: 'btnBg', label: 'Button Background Color', type: 'color', default: '#065f46' },
+            { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
+            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [{value: 'pill', label: 'Pill / Oval'}, {value: 'rounded', label: 'Rounded'}, {value: 'square', label: 'Square'}] },
+            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [{value: 'none', label: 'None'}, {value: 'glow', label: 'Glow'}, {value: 'pulse_alert', label: 'Pulse Alert'}, {value: 'scale_lift', label: 'Scale Lift'}] },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Chat'}] },
+            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Message', type: 'text', default: 'Hello! I would like to discuss our site requirements.' },
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
+            { key: 'imagePosition', label: 'Image Side Layout', type: 'select', default: 'left', options: [{value: 'left', label: 'Image Left / Text Right'}, {value: 'right', label: 'Text Left / Image Right'}] },
+            { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
+            { key: 'cardBgColor', label: 'Image Card Background', type: 'color', default: '#f8fafc' },
+            { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#475569' },
+            { key: 'accentColor', label: 'Accent / Tag Color', type: 'color', default: '#065f46' }
+        ],
+        html: `<section class="py-12 px-6 md:px-12 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="work_description_shelf">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-12 {{imagePositionClass}}">
+        <!-- Left / Right Image Display Shelf -->
+        <div class="w-full md:w-1/2 flex flex-col gap-4">
+            <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border border-slate-200/80 group" style="background-color: {{cardBgColor}};">
+                {{activeImageHtml}}
+            </div>
+            <!-- Thumbnails Selector -->
+            {{thumbnailsListHtml}}
+        </div>
+
+        <!-- Content Info Panel -->
+        <div class="w-full md:w-1/2 space-y-5">
+            <div class="space-y-2">
+                <p class="text-xs font-black uppercase tracking-wider opacity-90" style="color: {{accentColor}};">{{overlineText}}</p>
+                <h2 class="text-2xl md:text-3xl font-black leading-tight tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+            </div>
+
+            <p class="text-sm leading-relaxed" style="color: {{textColor}};">{{descriptionText}}</p>
+
+            <!-- Tags / Badge Pills List -->
+            <div class="flex flex-wrap gap-2 py-1">
+                {{tagsHtml}}
+            </div>
+
+            <p class="text-xs leading-relaxed opacity-90 font-medium" style="color: {{textColor}};">{{footerText}}</p>
+
+            <div class="pt-2">
+                {{workShelfCtaBtn}}
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
         id: 'progress_bar',
         name: 'Progress Meter Bar Gauge',
         category: 'Features',
@@ -2452,4 +2516,26 @@ if (typeof window !== 'undefined') {
         window.loadNuvisSaaSBlogs();
         if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
     }
+
+    window.switchWorkShelfImage = function(btnEl, imgSrc, titleText, descText) {
+        const root = btnEl.closest('[data-component="work_description_shelf"]');
+        if (!root) return;
+
+        const mainImg = root.querySelector('.main-work-shelf-img');
+        const mainTitle = root.querySelector('.main-work-shelf-title');
+        const mainDesc = root.querySelector('.main-work-shelf-desc');
+
+        if (mainImg) mainImg.src = imgSrc || '';
+        if (mainTitle) mainTitle.innerText = titleText || '';
+        if (mainDesc) mainDesc.innerText = descText || '';
+
+        const thumbs = root.querySelectorAll('.work-shelf-thumb');
+        thumbs.forEach(t => {
+            t.classList.remove('ring-2', 'ring-emerald-600', 'border-emerald-600', 'scale-105');
+            t.classList.add('opacity-70');
+        });
+        btnEl.classList.remove('opacity-70');
+        btnEl.classList.add('ring-2', 'ring-emerald-600', 'border-emerald-600', 'scale-105');
+    };
+
 }
