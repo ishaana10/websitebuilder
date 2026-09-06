@@ -1470,9 +1470,10 @@ $csrf_token = generate_csrf_token();
                         const btnText = card.btnText || '';
                         const btnUrl = card.btnUrl || '#';
 
-                        const mediaHtml = imgUrl ?
+                        const mediaType = card.mediaType || (imgUrl ? 'image' : 'icon');
+                        const mediaHtml = (mediaType === 'image' && imgUrl) ?
                             `<img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl shadow-md border border-slate-700/50" alt="${titleText.replace(/"/g, '&quot;')}" />` :
-                            `<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg" style="background-color: rgba(20, 184, 166, 0.12); color: ${accentColor};"><i class="${iconClass}"></i></div>`;
+                            `<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0" style="background-color: rgba(20, 184, 166, 0.12); color: ${accentColor};"><i class="${iconClass}"></i></div>`;
 
                         const cardBtnHtml = btnText ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
@@ -2965,17 +2966,62 @@ $csrf_token = generate_csrf_token();
                                                                         />
                                                                     </div>
 
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[10px] font-semibold text-slate-300">FontAwesome Icon</label>
-                                                                            <input
-                                                                                type="text"
-                                                                                value={card.iconClass || 'fas fa-cubes'}
-                                                                                onChange={(e) => updateCardField(cardIdx, 'iconClass', e.target.value)}
-                                                                                placeholder="fas fa-star"
-                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                            />
+                                                                    <div className="space-y-1.5 border-t border-b border-slate-800/80 py-2 my-1">
+                                                                        <label className="text-[10px] font-bold uppercase tracking-wider text-teal-400 block">Card Media Type</label>
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateCardField(cardIdx, 'mediaType', 'icon')}
+                                                                                className={`py-1.5 px-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition ${(!card.mediaType || card.mediaType === 'icon') ? 'bg-teal-950/80 border-teal-500 text-teal-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}
+                                                                            >
+                                                                                <i className="fas fa-icons"></i> Font Icon
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateCardField(cardIdx, 'mediaType', 'image')}
+                                                                                className={`py-1.5 px-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition ${(card.mediaType === 'image' || (!card.mediaType && card.imageUrl)) ? 'bg-teal-950/80 border-teal-500 text-teal-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}
+                                                                            >
+                                                                                <i className="fas fa-image"></i> Picture / Image
+                                                                            </button>
                                                                         </div>
+
+                                                                        {(card.mediaType === 'image' || (!card.mediaType && card.imageUrl)) ? (
+                                                                            <div className="space-y-1.5 pt-1">
+                                                                                <label className="text-[10px] font-semibold text-slate-300">Picture Upload or Image URL</label>
+                                                                                <div className="flex gap-2 items-center">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={card.imageUrl || ''}
+                                                                                        onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                        placeholder="https://... or upload picture"
+                                                                                        className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                    />
+                                                                                    <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Picture">
+                                                                                        <i className="fas fa-upload"></i>
+                                                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
+                                                                                    </label>
+                                                                                </div>
+                                                                                {card.imageUrl && (
+                                                                                    <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center">
+                                                                                        <img src={card.imageUrl} className="w-full h-full object-cover" alt="Card Picture Preview" />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="space-y-1 pt-1">
+                                                                                <label className="text-[10px] font-semibold text-slate-300">FontAwesome Icon Class</label>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={card.iconClass || 'fas fa-cubes'}
+                                                                                    onChange={(e) => updateCardField(cardIdx, 'iconClass', e.target.value)}
+                                                                                    placeholder="fas fa-star"
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
                                                                         <div className="space-y-1">
                                                                             <label className="text-[10px] font-semibold text-slate-300">Button Text</label>
                                                                             <input
@@ -2986,41 +3032,17 @@ $csrf_token = generate_csrf_token();
                                                                                 className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
                                                                         </div>
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Button URL</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            value={card.btnUrl || '#'}
-                                                                            onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
-                                                                            placeholder="https://..."
-                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Image Upload / URL</label>
-                                                                        <div className="flex gap-2 items-center">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Button URL</label>
                                                                             <input
                                                                                 type="text"
-                                                                                value={card.imageUrl || ''}
-                                                                                onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                value={card.btnUrl || '#'}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
                                                                                 placeholder="https://..."
-                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
-                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
-                                                                                <i className="fas fa-upload"></i>
-                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
-                                                                            </label>
                                                                         </div>
                                                                     </div>
-
-                                                                    {card.imageUrl && (
-                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
-                                                                            <img src={card.imageUrl} className="w-full h-full object-cover" alt="Preview" />
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             ))}
                                                         </div>
