@@ -3057,6 +3057,97 @@ $csrf_token = generate_csrf_token();
                                                 );
                                             })()}
 
+                                            {/* CUSTOM DYNAMIC ASYMMETRIC PHOTO GRID EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'asymmetric_photo_grid' && (() => {
+                                                const handleImgUpload = (key, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, [key]: data.url } } : s);
+                                                            updateSectionsWithHistory(updated);
+                                                            showToast("Success", "Photo uploaded successfully!");
+                                                        } else {
+                                                            showToast("Upload Error", data.error || "Failed to upload image.");
+                                                        }
+                                                    })
+                                                    .catch(err => showToast("Upload Error", err.message));
+                                                };
+
+                                                const updatePropField = (key, val) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, [key]: val } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-border-all"></i> Asymmetric Photos & Captions Manager
+                                                        </h4>
+
+                                                        {[
+                                                            { keyPrefix: 'main', title: 'Tall Left Featured Photo' },
+                                                            { keyPrefix: 'side1', title: 'Right Top Stacked Photo' },
+                                                            { keyPrefix: 'side2', title: 'Right Bottom Stacked Photo' }
+                                                        ].map(item => {
+                                                            const imgKey = item.keyPrefix + 'ImgUrl';
+                                                            const altKey = item.keyPrefix + 'ImgAlt';
+                                                            const capKey = item.keyPrefix + (item.keyPrefix === 'main' ? 'Caption' : 'Caption');
+
+                                                            return (
+                                                                <div key={item.keyPrefix} className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                                                    <span className="text-[10px] font-bold text-teal-300 block">{item.title}</span>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-400">Photo Upload / URL</label>
+                                                                        <div className="flex gap-2 items-center">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedSection.props[imgKey] || ''}
+                                                                                onChange={(e) => updatePropField(imgKey, e.target.value)}
+                                                                                placeholder="https://..."
+                                                                                className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Photo">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImgUpload(imgKey, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {selectedSection.props[imgKey] && (
+                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                                                                            <img src={selectedSection.props[imgKey]} className="w-full h-full object-cover" alt="Preview" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-400">Caption Description</label>
+                                                                        <textarea
+                                                                            value={selectedSection.props[capKey] || ''}
+                                                                            onChange={(e) => updatePropField(capKey, e.target.value)}
+                                                                            rows="2"
+                                                                            placeholder="Enter card caption text..."
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+
                                             {/* CUSTOM DYNAMIC WORK DESCRIPTION PICTURE SHELF ITEM EDITOR */}
                                             {selectedSection && selectedSection.type.toLowerCase() === 'work_description_shelf' && (() => {
                                                 const defaultItems = [

@@ -1629,6 +1629,56 @@ const UI_COMPONENTS = [
 </section>`
     },
     {
+        id: 'asymmetric_photo_grid',
+        name: 'Asymmetric Photo Grid Showcase',
+        category: 'Features',
+        icon: 'fas fa-border-all',
+        schema: [
+            { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
+            { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Caption Text Color', type: 'color', default: '#475569' },
+            { key: 'mainImgUrl', label: 'Tall Left Featured Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80' },
+            { key: 'mainImgAlt', label: 'Main Image Alt Text', type: 'text', default: 'Pest treatment application on construction site' },
+            { key: 'mainCaption', label: 'Main Card Bottom Caption', type: 'textarea', default: 'Field treatment work being carried out on site by our technician.' },
+            { key: 'side1ImgUrl', label: 'Right Top Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80' },
+            { key: 'side1ImgAlt', label: 'Right Top Image Alt Text', type: 'text', default: 'Pest control work at height' },
+            { key: 'side1Caption', label: 'Right Top Card Bottom Caption', type: 'textarea', default: 'Specialized access work for commercial or industrial pest management.' },
+            { key: 'side2ImgUrl', label: 'Right Bottom Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80' },
+            { key: 'side2ImgAlt', label: 'Right Bottom Image Alt Text', type: 'text', default: 'Industrial site prepared for pest management' },
+            { key: 'side2Caption', label: 'Right Bottom Card Bottom Caption', type: 'textarea', default: 'Large-scale commercial or industrial site support, including fumigation-related work.' }
+        ],
+        html: `<section class="py-12 px-4 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="asymmetric_photo_grid">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <!-- TALL LEFT FEATURED PHOTO CARD -->
+        <div class="rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between h-full transition hover:shadow-md" style="background-color: {{cardBgColor}};">
+            <div class="w-full flex-1 rounded-xl overflow-hidden bg-slate-100 min-h-[320px] md:min-h-[460px] relative mb-4">
+                <img src="{{mainImgUrl}}" alt="{{mainImgAlt}}" class="w-full h-full object-cover rounded-xl" />
+            </div>
+            <p class="text-xs md:text-sm leading-relaxed" style="color: {{textColor}};">{{mainCaption}}</p>
+        </div>
+
+        <!-- RIGHT SIDE STACKED PHOTO CARDS COLUMN -->
+        <div class="flex flex-col gap-6 h-full justify-between">
+            <!-- TOP STACKED CARD -->
+            <div class="rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between flex-1 transition hover:shadow-md" style="background-color: {{cardBgColor}};">
+                <div class="w-full flex-1 rounded-xl overflow-hidden bg-slate-100 min-h-[180px] relative mb-4">
+                    <img src="{{side1ImgUrl}}" alt="{{side1ImgAlt}}" class="w-full h-full object-cover rounded-xl" />
+                </div>
+                <p class="text-xs md:text-sm leading-relaxed" style="color: {{textColor}};">{{side1Caption}}</p>
+            </div>
+
+            <!-- BOTTOM STACKED CARD -->
+            <div class="rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between flex-1 transition hover:shadow-md" style="background-color: {{cardBgColor}};">
+                <div class="w-full flex-1 rounded-xl overflow-hidden bg-slate-100 min-h-[180px] relative mb-4">
+                    <img src="{{side2ImgUrl}}" alt="{{side2ImgAlt}}" class="w-full h-full object-cover rounded-xl" />
+                </div>
+                <p class="text-xs md:text-sm leading-relaxed" style="color: {{textColor}};">{{side2Caption}}</p>
+            </div>
+        </div>
+    </div>
+</section>`
+    },
+    {
         id: 'progress_bar',
         name: 'Progress Meter Bar Gauge',
         category: 'Features',
