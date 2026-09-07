@@ -206,6 +206,8 @@ $csrf_token = generate_csrf_token();
             const [customJs, setCustomJs] = useState('');
             const [projectStatus, setProjectStatus] = useState(PROJECT_STATUS);
             const [componentSearchQuery, setComponentSearchQuery] = useState('');
+            const [isLeftShelfCollapsed, setIsLeftShelfCollapsed] = useState(false);
+            const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
             // --- Code Editor Tab States ---
             const [isFullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
@@ -1470,9 +1472,10 @@ $csrf_token = generate_csrf_token();
                         const btnText = card.btnText || '';
                         const btnUrl = card.btnUrl || '#';
 
-                        const mediaHtml = imgUrl ?
+                        const mediaType = card.mediaType || (imgUrl ? 'image' : 'icon');
+                        const mediaHtml = (mediaType === 'image' && imgUrl) ?
                             `<img src="${imgUrl}" class="w-16 h-16 object-cover rounded-xl shadow-md border border-slate-700/50" alt="${titleText.replace(/"/g, '&quot;')}" />` :
-                            `<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg" style="background-color: rgba(20, 184, 166, 0.12); color: ${accentColor};"><i class="${iconClass}"></i></div>`;
+                            `<div class="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg shrink-0" style="background-color: rgba(20, 184, 166, 0.12); color: ${accentColor};"><i class="${iconClass}"></i></div>`;
 
                         const cardBtnHtml = btnText ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
@@ -2187,67 +2190,98 @@ $csrf_token = generate_csrf_token();
                     <div className="flex flex-1 overflow-hidden">
 
                         {/* LEFT COLUMN - COMPONENTS LIBRARY */}
-                        <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2 shrink-0">
-                                <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
-                                <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
-
-                                {/* SEARCH / FILTER COMPONENT BAR */}
-                                <div className="relative mt-2">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 text-xs">
-                                        <i className="fas fa-search"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={componentSearchQuery}
-                                        onChange={(e) => setComponentSearchQuery(e.target.value)}
-                                        placeholder="Search widgets (e.g. Hero, Alert)..."
-                                        className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
-                                    />
-                                    {componentSearchQuery && (
+                        {isLeftShelfCollapsed ? (
+                            <aside className="w-14 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 shrink-0 transition-all duration-300 select-none">
+                                <button
+                                    onClick={() => setIsLeftShelfCollapsed(false)}
+                                    title="Expand Components Shelf"
+                                    id="btn-expand-left-shelf"
+                                    className="p-2 text-slate-400 hover:text-teal-400 bg-slate-950 rounded border border-slate-800 hover:border-teal-500/50 transition shadow"
+                                >
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
+                                <div
+                                    onClick={() => setIsLeftShelfCollapsed(false)}
+                                    className="mt-8 text-slate-500 hover:text-teal-400 text-[11px] font-extrabold tracking-widest uppercase [writing-mode:vertical-lr] rotate-180 flex items-center gap-2 cursor-pointer transition"
+                                >
+                                    <i className="fas fa-cubes rotate-180 text-teal-400"></i> Components Shelf
+                                </div>
+                            </aside>
+                        ) : (
+                            <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0 transition-all duration-300">
+                                <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2 shrink-0">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
+                                            <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
+                                        </div>
                                         <button
-                                            onClick={() => setComponentSearchQuery('')}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">
-                                            <i className="fas fa-times-circle"></i>
+                                            onClick={() => setIsLeftShelfCollapsed(true)}
+                                            title="Minimize Shelf"
+                                            id="btn-collapse-left-shelf"
+                                            className="p-1.5 text-slate-400 hover:text-teal-400 hover:bg-slate-800 rounded transition shrink-0 ml-2"
+                                        >
+                                            <i className="fas fa-chevron-left"></i>
                                         </button>
-                                    )}
+                                    </div>
+
+                                    {/* SEARCH / FILTER COMPONENT BAR */}
+                                    <div className="relative mt-2">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 text-xs">
+                                            <i className="fas fa-search"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={componentSearchQuery}
+                                            onChange={(e) => setComponentSearchQuery(e.target.value)}
+                                            placeholder="Search widgets (e.g. Hero, Alert)..."
+                                            className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+                                        />
+                                        {componentSearchQuery && (
+                                            <button
+                                                onClick={() => setComponentSearchQuery('')}
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">
+                                                <i className="fas fa-times-circle"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setIsCustomCompModalOpen(true)}
+                                        className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow mt-2">
+                                        <i className="fas fa-plus-circle"></i> Create Custom Component
+                                    </button>
                                 </div>
 
-                                <button
-                                    onClick={() => setIsCustomCompModalOpen(true)}
-                                    className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow mt-2">
-                                    <i className="fas fa-plus-circle"></i> Create Custom Component
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
-                                    // Filter components inside category using case-insensitive search matching against name, category or tag id
-                                    const items = ACTIVE_COMPONENTS.filter(comp => {
-                                        if (comp.category !== cat) return false;
-                                        if (!componentSearchQuery.trim()) return true;
-                                        const query = componentSearchQuery.toLowerCase().trim();
-                                        return comp.name.toLowerCase().includes(query) ||
-                                               comp.id.toLowerCase().includes(query) ||
-                                               comp.category.toLowerCase().includes(query);
-                                    });
-                                    if (items.length === 0) return null;
-                                    return (
-                                        <div key={cat} className="space-y-2">
-                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{cat}</h3>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {items.map(comp => (
-                                                    <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} onClick={() => handleAddSection(comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-pointer transition-all duration-200 select-none group hover:border-teal-500/30">
-                                                        <div className="text-teal-400 text-lg mb-1.5 group-hover:scale-110 transition-transform duration-200"><i className={comp.icon}></i></div>
-                                                        <div className="text-[10px] text-slate-300 font-medium truncate">{comp.name}</div>
-                                                    </div>
-                                                ))}
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
+                                        // Filter components inside category using case-insensitive search matching against name, category or tag id
+                                        const items = ACTIVE_COMPONENTS.filter(comp => {
+                                            if (comp.category !== cat) return false;
+                                            if (!componentSearchQuery.trim()) return true;
+                                            const query = componentSearchQuery.toLowerCase().trim();
+                                            return comp.name.toLowerCase().includes(query) ||
+                                                   comp.id.toLowerCase().includes(query) ||
+                                                   comp.category.toLowerCase().includes(query);
+                                        });
+                                        if (items.length === 0) return null;
+                                        return (
+                                            <div key={cat} className="space-y-2">
+                                                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{cat}</h3>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {items.map(comp => (
+                                                        <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} onClick={() => handleAddSection(comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-pointer transition-all duration-200 select-none group hover:border-teal-500/30">
+                                                            <div className="text-teal-400 text-lg mb-1.5 group-hover:scale-110 transition-transform duration-200"><i className={comp.icon}></i></div>
+                                                            <div className="text-[10px] text-slate-300 font-medium truncate">{comp.name}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </aside>
+                                        );
+                                    })}
+                                </div>
+                            </aside>
+                        )}
 
                         {/* CENTER CANVAS CONTAINER - RESPONSIVE FRAME */}
                         <main className="flex-1 bg-slate-950 overflow-y-auto p-8 flex flex-col justify-start items-center gap-6 transition-all" onClick={() => { setActiveSectionId(null); setActiveElementId(null); setPropsSubTab('block'); }}>
@@ -2349,11 +2383,39 @@ $csrf_token = generate_csrf_token();
                         </main>
 
                         {/* RIGHT COLUMN - CONTROL CENTER (PROPERTIES & CUSTOMIZER) */}
-                        <aside className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800">
-                                <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Control Center</h2>
-                                <p className="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
-                            </div>
+                        {isRightPanelCollapsed ? (
+                            <aside className="w-14 bg-slate-900 border-l border-slate-800 flex flex-col items-center py-4 shrink-0 transition-all duration-300 select-none">
+                                <button
+                                    onClick={() => setIsRightPanelCollapsed(false)}
+                                    title="Expand Control Center"
+                                    id="btn-expand-right-panel"
+                                    className="p-2 text-slate-400 hover:text-teal-400 bg-slate-950 rounded border border-slate-800 hover:border-teal-500/50 transition shadow"
+                                >
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                <div
+                                    onClick={() => setIsRightPanelCollapsed(false)}
+                                    className="mt-8 text-slate-500 hover:text-teal-400 text-[11px] font-extrabold tracking-widest uppercase [writing-mode:vertical-lr] rotate-180 flex items-center gap-2 cursor-pointer transition"
+                                >
+                                    <i className="fas fa-sliders-h rotate-180 text-teal-400"></i> Control Center
+                                </div>
+                            </aside>
+                        ) : (
+                            <aside className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden shrink-0 transition-all duration-300">
+                                <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Control Center</h2>
+                                        <p className="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsRightPanelCollapsed(true)}
+                                        title="Minimize Control Center"
+                                        id="btn-collapse-right-panel"
+                                        className="p-1.5 text-slate-400 hover:text-teal-400 hover:bg-slate-800 rounded transition shrink-0 ml-2"
+                                    >
+                                        <i className="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
 
                             {/* TAB NAVIGATION MENU GRID */}
                             <div className="grid grid-cols-4 border-b border-slate-800 bg-slate-950/40 shrink-0 text-[9px]">
@@ -2965,17 +3027,62 @@ $csrf_token = generate_csrf_token();
                                                                         />
                                                                     </div>
 
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        <div className="space-y-1">
-                                                                            <label className="text-[10px] font-semibold text-slate-300">FontAwesome Icon</label>
-                                                                            <input
-                                                                                type="text"
-                                                                                value={card.iconClass || 'fas fa-cubes'}
-                                                                                onChange={(e) => updateCardField(cardIdx, 'iconClass', e.target.value)}
-                                                                                placeholder="fas fa-star"
-                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                            />
+                                                                    <div className="space-y-1.5 border-t border-b border-slate-800/80 py-2 my-1">
+                                                                        <label className="text-[10px] font-bold uppercase tracking-wider text-teal-400 block">Card Media Type</label>
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateCardField(cardIdx, 'mediaType', 'icon')}
+                                                                                className={`py-1.5 px-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition ${(!card.mediaType || card.mediaType === 'icon') ? 'bg-teal-950/80 border-teal-500 text-teal-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}
+                                                                            >
+                                                                                <i className="fas fa-icons"></i> Font Icon
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => updateCardField(cardIdx, 'mediaType', 'image')}
+                                                                                className={`py-1.5 px-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 border transition ${(card.mediaType === 'image' || (!card.mediaType && card.imageUrl)) ? 'bg-teal-950/80 border-teal-500 text-teal-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'}`}
+                                                                            >
+                                                                                <i className="fas fa-image"></i> Picture / Image
+                                                                            </button>
                                                                         </div>
+
+                                                                        {(card.mediaType === 'image' || (!card.mediaType && card.imageUrl)) ? (
+                                                                            <div className="space-y-1.5 pt-1">
+                                                                                <label className="text-[10px] font-semibold text-slate-300">Picture Upload or Image URL</label>
+                                                                                <div className="flex gap-2 items-center">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={card.imageUrl || ''}
+                                                                                        onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                        placeholder="https://... or upload picture"
+                                                                                        className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                    />
+                                                                                    <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Picture">
+                                                                                        <i className="fas fa-upload"></i>
+                                                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
+                                                                                    </label>
+                                                                                </div>
+                                                                                {card.imageUrl && (
+                                                                                    <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center">
+                                                                                        <img src={card.imageUrl} className="w-full h-full object-cover" alt="Card Picture Preview" />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="space-y-1 pt-1">
+                                                                                <label className="text-[10px] font-semibold text-slate-300">FontAwesome Icon Class</label>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={card.iconClass || 'fas fa-cubes'}
+                                                                                    onChange={(e) => updateCardField(cardIdx, 'iconClass', e.target.value)}
+                                                                                    placeholder="fas fa-star"
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
                                                                         <div className="space-y-1">
                                                                             <label className="text-[10px] font-semibold text-slate-300">Button Text</label>
                                                                             <input
@@ -2986,41 +3093,17 @@ $csrf_token = generate_csrf_token();
                                                                                 className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
                                                                         </div>
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Button URL</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            value={card.btnUrl || '#'}
-                                                                            onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
-                                                                            placeholder="https://..."
-                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Image Upload / URL</label>
-                                                                        <div className="flex gap-2 items-center">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Button URL</label>
                                                                             <input
                                                                                 type="text"
-                                                                                value={card.imageUrl || ''}
-                                                                                onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                value={card.btnUrl || '#'}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
                                                                                 placeholder="https://..."
-                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
-                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
-                                                                                <i className="fas fa-upload"></i>
-                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
-                                                                            </label>
                                                                         </div>
                                                                     </div>
-
-                                                                    {card.imageUrl && (
-                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
-                                                                            <img src={card.imageUrl} className="w-full h-full object-cover" alt="Preview" />
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -3031,6 +3114,97 @@ $csrf_token = generate_csrf_token();
                                                         >
                                                             <i className="fas fa-plus"></i> Add Spotlight Card
                                                         </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC ASYMMETRIC PHOTO GRID EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'asymmetric_photo_grid' && (() => {
+                                                const handleImgUpload = (key, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, [key]: data.url } } : s);
+                                                            updateSectionsWithHistory(updated);
+                                                            showToast("Success", "Photo uploaded successfully!");
+                                                        } else {
+                                                            showToast("Upload Error", data.error || "Failed to upload image.");
+                                                        }
+                                                    })
+                                                    .catch(err => showToast("Upload Error", err.message));
+                                                };
+
+                                                const updatePropField = (key, val) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, [key]: val } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                            <i className="fas fa-border-all"></i> Asymmetric Photos & Captions Manager
+                                                        </h4>
+
+                                                        {[
+                                                            { keyPrefix: 'main', title: 'Tall Left Featured Photo' },
+                                                            { keyPrefix: 'side1', title: 'Right Top Stacked Photo' },
+                                                            { keyPrefix: 'side2', title: 'Right Bottom Stacked Photo' }
+                                                        ].map(item => {
+                                                            const imgKey = item.keyPrefix + 'ImgUrl';
+                                                            const altKey = item.keyPrefix + 'ImgAlt';
+                                                            const capKey = item.keyPrefix + (item.keyPrefix === 'main' ? 'Caption' : 'Caption');
+
+                                                            return (
+                                                                <div key={item.keyPrefix} className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                                                    <span className="text-[10px] font-bold text-teal-300 block">{item.title}</span>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-400">Photo Upload / URL</label>
+                                                                        <div className="flex gap-2 items-center">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={selectedSection.props[imgKey] || ''}
+                                                                                onChange={(e) => updatePropField(imgKey, e.target.value)}
+                                                                                placeholder="https://..."
+                                                                                className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Photo">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImgUpload(imgKey, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {selectedSection.props[imgKey] && (
+                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                                                                            <img src={selectedSection.props[imgKey]} className="w-full h-full object-cover" alt="Preview" />
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-400">Caption Description</label>
+                                                                        <textarea
+                                                                            value={selectedSection.props[capKey] || ''}
+                                                                            onChange={(e) => updatePropField(capKey, e.target.value)}
+                                                                            rows="2"
+                                                                            placeholder="Enter card caption text..."
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 );
                                             })()}
@@ -4716,7 +4890,8 @@ $csrf_token = generate_csrf_token();
                                     </div>
                                 </div>
                             )}
-                        </aside>
+                            </aside>
+                        )}
                     </div>
 
                     {/* FULLSCREEN ADVANCED CODE EDITOR IDE */}

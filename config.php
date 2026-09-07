@@ -108,24 +108,33 @@ function get_db_connection() {
                 // Ignore if table doesn't exist yet
             }
         } catch (PDOException $e) {
-            // Securely log errors or display a safe error message
-            error_log("DB connection error: " . $e->getMessage());
-
-            // If the request is a standard GET page load without any action query, output user-friendly raw text.
-            // Otherwise (AJAX, POST, or action API queries), return a clean, valid JSON payload to prevent front-end alert parsing crashes.
-            $is_page_load = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !isset($_GET['action']));
-            if ($is_page_load) {
-                die("Database connection failed. Please check the system logs.");
-            } else {
-                while (ob_get_level() > 0) {
-                    ob_end_clean();
-                }
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'error' => "Database connection failed. Details: " . $e->getMessage() . ". Please check your database server status."
+            // Fallback to local SQLite database if MySQL server is unreachable
+            $sqlite_file = __DIR__ . '/site_builder.sqlite';
+            if (file_exists($sqlite_file)) {
+                $pdo = new PDO("sqlite:" . $sqlite_file, null, null, [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]);
-                exit;
+            } else {
+                // Securely log errors or display a safe error message
+                error_log("DB connection error: " . $e->getMessage());
+
+                // If the request is a standard GET page load without any action query, output user-friendly raw text.
+                // Otherwise (AJAX, POST, or action API queries), return a clean, valid JSON payload to prevent front-end alert parsing crashes.
+                $is_page_load = (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !isset($_GET['action']));
+                if ($is_page_load) {
+                    die("Database connection failed. Please check the system logs.");
+                } else {
+                    while (ob_get_level() > 0) {
+                        ob_end_clean();
+                    }
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => false,
+                        'error' => "Database connection failed. Details: " . $e->getMessage() . ". Please check your database server status."
+                    ]);
+                    exit;
+                }
             }
         }
     }

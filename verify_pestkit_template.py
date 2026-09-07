@@ -15,11 +15,11 @@ def run_pestkit_verification(page):
     password = "securepass123"
 
     print("Navigating to Nuvis Webidesigner Landing Portal...")
-    page.goto("http://127.0.0.1:8000/index.php")
+    page.goto("http://localhost:8000/index.php")
     page.wait_for_timeout(1000)
 
     print("Switching to Registration View...")
-    page.goto("http://127.0.0.1:8000/index.php?action=register")
+    page.goto("http://localhost:8000/index.php?action=register")
     page.wait_for_timeout(1000)
 
     print(f"Registering new developer user: {username}...")
@@ -64,7 +64,7 @@ def run_pestkit_verification(page):
     print(f"Resolved latest compiled PestKit project slug: {slug}")
 
     print("Navigating to compiled webpage preview...")
-    page.goto(f"http://127.0.0.1:8000/render.php?slug={slug}&user={username}")
+    page.goto(f"http://localhost:8000/render.php?slug={slug}&user={username}")
     page.wait_for_timeout(2000)
     page.screenshot(path="/home/jules/verification/screenshots/pest_02_rendered_page.png")
 
@@ -91,7 +91,7 @@ def run_pestkit_verification(page):
 
     # Verify that contact submissions are displayed inside the Admin Panel
     print("Navigating back to the Admin Dashboard...")
-    page.goto("http://127.0.0.1:8000/admin.php")
+    page.goto("http://localhost:8000/admin.php")
     page.wait_for_timeout(1500)
 
     print("Switching Tabs: Form Submissions Tab...")
