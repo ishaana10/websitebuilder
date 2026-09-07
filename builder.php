@@ -3213,17 +3213,17 @@ $csrf_token = generate_csrf_token();
                                                                     <span className="text-[10px] font-bold text-teal-300 block">{item.title}</span>
 
                                                                     <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-400">Photo Upload / URL</label>
+                                                                        <label className="text-[10px] font-semibold text-slate-400">Photo Asset URL / Local Upload</label>
                                                                         <div className="flex gap-2 items-center">
                                                                             <input
                                                                                 type="text"
                                                                                 value={selectedSection.props[imgKey] || ''}
                                                                                 onChange={(e) => updatePropField(imgKey, e.target.value)}
-                                                                                placeholder="https://..."
+                                                                                placeholder="https://... or uploads/..."
                                                                                 className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
-                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Photo">
-                                                                                <i className="fas fa-upload"></i>
+                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition" title="Upload Photo as Site Asset">
+                                                                                <i className="fas fa-upload"></i> <span>Upload Asset</span>
                                                                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImgUpload(imgKey, e)} />
                                                                             </label>
                                                                         </div>
