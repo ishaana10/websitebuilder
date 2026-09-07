@@ -206,6 +206,8 @@ $csrf_token = generate_csrf_token();
             const [customJs, setCustomJs] = useState('');
             const [projectStatus, setProjectStatus] = useState(PROJECT_STATUS);
             const [componentSearchQuery, setComponentSearchQuery] = useState('');
+            const [isLeftShelfCollapsed, setIsLeftShelfCollapsed] = useState(false);
+            const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
             // --- Code Editor Tab States ---
             const [isFullscreenEditorOpen, setFullscreenEditorOpen] = useState(false);
@@ -2188,67 +2190,98 @@ $csrf_token = generate_csrf_token();
                     <div className="flex flex-1 overflow-hidden">
 
                         {/* LEFT COLUMN - COMPONENTS LIBRARY */}
-                        <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2 shrink-0">
-                                <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
-                                <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
-
-                                {/* SEARCH / FILTER COMPONENT BAR */}
-                                <div className="relative mt-2">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 text-xs">
-                                        <i className="fas fa-search"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={componentSearchQuery}
-                                        onChange={(e) => setComponentSearchQuery(e.target.value)}
-                                        placeholder="Search widgets (e.g. Hero, Alert)..."
-                                        className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
-                                    />
-                                    {componentSearchQuery && (
+                        {isLeftShelfCollapsed ? (
+                            <aside className="w-14 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 shrink-0 transition-all duration-300 select-none">
+                                <button
+                                    onClick={() => setIsLeftShelfCollapsed(false)}
+                                    title="Expand Components Shelf"
+                                    id="btn-expand-left-shelf"
+                                    className="p-2 text-slate-400 hover:text-teal-400 bg-slate-950 rounded border border-slate-800 hover:border-teal-500/50 transition shadow"
+                                >
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
+                                <div
+                                    onClick={() => setIsLeftShelfCollapsed(false)}
+                                    className="mt-8 text-slate-500 hover:text-teal-400 text-[11px] font-extrabold tracking-widest uppercase [writing-mode:vertical-lr] rotate-180 flex items-center gap-2 cursor-pointer transition"
+                                >
+                                    <i className="fas fa-cubes rotate-180 text-teal-400"></i> Components Shelf
+                                </div>
+                            </aside>
+                        ) : (
+                            <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden shrink-0 transition-all duration-300">
+                                <div className="p-4 border-b border-slate-800 bg-slate-900/50 space-y-2 shrink-0">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Components Shelf</h2>
+                                            <p className="text-[11px] text-slate-400 mt-1">Drag and drop components directly onto the web canvas.</p>
+                                        </div>
                                         <button
-                                            onClick={() => setComponentSearchQuery('')}
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">
-                                            <i className="fas fa-times-circle"></i>
+                                            onClick={() => setIsLeftShelfCollapsed(true)}
+                                            title="Minimize Shelf"
+                                            id="btn-collapse-left-shelf"
+                                            className="p-1.5 text-slate-400 hover:text-teal-400 hover:bg-slate-800 rounded transition shrink-0 ml-2"
+                                        >
+                                            <i className="fas fa-chevron-left"></i>
                                         </button>
-                                    )}
+                                    </div>
+
+                                    {/* SEARCH / FILTER COMPONENT BAR */}
+                                    <div className="relative mt-2">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500 text-xs">
+                                            <i className="fas fa-search"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={componentSearchQuery}
+                                            onChange={(e) => setComponentSearchQuery(e.target.value)}
+                                            placeholder="Search widgets (e.g. Hero, Alert)..."
+                                            className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+                                        />
+                                        {componentSearchQuery && (
+                                            <button
+                                                onClick={() => setComponentSearchQuery('')}
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-white text-xs">
+                                                <i className="fas fa-times-circle"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setIsCustomCompModalOpen(true)}
+                                        className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow mt-2">
+                                        <i className="fas fa-plus-circle"></i> Create Custom Component
+                                    </button>
                                 </div>
 
-                                <button
-                                    onClick={() => setIsCustomCompModalOpen(true)}
-                                    className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-extrabold py-2 rounded text-xs transition border border-slate-750 flex items-center justify-center gap-1.5 shadow mt-2">
-                                    <i className="fas fa-plus-circle"></i> Create Custom Component
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
-                                    // Filter components inside category using case-insensitive search matching against name, category or tag id
-                                    const items = ACTIVE_COMPONENTS.filter(comp => {
-                                        if (comp.category !== cat) return false;
-                                        if (!componentSearchQuery.trim()) return true;
-                                        const query = componentSearchQuery.toLowerCase().trim();
-                                        return comp.name.toLowerCase().includes(query) ||
-                                               comp.id.toLowerCase().includes(query) ||
-                                               comp.category.toLowerCase().includes(query);
-                                    });
-                                    if (items.length === 0) return null;
-                                    return (
-                                        <div key={cat} className="space-y-2">
-                                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{cat}</h3>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {items.map(comp => (
-                                                    <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} onClick={() => handleAddSection(comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-pointer transition-all duration-200 select-none group hover:border-teal-500/30">
-                                                        <div className="text-teal-400 text-lg mb-1.5 group-hover:scale-110 transition-transform duration-200"><i className={comp.icon}></i></div>
-                                                        <div className="text-[10px] text-slate-300 font-medium truncate">{comp.name}</div>
-                                                    </div>
-                                                ))}
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {['Headers', 'Hero', 'Features', 'Pricing', 'Forms', 'Advanced', 'Footers'].map(cat => {
+                                        // Filter components inside category using case-insensitive search matching against name, category or tag id
+                                        const items = ACTIVE_COMPONENTS.filter(comp => {
+                                            if (comp.category !== cat) return false;
+                                            if (!componentSearchQuery.trim()) return true;
+                                            const query = componentSearchQuery.toLowerCase().trim();
+                                            return comp.name.toLowerCase().includes(query) ||
+                                                   comp.id.toLowerCase().includes(query) ||
+                                                   comp.category.toLowerCase().includes(query);
+                                        });
+                                        if (items.length === 0) return null;
+                                        return (
+                                            <div key={cat} className="space-y-2">
+                                                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{cat}</h3>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {items.map(comp => (
+                                                        <div key={comp.id} draggable onDragStart={(e) => handleDragStart(e, comp.id)} onClick={() => handleAddSection(comp.id)} className="bg-slate-950 hover:bg-slate-800 border border-slate-800/80 rounded-lg p-3 text-center cursor-pointer transition-all duration-200 select-none group hover:border-teal-500/30">
+                                                            <div className="text-teal-400 text-lg mb-1.5 group-hover:scale-110 transition-transform duration-200"><i className={comp.icon}></i></div>
+                                                            <div className="text-[10px] text-slate-300 font-medium truncate">{comp.name}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </aside>
+                                        );
+                                    })}
+                                </div>
+                            </aside>
+                        )}
 
                         {/* CENTER CANVAS CONTAINER - RESPONSIVE FRAME */}
                         <main className="flex-1 bg-slate-950 overflow-y-auto p-8 flex flex-col justify-start items-center gap-6 transition-all" onClick={() => { setActiveSectionId(null); setActiveElementId(null); setPropsSubTab('block'); }}>
@@ -2350,11 +2383,39 @@ $csrf_token = generate_csrf_token();
                         </main>
 
                         {/* RIGHT COLUMN - CONTROL CENTER (PROPERTIES & CUSTOMIZER) */}
-                        <aside className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden shrink-0">
-                            <div className="p-4 border-b border-slate-800">
-                                <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Control Center</h2>
-                                <p className="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
-                            </div>
+                        {isRightPanelCollapsed ? (
+                            <aside className="w-14 bg-slate-900 border-l border-slate-800 flex flex-col items-center py-4 shrink-0 transition-all duration-300 select-none">
+                                <button
+                                    onClick={() => setIsRightPanelCollapsed(false)}
+                                    title="Expand Control Center"
+                                    id="btn-expand-right-panel"
+                                    className="p-2 text-slate-400 hover:text-teal-400 bg-slate-950 rounded border border-slate-800 hover:border-teal-500/50 transition shadow"
+                                >
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                <div
+                                    onClick={() => setIsRightPanelCollapsed(false)}
+                                    className="mt-8 text-slate-500 hover:text-teal-400 text-[11px] font-extrabold tracking-widest uppercase [writing-mode:vertical-lr] rotate-180 flex items-center gap-2 cursor-pointer transition"
+                                >
+                                    <i className="fas fa-sliders-h rotate-180 text-teal-400"></i> Control Center
+                                </div>
+                            </aside>
+                        ) : (
+                            <aside className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden shrink-0 transition-all duration-300">
+                                <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-xs font-extrabold text-teal-400 uppercase tracking-widest">Control Center</h2>
+                                        <p className="text-[11px] text-slate-400 mt-1">Adjust layout properties & custom injects.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsRightPanelCollapsed(true)}
+                                        title="Minimize Control Center"
+                                        id="btn-collapse-right-panel"
+                                        className="p-1.5 text-slate-400 hover:text-teal-400 hover:bg-slate-800 rounded transition shrink-0 ml-2"
+                                    >
+                                        <i className="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
 
                             {/* TAB NAVIGATION MENU GRID */}
                             <div className="grid grid-cols-4 border-b border-slate-800 bg-slate-950/40 shrink-0 text-[9px]">
@@ -4829,7 +4890,8 @@ $csrf_token = generate_csrf_token();
                                     </div>
                                 </div>
                             )}
-                        </aside>
+                            </aside>
+                        )}
                     </div>
 
                     {/* FULLSCREEN ADVANCED CODE EDITOR IDE */}
