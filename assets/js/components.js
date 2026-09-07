@@ -1574,6 +1574,16 @@ const UI_COMPONENTS = [
             { key: 'heading', label: 'Main Section Title', type: 'text', default: 'Pest management for demanding work environments' },
             { key: 'descriptionText', label: 'Primary Description', type: 'text', default: 'All Pest supports businesses that need reliable pest management across complex operating environments, including sites where access, safety, hygiene and service coordination are important.' },
             { key: 'tagsList', label: 'Service Tags / Badges (Comma-separated)', type: 'text', default: 'Hotels & Resorts, Restaurants, Factories, Warehouses, Construction Sites, Vessels, Shipping Containers, Offices & Retail, Residential Properties, Industrial Facilities' },
+            { key: 'listEffect', label: 'Service Tags / List Visual Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'hover-lift', label: 'Hover Lift & Scale' },
+                { value: 'hover-glow', label: 'Outer Neon Glow' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'bounce_alert', label: 'Bouncing Alert Effect' },
+                { value: 'gradient_border', label: 'Gradient Border Highlight' },
+                { value: 'scale_lift', label: 'Hover Scale Lift' },
+                { value: 'glassmorphism', label: 'Glassmorphism Blur' }
+            ] },
             { key: 'footerText', label: 'Secondary Footer Description', type: 'text', default: 'We can discuss one-off treatments as well as scheduled service programs depending on your site requirements.' },
             { key: 'btnText', label: 'Button Text', type: 'text', default: 'Discuss Your Site' },
             { key: 'btnBg', label: 'Button Background Color', type: 'color', default: '#065f46' },
