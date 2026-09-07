@@ -1567,49 +1567,78 @@ $csrf_token = generate_csrf_token();
                         }
                     ];
 
-                    const items = (Array.isArray(sec.props.items) && sec.props.items.length > 0) ? sec.props.items : defaultItems;
-                    const activeIndex = Math.min(Math.max(parseInt(sec.props.activeImageIndex || 0, 10), 0), items.length - 1);
-                    const activeItem = items[activeIndex] || items[0];
+                    const items = sec.props.items !== undefined
+                        ? (Array.isArray(sec.props.items) ? sec.props.items : [])
+                        : defaultItems;
 
-                    const activeImgUrl = activeItem.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
-                    const activeTitle = activeItem.title || '';
-                    const activeDesc = activeItem.description || '';
-
-                    const activeImageHtml = `
-                        <img src="${activeImgUrl}" class="main-work-shelf-img w-full h-full object-cover transition-all duration-500" alt="${activeTitle.replace(/"/g, '&quot;')}" />
-                        ${(activeTitle || activeDesc) ? `
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent p-5 text-white flex flex-col justify-end">
-                                ${activeTitle ? `<h4 class="main-work-shelf-title text-base font-bold tracking-tight mb-1">${activeTitle}</h4>` : ''}
-                                ${activeDesc ? `<p class="main-work-shelf-desc text-xs text-slate-200 line-clamp-2 leading-relaxed">${activeDesc}</p>` : ''}
-                            </div>
-                        ` : ''}
-                    `;
-
+                    let activeImageHtml = '';
                     let thumbnailsListHtml = '';
-                    if (items.length > 1) {
-                        const thumbBtns = items.map((item, idx) => {
-                            const imgUrl = item.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
-                            const titleEsc = (item.title || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
-                            const descEsc = (item.description || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
-                            const isActive = idx === activeIndex;
-                            const activeClasses = isActive ? 'ring-2 ring-emerald-600 border-emerald-600 scale-105' : 'opacity-70 hover:opacity-100';
 
-                            return `<button onclick="window.switchWorkShelfImage(this, '${imgUrl}', '${titleEsc}', '${descEsc}')" class="work-shelf-thumb relative w-20 h-14 rounded-lg overflow-hidden border border-slate-300 shadow-sm transition-all duration-200 flex-shrink-0 ${activeClasses}" title="${titleEsc}">
-                                <img src="${imgUrl}" class="w-full h-full object-cover" alt="Thumbnail ${idx + 1}" />
-                            </button>`;
-                        }).join('');
+                    if (items.length > 0) {
+                        const activeIndex = Math.min(Math.max(parseInt(sec.props.activeImageIndex || 0, 10), 0), items.length - 1);
+                        const activeItem = items[activeIndex] || items[0];
 
-                        thumbnailsListHtml = `<div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin scrollbar-thumb-slate-300">${thumbBtns}</div>`;
+                        const activeImgUrl = activeItem.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                        const activeTitle = activeItem.title || '';
+                        const activeDesc = activeItem.description || '';
+
+                        activeImageHtml = `
+                            <img src="${activeImgUrl}" class="main-work-shelf-img w-full h-full object-cover transition-all duration-500" alt="${activeTitle.replace(/"/g, '&quot;')}" />
+                            ${(activeTitle || activeDesc) ? `
+                                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent p-5 text-white flex flex-col justify-end">
+                                    ${activeTitle ? `<h4 class="main-work-shelf-title text-base font-bold tracking-tight mb-1">${activeTitle}</h4>` : ''}
+                                    ${activeDesc ? `<p class="main-work-shelf-desc text-xs text-slate-200 line-clamp-2 leading-relaxed">${activeDesc}</p>` : ''}
+                                </div>
+                            ` : ''}
+                        `;
+
+                        if (items.length > 1) {
+                            const thumbBtns = items.map((item, idx) => {
+                                const imgUrl = item.imageUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                const titleEsc = (item.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                                const descEsc = (item.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                                const isActive = idx === activeIndex;
+                                const activeClasses = isActive ? 'ring-2 ring-emerald-600 border-emerald-600 scale-105' : 'opacity-70 hover:opacity-100';
+
+                                return `<button onclick="window.switchWorkShelfImage(this, '${imgUrl}', '${titleEsc}', '${descEsc}')" class="work-shelf-thumb relative w-20 h-14 rounded-lg overflow-hidden border border-slate-300 shadow-sm transition-all duration-200 flex-shrink-0 ${activeClasses}" title="${titleEsc}">
+                                    <img src="${imgUrl}" class="w-full h-full object-cover" alt="Thumbnail ${idx + 1}" />
+                                </button>`;
+                            }).join('');
+
+                            thumbnailsListHtml = `<div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-thin scrollbar-thumb-slate-300">${thumbBtns}</div>`;
+                        }
+                    } else {
+                        activeImageHtml = `<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-400 font-sans"><i class="fas fa-image text-3xl mb-2 opacity-50"></i><p class="text-xs">No service picture items in list.</p></div>`;
                     }
 
                     // Compile Tags List
-                    const tagsRaw = sec.props.tagsList || '';
-                    const tagsArray = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+                    const tagsRaw = sec.props.tagsList !== undefined ? sec.props.tagsList : '';
+                    const tagsArray = typeof tagsRaw === 'string'
+                        ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean)
+                        : (Array.isArray(tagsRaw) ? tagsRaw : []);
                     const tagBgColor = sec.props.cardBgColor || '#f1f5f9';
                     const tagTextColor = sec.props.accentColor || '#065f46';
+                    const listEffect = sec.props.listEffect || 'none';
+
+                    let listEffectClass = 'hover:scale-105';
+                    if (listEffect === 'hover-lift') {
+                        listEffectClass = 'transform hover:-translate-y-1 hover:scale-105 hover:shadow-lg transition-all duration-300';
+                    } else if (listEffect === 'hover-glow') {
+                        listEffectClass = 'hover:shadow-[0_0_15px_rgba(20,184,166,0.6)] hover:border-teal-400 hover:scale-105 transition-all duration-300';
+                    } else if (listEffect === 'pulse_alert') {
+                        listEffectClass = 'animate-pulse ring-2 ring-emerald-500/50 hover:scale-105 transition-all duration-300';
+                    } else if (listEffect === 'bounce_alert') {
+                        listEffectClass = 'animate-bounce hover:scale-105 transition-all duration-300';
+                    } else if (listEffect === 'gradient_border') {
+                        listEffectClass = 'border-2 border-emerald-500/60 shadow-md hover:scale-105 hover:border-emerald-400 transition-all duration-300';
+                    } else if (listEffect === 'scale_lift') {
+                        listEffectClass = 'transform hover:scale-110 hover:-translate-y-0.5 transition-all duration-300';
+                    } else if (listEffect === 'glassmorphism') {
+                        listEffectClass = 'backdrop-blur-md bg-white/20 border border-white/30 hover:scale-105 transition-all duration-300';
+                    }
 
                     const tagsHtml = tagsArray.map(tag => {
-                        return `<span class="inline-block px-3.5 py-1.5 rounded-full text-xs font-bold transition duration-200 hover:scale-105 border border-slate-200/80 shadow-sm" style="background-color: ${tagBgColor}; color: ${tagTextColor};">${tag}</span>`;
+                        return `<span class="inline-block px-3.5 py-1.5 rounded-full text-xs font-bold transition duration-200 border border-slate-200/80 shadow-sm ${listEffectClass}" style="background-color: ${tagBgColor}; color: ${tagTextColor};">${tag}</span>`;
                     }).join('');
 
                     // CTA Button Compilation
@@ -3232,7 +3261,7 @@ $csrf_token = generate_csrf_token();
                                                     }
                                                 ];
 
-                                                const currentItems = (Array.isArray(selectedSection.props.items) && selectedSection.props.items.length > 0) ? selectedSection.props.items : defaultItems;
+                                                const currentItems = selectedSection.props.items !== undefined ? selectedSection.props.items : defaultItems;
 
                                                 const handleItemsChange = (newItems) => {
                                                     const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, items: newItems } } : s);
@@ -3281,85 +3310,152 @@ $csrf_token = generate_csrf_token();
                                                         .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
                                                 };
 
-                                                return (
-                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
-                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                            <i className="fas fa-briefcase"></i> Manage Work / Service Items
-                                                        </h4>
-                                                        <p className="text-[11px] text-slate-400 leading-relaxed">
-                                                            Add, reorder, or edit pictures and descriptions for each service area shown on the shelf.
-                                                        </p>
+                                                // Service Tags List Editor Logic
+                                                const defaultTags = ['Hotels & Resorts', 'Restaurants', 'Factories', 'Warehouses', 'Construction Sites', 'Vessels', 'Shipping Containers', 'Offices & Retail', 'Residential Properties', 'Industrial Facilities'];
+                                                const rawTags = selectedSection.props.tagsList !== undefined ? selectedSection.props.tagsList : defaultTags.join(', ');
+                                                const currentTags = typeof rawTags === 'string'
+                                                    ? rawTags.split(',').map(t => t.trim()).filter(Boolean)
+                                                    : (Array.isArray(rawTags) ? rawTags : []);
 
+                                                const handleTagsChange = (newTags) => {
+                                                    const tagsString = newTags.join(', ');
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, tagsList: tagsString } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addTag = () => {
+                                                    handleTagsChange([...currentTags, 'New Service Tag']);
+                                                };
+
+                                                const removeTag = (tagIdx) => {
+                                                    handleTagsChange(currentTags.filter((_, idx) => idx !== tagIdx));
+                                                };
+
+                                                const updateTagText = (tagIdx, val) => {
+                                                    const updatedTags = currentTags.map((tag, idx) => idx === tagIdx ? val : tag);
+                                                    handleTagsChange(updatedTags);
+                                                };
+
+                                                return (
+                                                    <div className="space-y-6 pt-4 border-t border-slate-800">
+                                                        {/* Picture Shelf Items Manager */}
                                                         <div className="space-y-3">
-                                                            {currentItems.map((item, itemIdx) => (
-                                                                <div key={item.id || itemIdx} className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-3 relative group">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
-                                                                            Item #{itemIdx + 1}
-                                                                        </span>
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-briefcase"></i> Manage Work / Service Picture Items
+                                                            </h4>
+                                                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                                                                Add, remove, or edit pictures and descriptions for each service area shown on the shelf.
+                                                            </p>
+
+                                                            <div className="space-y-3">
+                                                                {currentItems.map((item, itemIdx) => (
+                                                                    <div key={item.id || itemIdx} className="bg-slate-900/90 border border-slate-800 rounded-lg p-3 space-y-3 relative group">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
+                                                                                Item #{itemIdx + 1}
+                                                                            </span>
+                                                                            <button
+                                                                                onClick={() => removeItem(itemIdx)}
+                                                                                className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
+                                                                                title="Remove Item"
+                                                                            >
+                                                                                <i className="fas fa-trash-alt"></i>
+                                                                            </button>
+                                                                        </div>
+
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Title</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={item.title || ''}
+                                                                                onChange={(e) => updateItemField(itemIdx, 'title', e.target.value)}
+                                                                                placeholder="Service / Work Title"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Description</label>
+                                                                            <textarea
+                                                                                value={item.description || ''}
+                                                                                onChange={(e) => updateItemField(itemIdx, 'description', e.target.value)}
+                                                                                placeholder="Detailed description of work or service..."
+                                                                                rows="2"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Image Source</label>
+                                                                            <div className="flex gap-2 items-center">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={item.imageUrl || ''}
+                                                                                    onChange={(e) => updateItemField(itemIdx, 'imageUrl', e.target.value)}
+                                                                                    placeholder="https://..."
+                                                                                    className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                />
+                                                                                <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
+                                                                                    <i className="fas fa-upload"></i>
+                                                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(itemIdx, e)} />
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {item.imageUrl && (
+                                                                            <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
+                                                                                <img src={item.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <button
+                                                                onClick={addItem}
+                                                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                            >
+                                                                <i className="fas fa-plus"></i> Add Service / Work Item
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Service Tags / Badges List Manager */}
+                                                        <div className="pt-4 border-t border-slate-800 space-y-3">
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-tags"></i> Manage Service Tags / Badges List
+                                                            </h4>
+                                                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                                                                Add, edit, or delete tag pills displayed under the primary description.
+                                                            </p>
+
+                                                            <div className="space-y-2">
+                                                                {currentTags.map((tag, tagIdx) => (
+                                                                    <div key={tagIdx} className="flex gap-2 items-center bg-slate-900/80 border border-slate-800 rounded p-1.5">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={tag}
+                                                                            onChange={(e) => updateTagText(tagIdx, e.target.value)}
+                                                                            placeholder="Tag / Badge Text"
+                                                                            className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
                                                                         <button
-                                                                            onClick={() => removeItem(itemIdx)}
-                                                                            className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
-                                                                            title="Remove Item"
+                                                                            onClick={() => removeTag(tagIdx)}
+                                                                            className="text-slate-500 hover:text-rose-400 text-xs p-1.5 transition"
+                                                                            title="Delete Tag"
                                                                         >
                                                                             <i className="fas fa-trash-alt"></i>
                                                                         </button>
                                                                     </div>
+                                                                ))}
+                                                            </div>
 
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Title</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            value={item.title || ''}
-                                                                            onChange={(e) => updateItemField(itemIdx, 'title', e.target.value)}
-                                                                            placeholder="Service / Work Title"
-                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Description</label>
-                                                                        <textarea
-                                                                            value={item.description || ''}
-                                                                            onChange={(e) => updateItemField(itemIdx, 'description', e.target.value)}
-                                                                            placeholder="Detailed description of work or service..."
-                                                                            rows="2"
-                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-[10px] font-semibold text-slate-300">Image Source</label>
-                                                                        <div className="flex gap-2 items-center">
-                                                                            <input
-                                                                                type="text"
-                                                                                value={item.imageUrl || ''}
-                                                                                onChange={(e) => updateItemField(itemIdx, 'imageUrl', e.target.value)}
-                                                                                placeholder="https://..."
-                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
-                                                                            />
-                                                                            <label className="bg-slate-800 hover:bg-slate-700 text-teal-300 px-2.5 py-1.5 rounded text-xs cursor-pointer border border-slate-700 font-bold flex items-center gap-1 transition">
-                                                                                <i className="fas fa-upload"></i>
-                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(itemIdx, e)} />
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {item.imageUrl && (
-                                                                        <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-950">
-                                                                            <img src={item.imageUrl} className="w-full h-full object-cover" alt="Preview" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
+                                                            <button
+                                                                onClick={addTag}
+                                                                className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                            >
+                                                                <i className="fas fa-plus"></i> Add Service Tag Badge
+                                                            </button>
                                                         </div>
-
-                                                        <button
-                                                            onClick={addItem}
-                                                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
-                                                        >
-                                                            <i className="fas fa-plus"></i> Add Service / Work Item
-                                                        </button>
                                                     </div>
                                                 );
                                             })()}
