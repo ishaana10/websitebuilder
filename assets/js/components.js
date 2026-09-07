@@ -1407,6 +1407,14 @@ const UI_COMPONENTS = [
                 { value: '3', label: '3 Columns' },
                 { value: '4', label: '4 Columns' }
             ]},
+            { key: 'cardEffect', label: 'Card Visual / Animation Effect', type: 'select', default: 'hover-lift', options: [
+                { value: 'none', label: 'None (Standard Card)' },
+                { value: 'hover-lift', label: 'Hover Lift & Scale' },
+                { value: 'hover-glow', label: 'Hover Border Glow' },
+                { value: 'glassmorphism', label: 'Glassmorphism Blur' },
+                { value: 'gradient-border', label: 'Gradient Border Highlight' },
+                { value: 'fade-in-up', label: 'Fade-In Slide Up' }
+            ]},
             { key: 'bgColor', label: 'Section Background', type: 'color', default: 'transparent' },
             { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#1e293b' },
             { key: 'accentColor', label: 'Icon Accent Color', type: 'color', default: '#14b8a6' },

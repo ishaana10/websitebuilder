@@ -1463,6 +1463,20 @@ $csrf_token = generate_csrf_token();
                     const headingColor = sec.props.headingColor || '#ffffff';
                     const textColor = sec.props.textColor || '#cbd5e1';
                     const columns = sec.props.columns || '3';
+                    const cardEffect = sec.props.cardEffect || 'hover-lift';
+
+                    let effectClasses = ' hover:border-slate-700 transition duration-300 shadow-xl';
+                    if (cardEffect === 'hover-lift') {
+                        effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
+                    } else if (cardEffect === 'hover-glow') {
+                        effectClasses = ' hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 cursor-pointer';
+                    } else if (cardEffect === 'glassmorphism') {
+                        effectClasses = ' backdrop-blur-md bg-opacity-60 border border-white/10 shadow-xl transition-all duration-300';
+                    } else if (cardEffect === 'gradient-border') {
+                        effectClasses = ' border-2 border-teal-500/50 hover:border-teal-400 transition-all duration-300 shadow-md';
+                    } else if (cardEffect === 'fade-in-up') {
+                        effectClasses = ' animate-fadeIn hover:-translate-y-1 transition-all duration-300';
+                    }
 
                     const cardsHtml = cards.map(card => {
                         const imgUrl = card.imageUrl || '';
@@ -1480,7 +1494,7 @@ $csrf_token = generate_csrf_token();
                         const cardBtnHtml = btnText ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
 
-                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4 hover:border-slate-700 transition duration-300 shadow-xl" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
                             ${mediaHtml}
                             <div class="space-y-2">
                                 <h4 class="text-base font-bold" style="color: ${headingColor};">${titleText}</h4>
