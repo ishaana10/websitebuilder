@@ -2237,7 +2237,7 @@ $csrf_token = generate_csrf_token();
                                 <i className="fas fa-plus"></i>
                             </button>
                             {activePage !== 'index' && (
-                                <>
+                                <React.Fragment>
                                     <button
                                         onClick={() => renamePage(activePage)}
                                         className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded text-xs transition border border-slate-750"
@@ -2252,7 +2252,7 @@ $csrf_token = generate_csrf_token();
                                     >
                                         <i className="fas fa-trash-alt"></i>
                                     </button>
-                                </>
+                                </React.Fragment>
                             )}
                         </div>
 
