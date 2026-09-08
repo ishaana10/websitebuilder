@@ -573,6 +573,69 @@ $csrf_token = generate_csrf_token();
                 saveProject(true, updatedPages);
             };
 
+            const renamePage = (oldPageName) => {
+                if (oldPageName === 'index') {
+                    showToast("Error", "The main 'index' page cannot be renamed.");
+                    return;
+                }
+                const name = prompt(`Enter new name for page "${oldPageName}" (lowercase, no spaces, e.g., 'aboutus'):`, oldPageName);
+                if (!name) return;
+                const safeName = name.toLowerCase().trim().replace(/[^a-z0-9_-]+/g, '');
+                if (!safeName) {
+                    showToast("Error", "Invalid page name.");
+                    return;
+                }
+                if (safeName === oldPageName) return;
+                if (pages[safeName]) {
+                    showToast("Error", "A page with this name already exists!");
+                    return;
+                }
+
+                const updatedPages = {};
+                Object.keys(pages).forEach(pKey => {
+                    if (pKey === oldPageName) {
+                        updatedPages[safeName] = pages[oldPageName];
+                    } else {
+                        updatedPages[pKey] = pages[pKey];
+                    }
+                });
+
+                // Update any references across all pages to the old page name
+                Object.keys(updatedPages).forEach(pKey => {
+                    const pageSections = updatedPages[pKey] || [];
+                    pageSections.forEach(sec => {
+                        if (!sec || !sec.props) return;
+                        Object.keys(sec.props).forEach(propKey => {
+                            if (propKey.toLowerCase().endsWith('page') && sec.props[propKey] === oldPageName) {
+                                sec.props[propKey] = safeName;
+                            }
+                        });
+                        if (Array.isArray(sec.props.links)) {
+                            sec.props.links.forEach(link => {
+                                if (link.type === 'page' && link.pageName === oldPageName) {
+                                    link.pageName = safeName;
+                                }
+                                if (link.type === 'dropdown' && Array.isArray(link.children)) {
+                                    link.children.forEach(child => {
+                                        if (child.type === 'page' && child.pageName === oldPageName) {
+                                            child.pageName = safeName;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                setPages(updatedPages);
+                if (activePage === oldPageName) {
+                    setActivePage(safeName);
+                }
+                commitToHistory(updatedPages);
+                showToast("Page Renamed", `Page "${oldPageName}" renamed to "${safeName}".`);
+                saveProject(true, updatedPages);
+            };
+
             const handleCreateCustomComponentSubmit = (e) => {
                 e.preventDefault();
 
@@ -2174,13 +2237,22 @@ $csrf_token = generate_csrf_token();
                                 <i className="fas fa-plus"></i>
                             </button>
                             {activePage !== 'index' && (
-                                <button
-                                    onClick={() => deletePage(activePage)}
-                                    className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold rounded text-xs transition border border-slate-750"
-                                    title="Delete Current Page"
-                                >
-                                    <i className="fas fa-trash-alt"></i>
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => renamePage(activePage)}
+                                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded text-xs transition border border-slate-750"
+                                        title="Rename Current Page"
+                                    >
+                                        <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                        onClick={() => deletePage(activePage)}
+                                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-rose-400 font-bold rounded text-xs transition border border-slate-750"
+                                        title="Delete Current Page"
+                                    >
+                                        <i className="fas fa-trash-alt"></i>
+                                    </button>
+                                </>
                             )}
                         </div>
 
