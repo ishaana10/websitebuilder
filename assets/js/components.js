@@ -1762,6 +1762,56 @@ const UI_COMPONENTS = [
         </div>
     </div>
 </section>`
+    },
+    {
+        id: 'image_card_grid',
+        name: 'Visual Image Card Showcase Grid',
+        category: 'Hero',
+        icon: 'fas fa-th-large',
+        schema: [
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'Interactive Photo Cards Grid' },
+            { key: 'columns', label: 'Desktop Columns', type: 'select', default: '3', options: [
+                { value: '1', label: '1 Column' },
+                { value: '2', label: '2 Columns' },
+                { value: '3', label: '3 Columns' },
+                { value: '4', label: '4 Columns' }
+            ]},
+            { key: 'cardMinHeight', label: 'Card Min Height (e.g. 320px, 380px)', type: 'text', default: '340px' },
+            { key: 'bgEffect', label: 'Card Background Image Effect', type: 'select', default: 'zoom', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'zoom', label: 'Hover Smooth Zoom-In' },
+                { value: 'grayscale_to_color', label: 'Grayscale to Vibrant Color' },
+                { value: 'blur_to_sharp', label: 'Blur to Sharp Focus' },
+                { value: 'darken', label: 'Darken Overlay on Hover' },
+                { value: 'pan', label: 'Pan / Shift Effect' }
+            ]},
+            { key: 'cardEffect', label: 'Card Container Animation / Visual Effect', type: 'select', default: 'hover-lift', options: [
+                { value: 'none', label: 'None (Standard Card)' },
+                { value: 'hover-lift', label: 'Hover Lift & Scale' },
+                { value: 'hover-glow', label: 'Hover Border Glow' },
+                { value: 'glassmorphism', label: 'Glassmorphism Backdrop' },
+                { value: 'gradient-border', label: 'Gradient Border Highlight' },
+                { value: 'fade-in-up', label: 'Fade-In Slide Up' }
+            ]},
+            { key: 'overlayOpacity', label: 'Default Card Background Overlay Opacity (%)', type: 'select', default: '60', options: [
+                { value: '20', label: '20% Light Tint' },
+                { value: '40', label: '40% Medium Light Tint' },
+                { value: '60', label: '60% Standard Dark Tint' },
+                { value: '80', label: '80% Heavy Dark Tint' }
+            ]},
+            { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#020617' },
+            { key: 'headingColor', label: 'Section Heading Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Card Text Detail Color', type: 'color', default: '#e2e8f0' },
+            { key: 'accentColor', label: 'Card Accent / CTA Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `<section class="py-16 px-6 md:px-12 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="image_card_grid">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-10 tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-{{columns}} gap-6">
+            {{gridCardsHtml}}
+        </div>
+    </div>
+</section>`
     }
 ];
 
