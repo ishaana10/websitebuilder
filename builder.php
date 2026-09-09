@@ -1482,7 +1482,7 @@ $csrf_token = generate_csrf_token();
                     const btnText = sec.props.btnText || 'Get Started Now';
                     const btnShapeClass = resolveBtnShapeClass(sec.props);
                     const btnEffectClass = resolveBtnEffectClass(sec.props);
-                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition-all duration-300 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
                     compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
                 }
 
