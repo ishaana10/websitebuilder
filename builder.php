@@ -1482,7 +1482,7 @@ $csrf_token = generate_csrf_token();
                     const btnText = sec.props.btnText || 'Get Started Now';
                     const btnShapeClass = resolveBtnShapeClass(sec.props);
                     const btnEffectClass = resolveBtnEffectClass(sec.props);
-                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition duration-300 hover:scale-105 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition-all duration-300 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
                     compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
                 }
 
@@ -1568,6 +1568,109 @@ $csrf_token = generate_csrf_token();
                     }).join('\n');
 
                     compiledHtml = compiledHtml.replace(/{{\s*cardsHtml\s*}}/g, cardsHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*columns\s*}}/g, columns);
+                }
+
+                if (sec.type.toLowerCase() === 'image_card_grid') {
+                    const defaultCards = [
+                        {
+                            id: 'card-1',
+                            title: 'High-Speed Cloud Storage',
+                            description: 'Scale your enterprise workloads with instant NVMe storage architecture.',
+                            imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+                            overlayOpacity: '60',
+                            btnText: 'Discover Cloud',
+                            btnUrl: '#'
+                        },
+                        {
+                            id: 'card-2',
+                            title: 'Automated CI/CD Pipelines',
+                            description: 'Streamline continuous integration and deployment with zero-downtime releases.',
+                            imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80',
+                            overlayOpacity: '60',
+                            btnText: 'View Workflows',
+                            btnUrl: '#'
+                        },
+                        {
+                            id: 'card-3',
+                            title: 'AI Diagnostics & Insights',
+                            description: 'Leverage deep neural analytics to monitor application performance in real-time.',
+                            imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+                            overlayOpacity: '60',
+                            btnText: 'Explore AI',
+                            btnUrl: '#'
+                        }
+                    ];
+
+                    const cards = (Array.isArray(sec.props.cards) && sec.props.cards.length > 0) ? sec.props.cards : defaultCards;
+                    const columns = sec.props.columns || '3';
+                    const cardMinHeight = sec.props.cardMinHeight || '340px';
+                    const bgEffect = sec.props.bgEffect || 'zoom';
+                    const cardEffect = sec.props.cardEffect || 'hover-lift';
+                    const defaultOverlayOpacity = sec.props.overlayOpacity || '60';
+                    const textColor = sec.props.textColor || '#e2e8f0';
+                    const accentColor = sec.props.accentColor || '#14b8a6';
+
+                    let cardEffectClasses = '';
+                    if (cardEffect === 'hover-lift') {
+                        cardEffectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300';
+                    } else if (cardEffect === 'hover-glow') {
+                        cardEffectClasses = ' hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300';
+                    } else if (cardEffect === 'glassmorphism') {
+                        cardEffectClasses = ' backdrop-blur-md bg-opacity-60 border border-white/20 shadow-2xl transition-all duration-300';
+                    } else if (cardEffect === 'gradient-border') {
+                        cardEffectClasses = ' border-2 border-teal-500/50 hover:border-teal-400 transition-all duration-300 shadow-xl';
+                    } else if (cardEffect === 'fade-in-up') {
+                        cardEffectClasses = ' animate-fadeIn hover:-translate-y-1 transition-all duration-300';
+                    }
+
+                    // Map background image effect to Tailwind transition/hover classes
+                    let imgEffectClasses = ' transition-all duration-500 ease-out';
+                    if (bgEffect === 'zoom') {
+                        imgEffectClasses += ' group-hover:scale-110';
+                    } else if (bgEffect === 'grayscale_to_color') {
+                        imgEffectClasses += ' filter grayscale group-hover:grayscale-0 group-hover:scale-105';
+                    } else if (bgEffect === 'blur_to_sharp') {
+                        imgEffectClasses += ' filter blur-sm group-hover:blur-none group-hover:scale-105';
+                    } else if (bgEffect === 'darken') {
+                        imgEffectClasses += ' group-hover:brightness-75 group-hover:scale-105';
+                    } else if (bgEffect === 'pan') {
+                        imgEffectClasses += ' group-hover:scale-110 group-hover:translate-x-2';
+                    }
+
+                    const gridCardsHtml = cards.map(card => {
+                        const imgUrl = card.imageUrl || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80';
+                        const titleText = card.title || '';
+                        const descText = card.description || '';
+                        const btnText = card.btnText || '';
+                        const btnUrl = card.btnUrl || '#';
+                        const opacityVal = card.overlayOpacity !== undefined ? card.overlayOpacity : defaultOverlayOpacity;
+                        const opacityDecimal = (parseInt(opacityVal, 10) || 60) / 100;
+
+                        const cardBtnHtml = btnText ?
+                            `<a href="${btnUrl}" class="inline-block font-bold px-5 py-2.5 rounded-full text-xs uppercase tracking-wider transition duration-300 hover:scale-105 shadow-lg mt-2 shrink-0" style="background-color: ${accentColor}; color: #020617;">${btnText}</a>` : '';
+
+                        return `<div class="relative rounded-2xl overflow-hidden border border-slate-800 shadow-xl group flex flex-col justify-between p-6 ${cardEffectClasses}" style="min-height: ${cardMinHeight};">
+                            <!-- Background Image Layer -->
+                            <div class="absolute inset-0 bg-cover bg-center ${imgEffectClasses}" style="background-image: url('${imgUrl}');"></div>
+
+                            <!-- Dark Overlay Layer -->
+                            <div class="absolute inset-0 bg-slate-950 transition-opacity duration-300" style="opacity: ${opacityDecimal};"></div>
+
+                            <!-- Content Layer -->
+                            <div class="relative z-10 flex flex-col justify-between h-full space-y-4">
+                                <div class="space-y-2">
+                                    <h3 class="text-xl font-black text-white tracking-tight leading-snug">${titleText}</h3>
+                                    <p class="text-xs leading-relaxed opacity-90" style="color: ${textColor};">${descText}</p>
+                                </div>
+                                <div>
+                                    ${cardBtnHtml}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*gridCardsHtml\s*}}/g, gridCardsHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*columns\s*}}/g, columns);
                 }
 
@@ -3228,6 +3331,211 @@ $csrf_token = generate_csrf_token();
                                                             className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
                                                         >
                                                             <i className="fas fa-plus"></i> Add Spotlight Card
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC IMAGE CARD GRID EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'image_card_grid' && (() => {
+                                                const defaultCards = [
+                                                    {
+                                                        id: 'card-1',
+                                                        title: 'High-Speed Cloud Storage',
+                                                        description: 'Scale your enterprise workloads with instant NVMe storage architecture.',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+                                                        overlayOpacity: '60',
+                                                        btnText: 'Discover Cloud',
+                                                        btnUrl: '#'
+                                                    },
+                                                    {
+                                                        id: 'card-2',
+                                                        title: 'Automated CI/CD Pipelines',
+                                                        description: 'Streamline continuous integration and deployment with zero-downtime releases.',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80',
+                                                        overlayOpacity: '60',
+                                                        btnText: 'View Workflows',
+                                                        btnUrl: '#'
+                                                    },
+                                                    {
+                                                        id: 'card-3',
+                                                        title: 'AI Diagnostics & Insights',
+                                                        description: 'Leverage deep neural analytics to monitor application performance in real-time.',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
+                                                        overlayOpacity: '60',
+                                                        btnText: 'Explore AI',
+                                                        btnUrl: '#'
+                                                    }
+                                                ];
+
+                                                const currentCards = (Array.isArray(selectedSection.props.cards) && selectedSection.props.cards.length > 0) ? selectedSection.props.cards : defaultCards;
+
+                                                const handleCardsChange = (newCards) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, cards: newCards } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addCard = () => {
+                                                    handleCardsChange([...currentCards, {
+                                                        id: 'card-' + Date.now(),
+                                                        title: 'New Feature Card',
+                                                        description: 'Enter engaging description content for this photo card...',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
+                                                        overlayOpacity: '60',
+                                                        btnText: 'Learn More',
+                                                        btnUrl: '#'
+                                                    }]);
+                                                };
+
+                                                const removeCard = (cardIdx) => {
+                                                    handleCardsChange(currentCards.filter((_, idx) => idx !== cardIdx));
+                                                };
+
+                                                const updateCardField = (cardIdx, field, val) => {
+                                                    const updatedCards = currentCards.map((card, idx) => idx === cardIdx ? { ...card, [field]: val } : card);
+                                                    handleCardsChange(updatedCards);
+                                                };
+
+                                                const handleFileUpload = (cardIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', csrfToken);
+
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-CSRF-TOKEN': csrfToken
+                                                        },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            updateCardField(cardIdx, 'imageUrl', data.url);
+                                                        } else {
+                                                            alert(data.error || 'Image upload failed');
+                                                        }
+                                                    })
+                                                    .catch(err => {
+                                                        alert('Upload error: ' + err.message);
+                                                    });
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <div className="flex justify-between items-center">
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-th-large"></i> Manage Image Grid Cards
+                                                            </h4>
+                                                            <span className="text-[9px] text-slate-500 font-mono">{currentCards.length} Cards</span>
+                                                        </div>
+
+                                                        <div className="space-y-4">
+                                                            {currentCards.map((card, cardIdx) => (
+                                                                <div key={card.id || cardIdx} className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                                                                    <div className="flex justify-between items-center pb-2 border-b border-slate-900">
+                                                                        <span className="text-xs font-bold text-slate-300">Card #{cardIdx + 1}</span>
+                                                                        <button
+                                                                            onClick={() => removeCard(cardIdx)}
+                                                                            className="text-red-400 hover:text-red-300 text-xs p-1 transition"
+                                                                            title="Delete Card"
+                                                                        >
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Card Title / Heading</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={card.title || ''}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'title', e.target.value)}
+                                                                            placeholder="Card Title"
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-bold"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Card Description</label>
+                                                                        <textarea
+                                                                            rows={2}
+                                                                            value={card.description || ''}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'description', e.target.value)}
+                                                                            placeholder="Detailed description..."
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1.5">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Background Image URL / Direct Upload</label>
+                                                                        <div className="flex gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.imageUrl || ''}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'imageUrl', e.target.value)}
+                                                                                placeholder="https://images.unsplash.com/..."
+                                                                                className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                            />
+                                                                            <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 rounded text-xs font-bold cursor-pointer transition shrink-0 flex items-center justify-center">
+                                                                                <i className="fas fa-upload mr-1"></i> Upload
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cardIdx, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                        {card.imageUrl && (
+                                                                            <div className="relative aspect-video rounded overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                                                                                <img src={card.imageUrl} className="w-full h-full object-cover" alt="Card Background Preview" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Overlay Opacity (%)</label>
+                                                                            <select
+                                                                                value={card.overlayOpacity !== undefined ? card.overlayOpacity : '60'}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'overlayOpacity', e.target.value)}
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            >
+                                                                                <option value="20">20% Light Tint</option>
+                                                                                <option value="40">40% Medium Light</option>
+                                                                                <option value="60">60% Standard Dark</option>
+                                                                                <option value="80">80% Heavy Dark</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">CTA Button Text</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.btnText || ''}
+                                                                                onChange={(e) => updateCardField(cardIdx, 'btnText', e.target.value)}
+                                                                                placeholder="Discover More"
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">CTA Button Link URL</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={card.btnUrl || '#'}
+                                                                            onChange={(e) => updateCardField(cardIdx, 'btnUrl', e.target.value)}
+                                                                            placeholder="https://..."
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <button
+                                                            onClick={addCard}
+                                                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Image Card
                                                         </button>
                                                     </div>
                                                 );
