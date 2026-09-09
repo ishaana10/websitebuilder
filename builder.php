@@ -1482,7 +1482,9 @@ $csrf_token = generate_csrf_token();
                     const btnText = sec.props.btnText || 'Get Started Now';
                     const btnShapeClass = resolveBtnShapeClass(sec.props);
                     const btnEffectClass = resolveBtnEffectClass(sec.props);
-                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition-all duration-300 ${btnEffectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>`;
+                    const effect = sec.props.btnEffect || 'none';
+                    const bgStyle = (effect === 'gradient_flow' || effect === 'lime_gradient') ? '' : `background-color: ${btnBg};`;
+                    const bannerBtnHtml = `<a href="${href}" ${targetAttr} class="inline-block font-extrabold px-8 py-4 ${btnShapeClass} shadow-lg transition-all duration-300 ${btnEffectClass}" style="${bgStyle} color: ${btnColor};" data-cta-button="true" data-el-path="el-cta">${btnText}</a>`;
                     compiledHtml = compiledHtml.replace(/{{\s*bannerBtn\s*}}/g, bannerBtnHtml);
                 }
 
@@ -2695,6 +2697,20 @@ $csrf_token = generate_csrf_token();
                                                             <i className="fas fa-edit"></i> Edit Properties
                                                         </h4>
                                                         {compDef.schema.map(field => {
+                                                            // Determine link type prefix (e.g. 'btn' or 'secBtn' or 'tier1')
+                                                            let linkTypeKey = 'btnLinkType';
+                                                            if (field.key.startsWith('secBtn')) linkTypeKey = 'secBtnLinkType';
+                                                            if (field.key.startsWith('tier1')) linkTypeKey = 'tier1BtnLinkType';
+                                                            if (field.key.startsWith('tier2')) linkTypeKey = 'tier2BtnLinkType';
+
+                                                            const currentLinkType = selectedSection.props[linkTypeKey] || 'url';
+
+                                                            // Conditionally hide non-applicable destination fields
+                                                            if (field.key.endsWith('Url') && currentLinkType !== 'url') return null;
+                                                            if (field.key.endsWith('Page') && currentLinkType !== 'page') return null;
+                                                            if (field.key.endsWith('Section') && currentLinkType !== 'section') return null;
+                                                            if ((field.key.endsWith('WaPhone') || field.key.endsWith('WaMsg')) && currentLinkType !== 'whatsapp') return null;
+
                                                             const val = selectedSection.props[field.key] !== undefined ? selectedSection.props[field.key] : field.default;
 
                                                             const handleFieldChange = (newVal) => {

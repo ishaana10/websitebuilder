@@ -1203,13 +1203,6 @@ const UI_COMPONENTS = [
                 { value: 'rounded', label: 'Rounded Corners' },
                 { value: 'square', label: 'Square' }
             ]},
-            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
-            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
-            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
-            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
-            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
-            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am ready to accelerate my workflow.' },
-            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false },
             { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'glow', label: 'Outer Neon Glow Effect' },
@@ -1220,7 +1213,14 @@ const UI_COMPONENTS = [
                 { value: 'lime_gradient', label: 'Vibrant Lime Green Gradient Shift' },
                 { value: 'scale_lift', label: 'Hover Lift & Scale' },
                 { value: 'ring_pulse', label: 'Pulsing Outer Ring' }
-            ] }
+            ] },
+            { key: 'btnLinkType', label: 'Button Link Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
+            { key: 'btnUrl', label: 'Button URL', type: 'text', default: '#' },
+            { key: 'btnPage', label: 'Select Page', type: 'text', default: 'index' },
+            { key: 'btnSection', label: 'Select Section', type: 'text', default: '' },
+            { key: 'btnWaPhone', label: 'WhatsApp Phone Number', type: 'text', default: '15551234567' },
+            { key: 'btnWaMsg', label: 'WhatsApp Pre-filled Message', type: 'text', default: 'Hello! I am ready to accelerate my workflow.' },
+            { key: 'btnNewTab', label: 'Open in New Tab', type: 'checkbox', default: false }
         ],
         html: `
 <section class="py-16 px-8 rounded-lg text-center" style="background-color: {{bgColor}}; color: {{textColor}};" data-component="cta_banner">
