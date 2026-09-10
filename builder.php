@@ -1610,6 +1610,7 @@ $csrf_token = generate_csrf_token();
                     const bgEffect = sec.props.bgEffect || 'zoom';
                     const cardEffect = sec.props.cardEffect || 'hover-lift';
                     const defaultOverlayOpacity = sec.props.overlayOpacity || '60';
+                    const showButtons = sec.props.showButtons !== undefined ? sec.props.showButtons : true;
                     const textColor = sec.props.textColor || '#e2e8f0';
                     const accentColor = sec.props.accentColor || '#14b8a6';
 
@@ -1649,7 +1650,7 @@ $csrf_token = generate_csrf_token();
                         const opacityVal = card.overlayOpacity !== undefined ? card.overlayOpacity : defaultOverlayOpacity;
                         const opacityDecimal = (parseInt(opacityVal, 10) || 60) / 100;
 
-                        const cardBtnHtml = btnText ?
+                        const cardBtnHtml = (showButtons && btnText) ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-5 py-2.5 rounded-full text-xs uppercase tracking-wider transition duration-300 hover:scale-105 shadow-lg mt-2 shrink-0" style="background-color: ${accentColor}; color: #020617;">${btnText}</a>` : '';
 
                         return `<div class="relative rounded-2xl overflow-hidden border border-slate-800 shadow-xl group flex flex-col justify-between p-6 ${cardEffectClasses}" style="min-height: ${cardMinHeight};">
@@ -3522,12 +3523,12 @@ $csrf_token = generate_csrf_token();
                                                                             </select>
                                                                         </div>
                                                                         <div className="space-y-1">
-                                                                            <label className="text-[10px] font-semibold text-slate-300">CTA Button Text</label>
+                                                                            <label className="text-[10px] font-semibold text-slate-300">CTA Button Text (Leave blank to hide)</label>
                                                                             <input
                                                                                 type="text"
                                                                                 value={card.btnText || ''}
                                                                                 onChange={(e) => updateCardField(cardIdx, 'btnText', e.target.value)}
-                                                                                placeholder="Discover More"
+                                                                                placeholder="Discover More (or leave empty)"
                                                                                 className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
                                                                             />
                                                                         </div>
