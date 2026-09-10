@@ -3419,12 +3419,12 @@ $csrf_token = generate_csrf_token();
 
                                                     const formData = new FormData();
                                                     formData.append('image', file);
-                                                    formData.append('csrf_token', csrfToken);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
 
                                                     fetch('api.php?action=upload_image', {
                                                         method: 'POST',
                                                         headers: {
-                                                            'X-CSRF-TOKEN': csrfToken
+                                                            'X-CSRF-TOKEN': CSRF_TOKEN
                                                         },
                                                         body: formData
                                                     })
