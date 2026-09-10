@@ -1824,6 +1824,8 @@ const UI_COMPONENTS = [
             { key: 'ratingScore', label: 'Rating Score (e.g. 4.9)', type: 'text', default: '4.9' },
             { key: 'totalReviews', label: 'Total Verified Reviews Count', type: 'text', default: '128' },
             { key: 'writeReviewUrl', label: 'Google Write Review / Place URL', type: 'text', default: 'https://google.com' },
+            { key: 'writeReviewBtnText', label: 'Write Review Button Text', type: 'text', default: 'Write a Review' },
+            { key: 'showWriteReviewBtn', label: 'Show Write Review Button', type: 'checkbox', default: true },
             { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Review Card Background', type: 'color', default: '#1e293b' },
             { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
@@ -1851,7 +1853,7 @@ const UI_COMPONENTS = [
             </div>
             <a href="{{writeReviewUrl}}" target="_blank" rel="noopener" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-bold transition shadow-lg flex items-center gap-2 shrink-0">
                 <i class="fab fa-google"></i>
-                <span>Review us on Google</span>
+                <span>{{writeReviewBtnText}}</span>
             </a>
         </div>
 

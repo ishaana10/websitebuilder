@@ -1762,6 +1762,17 @@ $csrf_token = generate_csrf_token();
                     const textColor = sec.props.textColor || '#cbd5e1';
                     const starColor = sec.props.starColor || '#fbbf24';
 
+                    const showWriteReviewBtn = sec.props.showWriteReviewBtn !== false;
+                    const writeReviewBtnText = sec.props.writeReviewBtnText || 'Write a Review';
+                    const writeReviewUrl = sec.props.writeReviewUrl || 'https://google.com';
+
+                    if (!showWriteReviewBtn) {
+                        compiledHtml = compiledHtml.replace(/<a href="{{writeReviewUrl}}"[^>]*>[\s\S]*?<\/a>/gi, '');
+                    } else {
+                        compiledHtml = compiledHtml.replace(/{{\s*writeReviewBtnText\s*}}/g, writeReviewBtnText);
+                        compiledHtml = compiledHtml.replace(/{{\s*writeReviewUrl\s*}}/g, writeReviewUrl);
+                    }
+
                     const reviewsCardsHtml = reviews.map(rev => {
                         const name = rev.authorName || 'Verified Reviewer';
                         const role = rev.authorRole || 'Google User';
@@ -3784,7 +3795,12 @@ $csrf_token = generate_csrf_token();
                                                             <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
                                                                 <i className="fab fa-google"></i> Manage Google Reviews
                                                             </h4>
-                                                            <span className="text-[9px] text-slate-500 font-mono">{currentReviews.length} Reviews</span>
+                                                            <button
+                                                                onClick={addReview}
+                                                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 rounded text-[10px] font-bold transition flex items-center gap-1"
+                                                            >
+                                                                <i className="fas fa-plus"></i> Add Review
+                                                            </button>
                                                         </div>
 
                                                         <div className="space-y-4">
