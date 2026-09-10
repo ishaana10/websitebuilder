@@ -1799,6 +1799,7 @@ const UI_COMPONENTS = [
                 { value: '60', label: '60% Standard Dark Tint' },
                 { value: '80', label: '80% Heavy Dark Tint' }
             ]},
+            { key: 'showButtons', label: 'Show CTA Buttons on Cards', type: 'checkbox', default: true },
             { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#020617' },
             { key: 'headingColor', label: 'Section Heading Color', type: 'color', default: '#ffffff' },
             { key: 'textColor', label: 'Card Text Detail Color', type: 'color', default: '#e2e8f0' },
