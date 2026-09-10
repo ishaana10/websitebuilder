@@ -1725,6 +1725,90 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*columns\s*}}/g, columns);
                 }
 
+                if (sec.type.toLowerCase() === 'google_reviews') {
+                    const defaultReviews = [
+                        {
+                            id: 'rev-1',
+                            authorName: 'David Miller',
+                            authorRole: 'Local Local Business Owner',
+                            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+                            ratingStars: '5',
+                            dateText: 'a week ago',
+                            reviewText: 'Outstanding service! The team was prompt, extremely professional, and resolved our issue on the first visit. Highly recommended.'
+                        },
+                        {
+                            id: 'rev-2',
+                            authorName: 'Serah Lawson',
+                            authorRole: 'Verified Customer',
+                            avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+                            ratingStars: '5',
+                            dateText: '2 weeks ago',
+                            reviewText: 'Great experience from start to finish. Communication was top-tier and the results exceeded our expectations!'
+                        },
+                        {
+                            id: 'rev-3',
+                            authorName: 'Michael Chen',
+                            authorRole: 'Facility Manager',
+                            avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+                            ratingStars: '5',
+                            dateText: 'a month ago',
+                            reviewText: 'Very reliable and trustworthy commercial service. They pay attention to every detail and follow safety protocols strictly.'
+                        }
+                    ];
+
+                    const reviews = (Array.isArray(sec.props.reviews) && sec.props.reviews.length > 0) ? sec.props.reviews : defaultReviews;
+                    const cardBg = sec.props.cardBg || '#1e293b';
+                    const headingColor = sec.props.headingColor || '#ffffff';
+                    const textColor = sec.props.textColor || '#cbd5e1';
+                    const starColor = sec.props.starColor || '#fbbf24';
+
+                    const reviewsCardsHtml = reviews.map(rev => {
+                        const name = rev.authorName || 'Verified Reviewer';
+                        const role = rev.authorRole || 'Google User';
+                        const avatar = rev.avatarUrl || '';
+                        const text = rev.reviewText || '';
+                        const date = rev.dateText || 'Recently';
+                        const starsCount = parseInt(rev.ratingStars || '5', 10) || 5;
+
+                        const starsHtml = Array.from({ length: 5 }, (_, i) => {
+                            if (i < starsCount) {
+                                return `<i class="fas fa-star" style="color: ${starColor};"></i>`;
+                            }
+                            return `<i class="far fa-star text-slate-600"></i>`;
+                        }).join('');
+
+                        const avatarHtml = avatar ?
+                            `<img src="${avatar}" class="w-10 h-10 rounded-full object-cover shadow border border-slate-700 shrink-0" alt="${name.replace(/"/g, '&quot;')}" />` :
+                            `<div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow shrink-0">${name.charAt(0).toUpperCase()}</div>`;
+
+                        return `<div class="p-6 rounded-2xl border border-slate-800/80 shadow-lg flex flex-col justify-between space-y-4" style="background-color: ${cardBg};">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        ${avatarHtml}
+                                        <div>
+                                            <h4 class="text-sm font-bold leading-tight" style="color: ${headingColor};">${name}</h4>
+                                            <p class="text-[11px] opacity-75" style="color: ${textColor};">${role}</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs shadow shrink-0" title="Verified Google Review">
+                                        <i class="fab fa-google text-blue-500"></i>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center text-xs space-x-0.5">
+                                        ${starsHtml}
+                                    </div>
+                                    <span class="text-[10px] opacity-60 font-semibold" style="color: ${textColor};">${date}</span>
+                                </div>
+                                <p class="text-xs leading-relaxed opacity-90" style="color: ${textColor};">"${text}"</p>
+                            </div>
+                        </div>`;
+                    }).join('\n');
+
+                    compiledHtml = compiledHtml.replace(/{{\s*reviewsCardsHtml\s*}}/g, reviewsCardsHtml);
+                }
+
 
 
                 // Dynamic compiler for about_feature_showcase component
@@ -3601,6 +3685,208 @@ $csrf_token = generate_csrf_token();
                                                             className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
                                                         >
                                                             <i className="fas fa-plus"></i> Add Image Card
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOM DYNAMIC GOOGLE REVIEWS EDITOR */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'google_reviews' && (() => {
+                                                const defaultReviews = [
+                                                    {
+                                                        id: 'rev-1',
+                                                        authorName: 'David Miller',
+                                                        authorRole: 'Local Business Owner',
+                                                        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+                                                        ratingStars: '5',
+                                                        dateText: 'a week ago',
+                                                        reviewText: 'Outstanding service! The team was prompt, extremely professional, and resolved our issue on the first visit. Highly recommended.'
+                                                    },
+                                                    {
+                                                        id: 'rev-2',
+                                                        authorName: 'Serah Lawson',
+                                                        authorRole: 'Verified Customer',
+                                                        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+                                                        ratingStars: '5',
+                                                        dateText: '2 weeks ago',
+                                                        reviewText: 'Great experience from start to finish. Communication was top-tier and the results exceeded our expectations!'
+                                                    },
+                                                    {
+                                                        id: 'rev-3',
+                                                        authorName: 'Michael Chen',
+                                                        authorRole: 'Facility Manager',
+                                                        avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+                                                        ratingStars: '5',
+                                                        dateText: 'a month ago',
+                                                        reviewText: 'Very reliable and trustworthy commercial service. They pay attention to every detail and follow safety protocols strictly.'
+                                                    }
+                                                ];
+
+                                                const currentReviews = (Array.isArray(selectedSection.props.reviews) && selectedSection.props.reviews.length > 0) ? selectedSection.props.reviews : defaultReviews;
+
+                                                const handleReviewsChange = (newReviews) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, reviews: newReviews } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addReview = () => {
+                                                    handleReviewsChange([...currentReviews, {
+                                                        id: 'rev-' + Date.now(),
+                                                        authorName: 'Satisfied Customer',
+                                                        authorRole: 'Verified Buyer',
+                                                        avatarUrl: '',
+                                                        ratingStars: '5',
+                                                        dateText: 'recently',
+                                                        reviewText: 'Friendly staff, prompt delivery, and amazing attention to detail!'
+                                                    }]);
+                                                };
+
+                                                const removeReview = (revIdx) => {
+                                                    handleReviewsChange(currentReviews.filter((_, idx) => idx !== revIdx));
+                                                };
+
+                                                const updateReviewField = (revIdx, field, val) => {
+                                                    const updated = currentReviews.map((rev, idx) => idx === revIdx ? { ...rev, [field]: val } : rev);
+                                                    handleReviewsChange(updated);
+                                                };
+
+                                                const handleAvatarUpload = (revIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-CSRF-TOKEN': CSRF_TOKEN
+                                                        },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            updateReviewField(revIdx, 'avatarUrl', data.url);
+                                                        } else {
+                                                            alert(data.error || 'Avatar upload failed');
+                                                        }
+                                                    })
+                                                    .catch(err => {
+                                                        alert('Upload error: ' + err.message);
+                                                    });
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <div className="flex justify-between items-center">
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fab fa-google"></i> Manage Google Reviews
+                                                            </h4>
+                                                            <span className="text-[9px] text-slate-500 font-mono">{currentReviews.length} Reviews</span>
+                                                        </div>
+
+                                                        <div className="space-y-4">
+                                                            {currentReviews.map((rev, revIdx) => (
+                                                                <div key={rev.id || revIdx} className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                                                                    <div className="flex justify-between items-center pb-2 border-b border-slate-900">
+                                                                        <span className="text-xs font-bold text-slate-300">Reviewer #{revIdx + 1}</span>
+                                                                        <button
+                                                                            onClick={() => removeReview(revIdx)}
+                                                                            className="text-red-400 hover:text-red-300 text-xs p-1 transition"
+                                                                            title="Delete Review"
+                                                                        >
+                                                                            <i className="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Author Name</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={rev.authorName || ''}
+                                                                                onChange={(e) => updateReviewField(revIdx, 'authorName', e.target.value)}
+                                                                                placeholder="David Miller"
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-bold"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Role / Subtitle</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={rev.authorRole || ''}
+                                                                                onChange={(e) => updateReviewField(revIdx, 'authorRole', e.target.value)}
+                                                                                placeholder="Verified Customer"
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Rating Stars (1-5)</label>
+                                                                            <select
+                                                                                value={rev.ratingStars || '5'}
+                                                                                onChange={(e) => updateReviewField(revIdx, 'ratingStars', e.target.value)}
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            >
+                                                                                <option value="5">5 Stars (★★★★★)</option>
+                                                                                <option value="4">4 Stars (★★★★☆)</option>
+                                                                                <option value="3">3 Stars (★★★☆☆)</option>
+                                                                                <option value="2">2 Stars (★★☆☆☆)</option>
+                                                                                <option value="1">1 Star (★☆☆☆☆)</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[10px] font-semibold text-slate-300">Review Date</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={rev.dateText || ''}
+                                                                                onChange={(e) => updateReviewField(revIdx, 'dateText', e.target.value)}
+                                                                                placeholder="2 weeks ago"
+                                                                                className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-1">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Review Content</label>
+                                                                        <textarea
+                                                                            rows={3}
+                                                                            value={rev.reviewText || ''}
+                                                                            onChange={(e) => updateReviewField(revIdx, 'reviewText', e.target.value)}
+                                                                            placeholder="Enter customer feedback..."
+                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="space-y-1.5">
+                                                                        <label className="text-[10px] font-semibold text-slate-300">Avatar Image URL / Upload</label>
+                                                                        <div className="flex gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={rev.avatarUrl || ''}
+                                                                                onChange={(e) => updateReviewField(revIdx, 'avatarUrl', e.target.value)}
+                                                                                placeholder="https://images.unsplash.com/..."
+                                                                                className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                            />
+                                                                            <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 rounded text-xs font-bold cursor-pointer transition shrink-0 flex items-center justify-center">
+                                                                                <i className="fas fa-upload mr-1"></i> Upload
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(revIdx, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        <button
+                                                            onClick={addReview}
+                                                            className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Google Review
                                                         </button>
                                                     </div>
                                                 );
