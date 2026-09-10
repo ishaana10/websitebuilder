@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webidesigner REST API Endpoints
+ * Nuvis WebDesign X REST API Endpoints
  * Supports secure operations for saving, retrieving, publishing, exporting, and deleting websites
  */
 // Start output buffering and suppress raw HTML error output during API responses
@@ -600,7 +600,7 @@ switch ($action) {
 
         // Create Zip Archive
         $zip = new ZipArchive();
-        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webidesigner_export_') . '.zip';
+        $zip_filename = tempnam(sys_get_temp_dir(), 'nuvis-webdesign-x_export_') . '.zip';
 
         if ($zip->open($zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             http_response_code(500);
@@ -664,7 +664,7 @@ switch ($action) {
                         if ($block['componentId'] === 'html_raw') {
                             $html_content .= $block['raw_html'] ?? '';
                         } elseif ($block['componentId'] === 'navbar') {
-                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis Webidesigner';
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis WebDesign X';
                             $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<span class="text-xl font-extrabold tracking-wider text-teal-400">' . sanitize_output($bText) . '</span>';
                             $linksHtml = '';
                             $navLinks = $block['links'] ?? [['text' => 'Home', 'url' => '#home'], ['text' => 'Features', 'url' => '#features'], ['text' => 'Pricing', 'url' => '#pricing'], ['text' => 'Contact', 'url' => '#contact']];
@@ -673,9 +673,9 @@ switch ($action) {
                             }
                             $html_content .= '<nav class="bg-slate-900 text-white py-4 px-6 relative shadow-md rounded-lg" data-component="navbar"><div class="flex justify-between items-center"><div class="text-xl font-extrabold tracking-wider text-teal-400">' . $logoHtml . '</div><div class="hidden md:flex space-x-6">' . $linksHtml . '</div><div class="flex items-center gap-4"><button onclick="const m = this.closest(\'[data-component]\').querySelector(\'.mobile-menu\'); if(m) m.classList.toggle(\'hidden\');" class="md:hidden text-xl focus:outline-none"><i class="fas fa-bars"></i></button><a href="#get-started" class="bg-teal-500 text-slate-950 font-bold px-4 py-2 rounded hover:bg-teal-400 transition duration-300 text-sm">Get Started</a></div></div><div class="mobile-menu hidden md:hidden flex flex-col space-y-2 mt-4 pt-4 border-t border-slate-700/50 w-full">' . implode('', array_map(function($lnk) { return '<a href="' . sanitize_output($lnk['url']) . '" class="block py-1.5 font-bold transition duration-300 hover:text-teal-300">' . sanitize_output($lnk['text']) . '</a>'; }, $navLinks)) . '</div></nav>';
                         } elseif ($block['componentId'] === 'footer') {
-                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis Webidesigner BUILDER';
+                            $bText = !empty($block['brandText']) ? $block['brandText'] : 'Nuvis WebDesign X BUILDER';
                             $logoHtml = !empty($block['logoImg']) ? '<img src="' . sanitize_output($block['logoImg']) . '" class="h-8 max-w-[120px] object-contain" alt="Logo">' : '<div class="text-lg font-black text-white">' . sanitize_output($bText) . '</div>';
-                            $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis Webidesigner. All rights reserved.';
+                            $copyText = !empty($block['copyright']) ? $block['copyright'] : '&copy; ' . date('Y') . ' Nuvis WebDesign X. All rights reserved.';
                             $linksHtml = '';
                             $footLinks = $block['links'] ?? [['text' => 'Privacy Policy', 'url' => '#'], ['text' => 'Terms of Use', 'url' => '#'], ['text' => 'Support', 'url' => '#']];
                             foreach ($footLinks as $lnk) {

@@ -1,5 +1,5 @@
 /**
- * Nuvis Webidesigner Pre-Built High-Quality UI Widgets & Components
+ * Nuvis WebDesign X Pre-Built High-Quality UI Widgets & Components
  * Tailored for modern, beautiful, and fully customizable responsive websites
  */
 
@@ -11,7 +11,7 @@ const UI_COMPONENTS = [
         category: 'Headers',
         icon: 'fas fa-bars',
         schema: [
-            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'Nuvis Webidesigner' },
+            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'Nuvis WebDesign X' },
             { key: 'logoUrl', label: 'Logo Image URL/Upload', type: 'text', default: '' },
             { key: 'showLogo', label: 'Show Logo', type: 'checkbox', default: true },
             { key: 'showBrandText', label: 'Show Brand Name', type: 'checkbox', default: true },
@@ -134,7 +134,7 @@ const UI_COMPONENTS = [
         category: 'Footers',
         icon: 'fas fa-shoe-prints',
         schema: [
-            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'Nuvis Webidesigner' },
+            { key: 'brandText', label: 'Brand Name', type: 'text', default: 'Nuvis WebDesign X' },
             { key: 'logoUrl', label: 'Logo Image URL/Upload', type: 'text', default: '' },
             { key: 'showLogo', label: 'Show Logo', type: 'checkbox', default: true },
             { key: 'showBrandText', label: 'Show Brand Name', type: 'checkbox', default: true },
@@ -149,7 +149,7 @@ const UI_COMPONENTS = [
                 { value: 'left-of-text', label: 'Left of Text' },
                 { value: 'right-of-text', label: 'Right of Text' }
             ]},
-            { key: 'copyright', label: 'Copyright Note', type: 'text', default: 'Nuvis Webidesigner. All rights reserved.' },
+            { key: 'copyright', label: 'Copyright Note', type: 'text', default: 'Nuvis WebDesign X. All rights reserved.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#94a3b8' },
             { key: 'accentColor', label: 'Link Accent Color', type: 'color', default: '#14b8a6' },
@@ -372,7 +372,7 @@ const UI_COMPONENTS = [
             { key: 'heading', label: 'Main Testimonial Heading', type: 'text', default: 'What our clients say' },
             { key: 'authorName', label: 'Author Name', type: 'text', default: 'Sarah Jenkins' },
             { key: 'authorRole', label: 'Author Role', type: 'text', default: 'CTO at CloudCorp' },
-            { key: 'text', label: 'Quote content', type: 'textarea', default: 'Rebuilding our workspace with Nuvis Webidesigner decreased static page load times instantly.' },
+            { key: 'text', label: 'Quote content', type: 'textarea', default: 'Rebuilding our workspace with Nuvis WebDesign X decreased static page load times instantly.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#0f172a' },
             { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' },
@@ -591,8 +591,8 @@ const UI_COMPONENTS = [
         <h2 class="text-3xl font-extrabold" style="color: {{btnBg}};">{{heading}}</h2>
         <p class="text-slate-400 mt-2 text-sm">{{text}}</p>
 
-        <form class="mt-8 space-y-4 text-left" onsubmit="event.preventDefault(); window.submitNuvisWebidesignerForm(this);">
-            <div class="nuvis-webidesigner-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
+        <form class="mt-8 space-y-4 text-left" onsubmit="event.preventDefault(); window.submitNuvisWebDesignXForm(this);">
+            <div class="nuvis-webdesign-x-form-status hidden p-3 rounded text-xs font-bold text-center"></div>
 
             <input type="hidden" name="custom_recipient" value="{{customRecipient}}" />
             <input type="hidden" name="smtp_host" value="{{smtpHost}}" />
@@ -1112,23 +1112,23 @@ const UI_COMPONENTS = [
         ],
         html: `
 <div class="fixed bottom-6 right-6 z-50 font-sans" data-component="chatbot">
-    <button onclick="window.toggleNuvisWebidesignerChat()" class="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 hover:scale-110 focus:outline-none" style="background-color: {{accentColor}};">
+    <button onclick="window.toggleNuvisWebDesignXChat()" class="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition duration-300 hover:scale-110 focus:outline-none" style="background-color: {{accentColor}};">
         <i class="fas fa-comments text-xl text-slate-950 animate-bounce"></i>
     </button>
-    <div id="nuvis-webidesigner-chat-window" class="hidden absolute bottom-16 right-0 w-80 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col" style="background-color: {{bgColor}};">
+    <div id="nuvis-webdesign-x-chat-window" class="hidden absolute bottom-16 right-0 w-80 border border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col" style="background-color: {{bgColor}};">
         <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="font-bold text-xs text-white uppercase tracking-wider">{{agentName}}</span>
             </div>
-            <button onclick="window.toggleNuvisWebidesignerChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <button onclick="window.toggleNuvisWebDesignXChat()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
         </div>
-        <div id="nuvis-webidesigner-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
+        <div id="nuvis-webdesign-x-chat-logs" class="p-4 h-48 overflow-y-auto space-y-3 flex flex-col text-xs text-slate-300">
             <div class="bg-slate-800/80 p-2 rounded-lg self-start max-w-[85%] leading-relaxed">
                 Hello there! Welcome. How can I assist your operations today?
             </div>
         </div>
-        <form onsubmit="event.preventDefault(); window.sendNuvisWebidesignerChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
+        <form onsubmit="event.preventDefault(); window.sendNuvisWebDesignXChatMessage(this);" class="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
             <input type="text" name="chat_msg" placeholder="Ask something..." required class="flex-1 bg-slate-850 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500">
             <button type="submit" class="font-bold px-3 py-1.5 rounded-lg text-xs hover:opacity-90" style="background-color: {{accentColor}}; color: {{bgColor}};"><i class="fas fa-paper-plane text-slate-950"></i></button>
         </form>
@@ -1314,7 +1314,7 @@ const UI_COMPONENTS = [
         category: 'Advanced',
         icon: 'fas fa-video',
         schema: [
-            { key: 'heading', label: 'Video Title', type: 'text', default: 'See Nuvis Webidesigner In Action' },
+            { key: 'heading', label: 'Video Title', type: 'text', default: 'See Nuvis WebDesign X In Action' },
             { key: 'videoUrl', label: 'Video URL', type: 'text', default: 'https://www.w3schools.com/html/mov_bbb.mp4' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'headingColor', label: 'Heading Color', type: 'color', default: '#ffffff' }
@@ -1879,13 +1879,13 @@ if (typeof window !== 'undefined') {
         }
     };
 
-    window.submitNuvisWebidesignerForm = function(formElement) {
+    window.submitNuvisWebDesignXForm = function(formElement) {
         const btn = formElement.querySelector("button[type='submit']");
-        const statusDiv = formElement.querySelector(".nuvis-webidesigner-form-status");
+        const statusDiv = formElement.querySelector(".nuvis-webdesign-x-form-status");
 
         if (btn) btn.disabled = true;
         if (statusDiv) {
-            statusDiv.className = "nuvis-webidesigner-form-status p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
+            statusDiv.className = "nuvis-webdesign-x-form-status p-3 rounded text-xs font-bold text-center bg-slate-800 text-slate-400";
             statusDiv.innerText = "Submitting secure entry...";
             statusDiv.classList.remove("hidden");
         }
@@ -1900,16 +1900,16 @@ if (typeof window !== 'undefined') {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                statusDiv.className = "nuvis-webidesigner-form-status p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20";
+                statusDiv.className = "nuvis-webdesign-x-form-status p-3 rounded text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/20";
                 statusDiv.innerText = data.message;
                 formElement.reset();
             } else {
-                statusDiv.className = "nuvis-webidesigner-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+                statusDiv.className = "nuvis-webdesign-x-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
                 statusDiv.innerText = data.error || "Submission rejected.";
             }
         })
         .catch(err => {
-            statusDiv.className = "nuvis-webidesigner-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
+            statusDiv.className = "nuvis-webdesign-x-form-status p-3 rounded text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/20";
             statusDiv.innerText = "Connection Failed. Please try again.";
         })
         .finally(() => {
@@ -1985,16 +1985,16 @@ if (typeof window !== 'undefined') {
         });
     };
 
-    window.toggleNuvisWebidesignerChat = function() {
-        const win = document.getElementById('nuvis-webidesigner-chat-window');
+    window.toggleNuvisWebDesignXChat = function() {
+        const win = document.getElementById('nuvis-webdesign-x-chat-window');
         if (win) {
             win.classList.toggle('hidden');
         }
     };
 
-    window.sendNuvisWebidesignerChatMessage = function(formElement) {
+    window.sendNuvisWebDesignXChatMessage = function(formElement) {
         const input = formElement.querySelector("input[name='chat_msg']");
-        const logs = document.getElementById('nuvis-webidesigner-chat-logs');
+        const logs = document.getElementById('nuvis-webdesign-x-chat-logs');
 
         if (!input || !logs) return;
 
@@ -2018,7 +2018,7 @@ if (typeof window !== 'undefined') {
             if (userMsg.toLowerCase().includes('price') || userMsg.toLowerCase().includes('pricing') || userMsg.toLowerCase().includes('cost')) {
                 responseText = "Our software licensing models start at just $0/mo for side developer projects, and $29/mo for complete Enterprise scopes including custom raw HTML features.";
             } else if (userMsg.toLowerCase().includes('feature') || userMsg.toLowerCase().includes('capabilities')) {
-                responseText = "Nuvis Webidesigner specializes in real-time compilations, 100ms static optimization, robust parameterized data architectures, and dynamic visual layouts.";
+                responseText = "Nuvis WebDesign X specializes in real-time compilations, 100ms static optimization, robust parameterized data architectures, and dynamic visual layouts.";
             }
 
             aiDiv.innerText = responseText;

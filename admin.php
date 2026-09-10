@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webidesigner Commercial Grade Admin Control Panel
+ * Nuvis WebDesign X Commercial Grade Admin Control Panel
  * Implements high fidelity layouts, analytics charts, dynamic database-backed site listings,
  * pre-packaged templates library, user management status control, customer contact form entries,
  * simulated SMTP dispatch logs, and server performance diagnostics.
@@ -761,7 +761,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_GET['action']) || isset($j
                 $error_msg = "Test subject is required.";
             } else {
                 require_once __DIR__ . '/EmailService.php';
-                $html_body = EmailService::getTemplate($test_theme, $test_subject, $test_body, "Simulated outbound test email from Nuvis Webidesigner admin panel.");
+                $html_body = EmailService::getTemplate($test_theme, $test_subject, $test_body, "Simulated outbound test email from Nuvis WebDesign X admin panel.");
                 $sent = EmailService::send($test_recipient, $test_subject, $html_body, $test_body, null);
                 if ($sent) {
                     $success_msg = "Simulated SMTP test email dispatched successfully! View logs below.";
@@ -887,7 +887,7 @@ try {
 
 // Fetch global email settings
 $email_settings = [
-    'recipient_email' => 'admin@nuvis-webidesigner.io',
+    'recipient_email' => 'admin@nuvis-webdesign-x.io',
     'auto_responder_enabled' => 1,
     'auto_responder_subject' => 'Thank you for contacting us!',
     'auto_responder_body' => "Hello!\n\nWe have received your inquiry regarding our services and will get back to you shortly.\n\nBest regards,\nThe Team",
@@ -934,7 +934,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvis Webidesigner - Admin Portal</title>
+    <title>Nuvis WebDesign X - Admin Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -958,7 +958,7 @@ $csrf_token = generate_csrf_token();
             <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/40">
                 <div class="flex items-center gap-2">
                     <img src="assets/images/logo.png" alt="Nuvis Logo" class="w-8 h-8 rounded-lg object-contain">
-                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">Nuvis Webidesigner v1.1</span>
+                    <span class="font-extrabold text-sm tracking-widest text-teal-400 uppercase">Nuvis WebDesign X v2.5</span>
                 </div>
             </div>
 
@@ -1114,7 +1114,7 @@ $csrf_token = generate_csrf_token();
                     <!-- Welcome Block -->
                     <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-xl p-8 shadow-md">
                         <div class="max-w-2xl">
-                            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-teal-500/20">Welcome to Nuvis Webidesigner Open-Source</span>
+                            <span class="bg-teal-500/10 text-teal-400 font-semibold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-teal-500/20">Welcome to Nuvis WebDesign X Proprietary</span>
                             <h2 class="text-2xl font-black text-white mt-4 tracking-tight">Design & Launch Commercial Grade Layouts</h2>
                             <p class="text-slate-300 mt-2 text-xs leading-relaxed">Combine pre-designed sections inside our premium responsive builder. Adjust content, classes, button pathways, or insert raw low-code components dynamically. Everything you create is powered by static optimization, loading under 100ms globally.</p>
                             <button onclick="openCreateModal()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black px-6 py-3 rounded-lg text-xs mt-6 flex items-center gap-2 transition">
@@ -1395,7 +1395,7 @@ $csrf_token = generate_csrf_token();
                                 <h3 class="font-extrabold text-white text-xs uppercase tracking-wider mb-2 text-teal-400 flex items-center gap-1.5">
                                     <i class="fab fa-git-alt"></i> Continuous Repository Updates
                                 </h3>
-                                <p class="text-xs text-slate-300 leading-relaxed">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official Nuvis Webidesigner git origin branch.</p>
+                                <p class="text-xs text-slate-300 leading-relaxed">Pull latest structural upgrades, visual components, security patches, and builder layouts directly from the official Nuvis WebDesign X git origin branch.</p>
                             </div>
 
                             <!-- Git Connection Configurations Form -->
@@ -1568,7 +1568,7 @@ $csrf_token = generate_csrf_token();
                                         </div>
                                         <div class="col-span-2">
                                             <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">From Name</label>
-                                            <input type="text" name="smtp_from_name" placeholder="Nuvis Webidesigner" value="<?php echo sanitize_output($email_settings['smtp_from_name'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                            <input type="text" name="smtp_from_name" placeholder="Nuvis WebDesign X" value="<?php echo sanitize_output($email_settings['smtp_from_name'] ?? ''); ?>" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
                                         </div>
                                     </div>
 
@@ -1600,7 +1600,7 @@ $csrf_token = generate_csrf_token();
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Test Email Subject</label>
-                                    <input type="text" name="test_subject" required value="Nuvis Webidesigner SMTP Dispatch Verification" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500">
+                                    <input type="text" name="test_subject" required value="Nuvis WebDesign X SMTP Dispatch Verification" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500">
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Template theme style</label>
