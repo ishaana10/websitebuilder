@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webidesigner Master Landing Page & Access Gate
+ * Nuvis WebDesign X Master Landing Page & Access Gate
  * Combines highly polished, interactive dark-themed landing presentation,
  * secure unified Login/Signup forms, feature breakdowns, and automated active session routing.
  */
@@ -22,7 +22,7 @@ $csrf_token = generate_csrf_token();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvis Webidesigner - Open Source Commercial Grade Website Builder</title>
+    <title>Nuvis WebDesign X - Commercial Grade Website Builder</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Premium Icons -->
@@ -37,8 +37,8 @@ $csrf_token = generate_csrf_token();
         <div class="flex items-center gap-3">
             <img src="assets/images/logo.png" alt="Nuvis Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg shadow-teal-500/20">
             <div>
-                <span class="font-black text-md tracking-wider text-white">Nuvis Webidesigner</span>
-                <span class="bg-teal-500/10 text-teal-400 font-extrabold px-2 py-0.5 rounded text-[9px] uppercase ml-1 border border-teal-500/15">Open Source</span>
+                <span class="font-black text-md tracking-wider text-white">Nuvis WebDesign X</span>
+                <span class="bg-teal-500/10 text-teal-400 font-extrabold px-2 py-0.5 rounded text-[9px] uppercase ml-1 border border-teal-500/15">Proprietary</span>
             </div>
         </div>
 
@@ -72,7 +72,7 @@ $csrf_token = generate_csrf_token();
 
         <!-- Footer signature -->
         <div class="text-xs text-slate-600">
-            &copy; <?php echo date('Y'); ?> Nuvis Webidesigner Open-Source. MIT Licensed.
+            &copy; <?php echo date('Y'); ?> Nuvis WebDesign X. Proprietary of nuvistechnologies.com.fj. All rights reserved.
         </div>
     </div>
 
@@ -98,7 +98,7 @@ $csrf_token = generate_csrf_token();
             <?php if ($action === 'login'): ?>
             <div>
                 <h2 class="text-2xl font-black text-white tracking-tight">Access Dashboard</h2>
-                <p class="text-slate-400 text-xs mt-1.5">Sign in to your open-source commercial builder portal.</p>
+                <p class="text-slate-400 text-xs mt-1.5">Sign in to your commercial builder portal.</p>
 
                 <form action="auth.php?auth_action=login" method="POST" class="space-y-4 mt-8">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">

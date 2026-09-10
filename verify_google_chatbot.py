@@ -7,7 +7,7 @@ async def run():
         context = await browser.new_context()
         page = await context.new_page()
 
-        print("1. Logging into Nuvis Webidesigner...")
+        print("1. Logging into Nuvis WebDesign X...")
         await page.goto("http://127.0.0.1:8000/index.php")
         await page.fill('input[name="username_or_email"]', "admin")
         await page.fill('input[name="password"]', "admin123")

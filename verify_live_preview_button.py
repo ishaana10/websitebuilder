@@ -15,7 +15,7 @@ def run_verification():
 
         print("Navigating to index.php...")
         page.goto("http://127.0.0.1:8000/index.php")
-        page.wait_for_selector("text=Nuvis Webidesigner")
+        page.wait_for_selector("text=Nuvis WebDesign X")
 
         page.click("text=Register standard builder")
         username = f"preview_user_{random.randint(1000, 9999)}"

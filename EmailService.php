@@ -1,6 +1,6 @@
 <?php
 /**
- * Nuvis Webidesigner Email Service Module
+ * Nuvis WebDesign X Email Service Module
  * Handles robust HTML e-mail rendering using premium inline-styled templates
  * and supports real PHP mail() dispatches with fallback database logging.
  */
@@ -28,7 +28,7 @@ class EmailService {
             $textColor = '#334155';    // Dark text
         }
 
-        $footer = $footer_note ?: "This is an automated notification from Nuvis Webidesigner.";
+        $footer = $footer_note ?: "This is an automated notification from Nuvis WebDesign X.";
 
         return "
 <!DOCTYPE html>
@@ -52,7 +52,7 @@ class EmailService {
     <div class='wrapper'>
         <div class='card'>
             <div class='header'>
-                <div class='logo-text'>Nuvis Webidesigner</div>
+                <div class='logo-text'>Nuvis WebDesign X</div>
                 <div class='title'>" . htmlspecialchars($title) . "</div>
             </div>
             <div class='body-content'>
@@ -95,8 +95,8 @@ class EmailService {
         }
 
         // Determine From Details
-        $from_email = 'noreply@nuvis-webidesigner.io';
-        $from_name = 'Nuvis Webidesigner';
+        $from_email = 'noreply@nuvis-webdesign-x.io';
+        $from_name = 'Nuvis WebDesign X';
 
         if ($active_smtp) {
             if (!empty($active_smtp['smtp_from_email'])) {
@@ -123,11 +123,11 @@ class EmailService {
 
             $handshake_log = "SMTP Connection initiated to: {$smtp_enc}://{$smtp_host}:{$smtp_port}\n" .
                              "220 {$smtp_host} ESMTP Postfix\n" .
-                             ">>> EHLO nuvis-webidesigner.io\n" .
+                             ">>> EHLO nuvis-webdesign-x.io\n" .
                              "250-{$smtp_host}, PIPELINING, SIZE 10240000, 8BITMIME, STARTTLS\n" .
                              ">>> STARTTLS\n" .
                              "220 2.0.0 Ready to start TLS\n" .
-                             ">>> EHLO nuvis-webidesigner.io\n" .
+                             ">>> EHLO nuvis-webdesign-x.io\n" .
                              "250-{$smtp_host}, PIPELINING, SIZE 10240000, 8BITMIME, AUTH LOGIN PLAIN\n" .
                              ">>> AUTH LOGIN\n" .
                              "334 VXNlcm5hbWU6\n" .
