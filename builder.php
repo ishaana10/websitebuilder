@@ -523,9 +523,10 @@ $csrf_token = generate_csrf_token();
                     return;
                 }
 
-                // Try to copy existing navbar & footer from active page or index if they exist
+                // Try to copy existing navbar, social_icons & footer from active page or index if they exist
                 const currentSects = pages[activePage] || pages["index"] || [];
                 const existingNavbar = currentSects.find(s => s.type && s.type.toLowerCase() === 'navbar') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'navbar');
+                const existingSocialIcons = currentSects.find(s => s.type && s.type.toLowerCase() === 'social_icons') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'social_icons');
                 const existingFooter = currentSects.find(s => s.type && s.type.toLowerCase() === 'footer') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'footer');
 
                 const newNavbar = existingNavbar ? JSON.parse(JSON.stringify(existingNavbar)) : {
@@ -544,9 +545,17 @@ $csrf_token = generate_csrf_token();
                 };
                 newFooter.id = 'sec-footer-' + Date.now();
 
+                const initialPageSects = [newNavbar];
+                if (existingSocialIcons) {
+                    const newSocialIcons = JSON.parse(JSON.stringify(existingSocialIcons));
+                    newSocialIcons.id = 'sec-social_icons-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                    initialPageSects.push(newSocialIcons);
+                }
+                initialPageSects.push(newFooter);
+
                 const updatedPages = {
                     ...pages,
-                    [safeName]: [newNavbar, newFooter]
+                    [safeName]: initialPageSects
                 };
 
                 setPages(updatedPages);
@@ -854,17 +863,19 @@ $csrf_token = generate_csrf_token();
             const updateSectionsWithHistory = (newSections) => {
                 let updatedPages = { ...pages, [activePage]: newSections };
 
-                // Automatically synchronize Navigation Bar and Footer properties across all pages
+                // Automatically synchronize Navigation Bar, Footer, and Social Icons Shelf across all pages
                 const updatedNavbar = newSections.find(s => s.type && s.type.toLowerCase() === 'navbar');
                 const updatedFooter = newSections.find(s => s.type && s.type.toLowerCase() === 'footer');
+                const updatedSocialIcons = newSections.find(s => s.type && s.type.toLowerCase() === 'social_icons');
 
-                if (updatedNavbar || updatedFooter) {
-                    Object.keys(updatedPages).forEach(pKey => {
-                        if (pKey === activePage) return; // Skip current active page
+                Object.keys(updatedPages).forEach(pKey => {
+                    if (pKey === activePage) return; // Skip current active page
 
-                        let pageSects = updatedPages[pKey] || [];
-                        let pageUpdated = false;
+                    let pageSects = updatedPages[pKey] || [];
+                    let pageUpdated = false;
 
+                    // Synchronize navbar and footer props/overrides
+                    if (updatedNavbar || updatedFooter) {
                         pageSects = pageSects.map(s => {
                             if (updatedNavbar && s.type && s.type.toLowerCase() === 'navbar') {
                                 pageUpdated = true;
@@ -888,12 +899,49 @@ $csrf_token = generate_csrf_token();
                             }
                             return s;
                         });
+                    }
 
-                        if (pageUpdated) {
-                            updatedPages[pKey] = pageSects;
+                    // Synchronize social_icons (insert above footer if missing, update props if present, or remove if deleted on active page)
+                    const existingSocialInPage = pageSects.find(s => s.type && s.type.toLowerCase() === 'social_icons');
+                    if (updatedSocialIcons) {
+                        if (existingSocialInPage) {
+                            pageSects = pageSects.map(s => {
+                                if (s.type && s.type.toLowerCase() === 'social_icons') {
+                                    pageUpdated = true;
+                                    return {
+                                        ...s,
+                                        props: JSON.parse(JSON.stringify(updatedSocialIcons.props)),
+                                        bg_color_override: updatedSocialIcons.bg_color_override,
+                                        bg_image_override: updatedSocialIcons.bg_image_override,
+                                        element_overrides: updatedSocialIcons.element_overrides ? JSON.parse(JSON.stringify(updatedSocialIcons.element_overrides)) : undefined
+                                    };
+                                }
+                                return s;
+                            });
+                        } else {
+                            // Insert clone of updatedSocialIcons directly before footer (or at the end)
+                            const socialClone = {
+                                ...JSON.parse(JSON.stringify(updatedSocialIcons)),
+                                id: 'sec-social_icons-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)
+                            };
+                            const footerIdx = pageSects.findIndex(s => s.type && s.type.toLowerCase() === 'footer');
+                            if (footerIdx !== -1) {
+                                pageSects.splice(footerIdx, 0, socialClone);
+                            } else {
+                                pageSects.push(socialClone);
+                            }
+                            pageUpdated = true;
                         }
-                    });
-                }
+                    } else if (existingSocialInPage && !updatedSocialIcons) {
+                        // Deleted on active page, delete from other pages as well
+                        pageSects = pageSects.filter(s => !(s.type && s.type.toLowerCase() === 'social_icons'));
+                        pageUpdated = true;
+                    }
+
+                    if (pageUpdated) {
+                        updatedPages[pKey] = pageSects;
+                    }
+                });
 
                 setPages(updatedPages);
                 commitToHistory(updatedPages);
