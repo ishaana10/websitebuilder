@@ -1273,20 +1273,21 @@ $csrf_token = generate_csrf_token();
                         return '';
                 }
             };
-            const resolveTextEffectClass = (props, prefix = '') => {
+            const resolveTextEffectStyle = (props, prefix = '') => {
+                if (!props) return '';
                 const effectKey = prefix ? prefix + 'TextEffect' : 'textEffect';
                 const effect = props[effectKey] || props.textEffect || 'none';
                 switch (effect) {
                     case 'drop_shadow':
-                        return 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]';
+                        return 'filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85));';
                     case 'heavy_shadow':
-                        return 'drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]';
+                        return 'filter: drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95));';
                     case 'glow':
-                        return 'drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]';
+                        return 'filter: drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9));';
                     case 'gradient':
-                        return 'bg-gradient-to-r from-teal-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent';
+                        return 'background-image: linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;';
                     case 'outline':
-                        return '[text-shadow:_0_1px_3px_rgb(0_0_0_/_95%),_0_-1px_3px_rgb(0_0_0_/_95%),_1px_0_3px_rgb(0_0_0_/_95%),_-1px_0_3px_rgb(0_0_0_/_95%)]';
+                        return 'text-shadow: 0px 1px 3px rgba(0,0,0,0.95), 0px -1px 3px rgba(0,0,0,0.95), 1px 0px 3px rgba(0,0,0,0.95), -1px 0px 3px rgba(0,0,0,0.95);';
                     default:
                         return '';
                 }
@@ -1306,11 +1307,19 @@ $csrf_token = generate_csrf_token();
                     });
                 }
 
-                // Global Text Effect Class Injection
-                const textEffectClass = resolveTextEffectClass(sec.props);
-                if (textEffectClass) {
-                    compiledHtml = compiledHtml.replace(/<h([1-6])([^>]*)class="([^"]*)"/gi, (match, level, attrs, classes) => {
-                        return `<h${level}${attrs}class="${classes} ${textEffectClass}"`;
+                // Global Text Effect Style Injection
+                const textEffectStyle = resolveTextEffectStyle(sec.props);
+                if (textEffectStyle) {
+                    compiledHtml = compiledHtml.replace(/<h([1-6])([^>]*)/gi, (fullMatch, level, attrs) => {
+                        if (attrs.includes('style="')) {
+                            return fullMatch.replace(/style="([^"]*)"/i, (styleMatch, styleContent) => {
+                                let trimmed = styleContent.trim();
+                                let joined = trimmed ? (trimmed.endsWith(';') ? trimmed + ' ' + textEffectStyle : trimmed + '; ' + textEffectStyle) : textEffectStyle;
+                                return `style="${joined}"`;
+                            });
+                        } else {
+                            return `${fullMatch} style="${textEffectStyle}"`;
+                        }
                     });
                 }
 
