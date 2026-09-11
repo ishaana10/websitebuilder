@@ -135,14 +135,14 @@ try {
     $recipient = !empty($custom_recipient) ? $custom_recipient : $project_info['owner_email'];
 
     // 4. Construct beautiful notification template for administrator
-    $admin_subject = "Nuvis Webidesigner Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
+    $admin_subject = "Nuvis WebDesign X Alert: New Contact Submission on [" . $project_info['project_name'] . "]";
     $admin_content = "Hello " . $project_info['owner_name'] . ",\n\n" .
-                     "You received a new message from a site visitor on your Nuvis Webidesigner page:\n\n" .
+                     "You received a new message from a site visitor on your Nuvis WebDesign X page:\n\n" .
                      "Name: " . $name . "\n" .
                      "Email: " . $email . "\n" .
                      "Message: " . $message;
 
-    $admin_html_body = EmailService::getTemplate($template_theme, $admin_subject, $admin_content, "Securely processed by Nuvis Webidesigner Notification Module.");
+    $admin_html_body = EmailService::getTemplate($template_theme, $admin_subject, $admin_content, "Securely processed by Nuvis WebDesign X Notification Module.");
 
     // Send and Log Administrator notification alert
     EmailService::send($recipient, $admin_subject, $admin_html_body, $admin_content, $submission_id, $site_smtp);

@@ -1,8 +1,8 @@
-# Contributing to Nuvis Webidesigner Website Builder
+# Contributing to Nuvis WebDesign X Website Builder
 
-Thank you for your interest in contributing to Nuvis Webidesigner! We are building a robust, open-source, secure, visual website builder, and your contributions make this platform better for everyone.
+Thank you for your interest in contributing to Nuvis WebDesign X! Nuvis WebDesign X is proprietary software owned by nuvistechnologies.com.fj.
 
-Below are guidelines and standards to help you get started with contributing.
+Below are guidelines and standards for authorized team members and contributors.
 
 ---
 
@@ -24,7 +24,7 @@ By participating in this project, you agree to keep the community welcoming, con
 - We love new ideas! Explain the feature, why it is beneficial for commercial users, and how you propose implementing it.
 
 ### 3. Pull Requests (PRs)
-- Fork the repository.
+- Fork or clone the repository.
 - Create a feature branch with a descriptive name (e.g. `feat/add-undo-redo` or `fix/session-timeout`).
 - Implement changes following our code standards.
 - Write or update tests in `verify_builder.py` or unit test suites.

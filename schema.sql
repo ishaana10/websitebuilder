@@ -1,5 +1,6 @@
--- Database Schema for Nuvis Webidesigner Open-Source Commercial Builder
+-- Database Schema for Nuvis WebDesign X Commercial Builder
 -- Highly Optimized and Secure Structure for PHP 8.1+ & MariaDB/MySQL
+-- Copyright (c) 2024 Nuvis WebDesign X. Proprietary of nuvistechnologies.com.fj
 
 -- Tenants Table (SaaS Layer)
 CREATE TABLE IF NOT EXISTS `tenants` (
@@ -103,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
 -- Global Email settings
 CREATE TABLE IF NOT EXISTS `email_settings` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `recipient_email` VARCHAR(255) NOT NULL DEFAULT 'admin@nuvis-webidesigner.io',
+    `recipient_email` VARCHAR(255) NOT NULL DEFAULT 'admin@nuvis-webdesign-x.io',
     `auto_responder_enabled` TINYINT(1) NOT NULL DEFAULT 1,
     `auto_responder_subject` VARCHAR(255) NOT NULL DEFAULT 'Thank you for contacting us!',
     `auto_responder_body` TEXT NOT NULL,
