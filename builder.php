@@ -2125,6 +2125,13 @@ $csrf_token = generate_csrf_token();
                         rootNode.style.backgroundColor = sec.bg_color_override;
                         rootNode.style.backgroundImage = 'none';
                     }
+                    if (sec.bg_gradient_enabled) {
+                        const deg = sec.bg_gradient_deg || '135deg';
+                        const c1 = sec.bg_gradient_color1 || '#0f172a';
+                        const c2 = sec.bg_gradient_color2 || '#1e293b';
+                        const c3 = sec.bg_gradient_color3 || '#0f766e';
+                        rootNode.style.backgroundImage = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                    }
                     if (sec.bg_image_override) {
                         const bgSize = sec.bg_size_override || 'cover';
                         const bgPos = sec.bg_position_override || 'center';
@@ -3119,6 +3126,88 @@ $csrf_token = generate_csrf_token();
                                                                         </div>
                                                                     </div>
                                                                 )}
+
+                                                                {/* Custom 3-Color Gradient Background Controls */}
+                                                                <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <label htmlFor="prop-bg_gradient_enabled" className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1 cursor-pointer">
+                                                                            <i className="fas fa-palette"></i> 3-Color Gradient Bg
+                                                                        </label>
+                                                                        <input
+                                                                            id="prop-bg_gradient_enabled"
+                                                                            type="checkbox"
+                                                                            checked={!!selectedSection.bg_gradient_enabled}
+                                                                            onChange={(e) => {
+                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_enabled: e.target.checked } : s);
+                                                                                updateSectionsWithHistory(updated);
+                                                                            }}
+                                                                            className="rounded bg-slate-950 border-slate-700 text-teal-500 focus:ring-teal-500 h-3.5 w-3.5"
+                                                                        />
+                                                                    </div>
+
+                                                                    {selectedSection.bg_gradient_enabled && (
+                                                                        <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2.5">
+                                                                            <div className="space-y-1">
+                                                                                <label className="text-[10px] text-slate-400 block">Gradient Direction / Angle</label>
+                                                                                <select
+                                                                                    value={selectedSection.bg_gradient_deg || '180deg'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_deg: e.target.value } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                                                                >
+                                                                                    <option value="180deg">Vertical (180° Top to Bottom)</option>
+                                                                                    <option value="0deg">Vertical Reverse (0° Bottom to Top)</option>
+                                                                                    <option value="90deg">Horizontal (90° Left to Right)</option>
+                                                                                    <option value="270deg">Horizontal Reverse (270° Right to Left)</option>
+                                                                                    <option value="135deg">Diagonal (135° Top-Left to Bottom-Right)</option>
+                                                                                    <option value="45deg">Up Diagonal (45° Bottom-Left to Top-Right)</option>
+                                                                                    <option value="225deg">Reverse Diagonal (225°)</option>
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div className="grid grid-cols-3 gap-2">
+                                                                                <div className="space-y-1 text-center">
+                                                                                    <label className="text-[9px] text-slate-400 block">Color 1 (Start)</label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={selectedSection.bg_gradient_color1 || '#0f172a'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_color1: e.target.value } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-1 text-center">
+                                                                                    <label className="text-[9px] text-slate-400 block">Color 2 (Mid)</label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={selectedSection.bg_gradient_color2 || '#1e293b'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_color2: e.target.value } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-1 text-center">
+                                                                                    <label className="text-[9px] text-slate-400 block">Color 3 (End)</label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={selectedSection.bg_gradient_color3 || '#0f766e'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_color3: e.target.value } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
