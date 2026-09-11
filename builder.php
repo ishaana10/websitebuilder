@@ -3150,16 +3150,18 @@ $csrf_token = generate_csrf_token();
                                                                             <div className="space-y-1">
                                                                                 <label className="text-[10px] text-slate-400 block">Gradient Direction / Angle</label>
                                                                                 <select
-                                                                                    value={selectedSection.bg_gradient_deg || '135deg'}
+                                                                                    value={selectedSection.bg_gradient_deg || '180deg'}
                                                                                     onChange={(e) => {
                                                                                         const updated = sections.map(s => s.id === selectedSection.id ? { ...s, bg_gradient_deg: e.target.value } : s);
                                                                                         updateSectionsWithHistory(updated);
                                                                                     }}
                                                                                     className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
                                                                                 >
-                                                                                    <option value="135deg">Diagonal (135° Top-Left to Bottom-Right)</option>
-                                                                                    <option value="90deg">Horizontal (90° Left to Right)</option>
                                                                                     <option value="180deg">Vertical (180° Top to Bottom)</option>
+                                                                                    <option value="0deg">Vertical Reverse (0° Bottom to Top)</option>
+                                                                                    <option value="90deg">Horizontal (90° Left to Right)</option>
+                                                                                    <option value="270deg">Horizontal Reverse (270° Right to Left)</option>
+                                                                                    <option value="135deg">Diagonal (135° Top-Left to Bottom-Right)</option>
                                                                                     <option value="45deg">Up Diagonal (45° Bottom-Left to Top-Right)</option>
                                                                                     <option value="225deg">Reverse Diagonal (225°)</option>
                                                                                 </select>
