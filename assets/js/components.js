@@ -176,6 +176,14 @@ const UI_COMPONENTS = [
         schema: [
             { key: 'badgeText', label: 'Badge Text', type: 'text', default: 'NEW REVOLUTION' },
             { key: 'heading', label: 'Hero Heading', type: 'text', default: 'Build Stunning Websites In Minutes' },
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'text', label: 'Subheading Text', type: 'textarea', default: 'The ultimate low-code drag and drop page builder designed to transform complex ideas.' },
             { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
             { key: 'btnBg', label: 'Primary CTA Background', type: 'color', default: '#14b8a6' },
@@ -1196,6 +1204,14 @@ const UI_COMPONENTS = [
             { key: 'btnText', label: 'Button Text', type: 'text', default: 'Get Started Now' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#14b8a6' },
             { key: 'textColor', label: 'Heading Text Color', type: 'color', default: '#0f172a' },
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
             { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
             { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [
@@ -1810,56 +1826,6 @@ const UI_COMPONENTS = [
         <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-10 tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
         <div class="grid grid-cols-1 md:grid-cols-{{columns}} gap-6">
             {{gridCardsHtml}}
-        </div>
-    </div>
-</section>`
-    },
-    {
-        id: 'google_reviews',
-        name: 'Google Reviews Showcase Shelf',
-        category: 'Features',
-        icon: 'fab fa-google',
-        schema: [
-            { key: 'businessName', label: 'Google Business Name', type: 'text', default: 'All Pest & Hygiene Solutions' },
-            { key: 'ratingScore', label: 'Rating Score (e.g. 4.9)', type: 'text', default: '4.9' },
-            { key: 'totalReviews', label: 'Total Verified Reviews Count', type: 'text', default: '128' },
-            { key: 'writeReviewUrl', label: 'Google Write Review / Place URL', type: 'text', default: 'https://google.com' },
-            { key: 'writeReviewBtnText', label: 'Write Review Button Text', type: 'text', default: 'Write a Review' },
-            { key: 'showWriteReviewBtn', label: 'Show Write Review Button', type: 'checkbox', default: true },
-            { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#0f172a' },
-            { key: 'cardBg', label: 'Review Card Background', type: 'color', default: '#1e293b' },
-            { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
-            { key: 'textColor', label: 'Review Text Color', type: 'color', default: '#cbd5e1' },
-            { key: 'starColor', label: 'Star Rating Color', type: 'color', default: '#fbbf24' }
-        ],
-        html: `<section class="py-16 px-6 md:px-12 w-full min-w-0 break-words" style="background-color: {{bgColor}};" data-component="google_reviews">
-    <div class="max-w-6xl mx-auto space-y-10">
-        <!-- Google Reviews Header Badge -->
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl border border-slate-800/80 shadow-xl" style="background-color: {{cardBg}};">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-2xl shadow shrink-0">
-                    <i class="fab fa-google text-blue-500"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-extrabold tracking-tight" style="color: {{headingColor}};">{{businessName}}</h3>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="text-lg font-black" style="color: {{headingColor}};">{{ratingScore}}</span>
-                        <div class="flex items-center text-sm" style="color: {{starColor}};">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                        <span class="text-xs font-semibold opacity-80" style="color: {{textColor}};">({{totalReviews}} verified reviews)</span>
-                    </div>
-                </div>
-            </div>
-            <a href="{{writeReviewUrl}}" target="_blank" rel="noopener" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-bold transition shadow-lg flex items-center gap-2 shrink-0">
-                <i class="fab fa-google"></i>
-                <span>{{writeReviewBtnText}}</span>
-            </a>
-        </div>
-
-        <!-- Customer Reviews Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {{reviewsCardsHtml}}
         </div>
     </div>
 </section>`
