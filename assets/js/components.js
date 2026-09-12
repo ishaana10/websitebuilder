@@ -59,7 +59,7 @@ const UI_COMPONENTS = [
             ] },
             { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
             { key: 'cornerRadius', label: 'Header Corner Shape', type: 'select', default: 'rounded-lg', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }, { value: 'rounded-full', label: 'Full Pill / Capsule' }] },
-            { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: false }
+            { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: true }
         ],
         html: `
 <nav class="py-4 px-6 shadow-md {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="navbar">
@@ -109,7 +109,7 @@ const UI_COMPONENTS = [
             { key: 'accentColor', label: 'Icon Highlight Color', type: 'color', default: '#38bdf8' },
             { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
             { key: 'cornerRadius', label: 'Shelf Corner Shape', type: 'select', default: 'rounded-none', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }] },
-            { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: false }
+            { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: true }
         ],
         html: `
 <div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="top_bar_shelf">

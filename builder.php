@@ -884,6 +884,11 @@ $csrf_token = generate_csrf_token();
                                     props: JSON.parse(JSON.stringify(updatedNavbar.props)),
                                     bg_color_override: updatedNavbar.bg_color_override,
                                     bg_image_override: updatedNavbar.bg_image_override,
+                                    bg_gradient_enabled: updatedNavbar.bg_gradient_enabled,
+                                    bg_gradient_deg: updatedNavbar.bg_gradient_deg,
+                                    bg_gradient_color1: updatedNavbar.bg_gradient_color1,
+                                    bg_gradient_color2: updatedNavbar.bg_gradient_color2,
+                                    bg_gradient_color3: updatedNavbar.bg_gradient_color3,
                                     element_overrides: updatedNavbar.element_overrides ? JSON.parse(JSON.stringify(updatedNavbar.element_overrides)) : undefined
                                 };
                             }
@@ -894,6 +899,11 @@ $csrf_token = generate_csrf_token();
                                     props: JSON.parse(JSON.stringify(updatedFooter.props)),
                                     bg_color_override: updatedFooter.bg_color_override,
                                     bg_image_override: updatedFooter.bg_image_override,
+                                    bg_gradient_enabled: updatedFooter.bg_gradient_enabled,
+                                    bg_gradient_deg: updatedFooter.bg_gradient_deg,
+                                    bg_gradient_color1: updatedFooter.bg_gradient_color1,
+                                    bg_gradient_color2: updatedFooter.bg_gradient_color2,
+                                    bg_gradient_color3: updatedFooter.bg_gradient_color3,
                                     element_overrides: updatedFooter.element_overrides ? JSON.parse(JSON.stringify(updatedFooter.element_overrides)) : undefined
                                 };
                             }
@@ -913,6 +923,11 @@ $csrf_token = generate_csrf_token();
                                         props: JSON.parse(JSON.stringify(updatedSocialIcons.props)),
                                         bg_color_override: updatedSocialIcons.bg_color_override,
                                         bg_image_override: updatedSocialIcons.bg_image_override,
+                                        bg_gradient_enabled: updatedSocialIcons.bg_gradient_enabled,
+                                        bg_gradient_deg: updatedSocialIcons.bg_gradient_deg,
+                                        bg_gradient_color1: updatedSocialIcons.bg_gradient_color1,
+                                        bg_gradient_color2: updatedSocialIcons.bg_gradient_color2,
+                                        bg_gradient_color3: updatedSocialIcons.bg_gradient_color3,
                                         element_overrides: updatedSocialIcons.element_overrides ? JSON.parse(JSON.stringify(updatedSocialIcons.element_overrides)) : undefined
                                     };
                                 }
@@ -1478,7 +1493,7 @@ $csrf_token = generate_csrf_token();
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
 
-                        const isSticky = sec.props.isSticky === true;
+                        const isSticky = sec.props.isSticky !== false;
                         compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50' : 'relative z-40');
                     }
                 }
@@ -1553,7 +1568,7 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*socialArea\s*}}/g, socialHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*ctaArea\s*}}/g, ctaHtml);
 
-                    const isSticky = sec.props.isSticky === true;
+                    const isSticky = sec.props.isSticky !== false;
                     compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50 shadow-md'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40');
                 }
 
