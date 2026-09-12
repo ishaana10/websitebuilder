@@ -1613,6 +1613,9 @@ $csrf_token = generate_csrf_token();
                     const columns = sec.props.columns || '3';
                     const cardEffect = sec.props.cardEffect || 'hover-lift';
 
+                    const isCardGrad = sec.props.cardBgGradientEnabled;
+                    const cardGradStyle = isCardGrad ? `background-image: linear-gradient(${sec.props.cardBgGradientDeg || '180deg'}, ${sec.props.cardBgGradientColor1 || '#0f172a'}, ${sec.props.cardBgGradientColor2 || '#1e293b'}, ${sec.props.cardBgGradientColor3 || '#0f766e'});` : `background-color: ${cardBgColor};`;
+
                     let effectClasses = ' hover:border-slate-700 transition duration-300 shadow-xl';
                     if (cardEffect === 'hover-lift') {
                         effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
@@ -1642,7 +1645,7 @@ $csrf_token = generate_csrf_token();
                         const cardBtnHtml = btnText ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
 
-                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4${effectClasses}" style="${cardGradStyle} color: ${textColor};">
                             ${mediaHtml}
                             <div class="space-y-2">
                                 <h4 class="text-base font-bold" style="color: ${headingColor};">${titleText}</h4>
@@ -1941,6 +1944,9 @@ $csrf_token = generate_csrf_token();
                     const textColor = sec.props.textColor || '#94a3b8';
                     const cardEffect = sec.props.cardEffect || 'none';
 
+                    const isCardGrad = sec.props.cardBgGradientEnabled;
+                    const cardGradStyle = isCardGrad ? `background-image: linear-gradient(${sec.props.cardBgGradientDeg || '180deg'}, ${sec.props.cardBgGradientColor1 || '#0f172a'}, ${sec.props.cardBgGradientColor2 || '#1e293b'}, ${sec.props.cardBgGradientColor3 || '#0f766e'});` : `background-color: ${cardBgColor};`;
+
                     let effectClasses = '';
                     if (cardEffect === 'hover-lift') {
                         effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
@@ -1955,7 +1961,7 @@ $csrf_token = generate_csrf_token();
                     }
 
                     const cardsHtml = cards.map(card => `
-                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="${cardGradStyle} color: ${textColor};">
                             ${card.content}
                         </div>
                     `).join('\n');

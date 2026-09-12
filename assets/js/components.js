@@ -260,6 +260,18 @@ const UI_COMPONENTS = [
         category: 'Hero',
         icon: 'fas fa-th',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
             { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
@@ -1481,6 +1493,18 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-box-open',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
             { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
@@ -1881,6 +1905,18 @@ const UI_COMPONENTS = [
         category: 'Hero',
         icon: 'fas fa-th-large',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
             { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
                 { value: 'none', label: 'Standard (None)' },
                 { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
