@@ -59,7 +59,7 @@ const UI_COMPONENTS = [
             ] },
             { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
             { key: 'cornerRadius', label: 'Header Corner Shape', type: 'select', default: 'rounded-lg', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }, { value: 'rounded-full', label: 'Full Pill / Capsule' }] },
-            { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: false }
+            { key: 'isSticky', label: 'Make Header Sticky when scrolling', type: 'checkbox', default: true }
         ],
         html: `
 <nav class="py-4 px-6 shadow-md {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="navbar">
@@ -109,7 +109,7 @@ const UI_COMPONENTS = [
             { key: 'accentColor', label: 'Icon Highlight Color', type: 'color', default: '#38bdf8' },
             { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] },
             { key: 'cornerRadius', label: 'Shelf Corner Shape', type: 'select', default: 'rounded-none', options: [{ value: 'rounded-none', label: 'Square / Sharp Corners (0px)' }, { value: 'rounded-md', label: 'Slightly Rounded (6px)' }, { value: 'rounded-lg', label: 'Medium Rounded (8px)' }, { value: 'rounded-xl', label: 'Rounded (12px)' }, { value: 'rounded-2xl', label: 'Extra Rounded (16px)' }] },
-            { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: false }
+            { key: 'isSticky', label: 'Make Top Bar Sticky when scrolling', type: 'checkbox', default: true }
         ],
         html: `
 <div class="py-2.5 px-6 border-b border-white/10 text-xs text-white transition-all duration-300 {{cornerRadius}} {{isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40'}}" style="background-color: {{bgColor}}; color: {{textColor}}; {{topMarginStyle}}" data-component="top_bar_shelf">
@@ -260,6 +260,26 @@ const UI_COMPONENTS = [
         category: 'Hero',
         icon: 'fas fa-th',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'colCount', label: 'Desktop Column Count', type: 'select', default: 'grid-cols-3', options: [
                 { value: 'grid-cols-1', label: '1 Column Span (Desktop)' },
                 { value: 'grid-cols-2', label: '2 Columns split (Desktop)' },
@@ -324,6 +344,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-align-left',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Elegance meets pure performance.' },
             { key: 'text', label: 'Rich Content Description', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
@@ -344,6 +372,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-columns',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Elegance meets pure performance.' },
             { key: 'text', label: 'Feature Description', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match.' },
             { key: 'imageUrl', label: 'Image URL', type: 'text', default: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60' },
@@ -377,6 +413,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-star',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Main Testimonial Heading', type: 'text', default: 'What our clients say' },
             { key: 'authorName', label: 'Author Name', type: 'text', default: 'Sarah Jenkins' },
             { key: 'authorRole', label: 'Author Role', type: 'text', default: 'CTO at CloudCorp' },
@@ -412,6 +456,14 @@ const UI_COMPONENTS = [
         category: 'Pricing',
         icon: 'fas fa-tags',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'tier1Name', label: 'Tier 1 Name', type: 'text', default: 'Starter' },
             { key: 'tier1Price', label: 'Tier 1 Price', type: 'text', default: '$19' },
             { key: 'tier1BtnText', label: 'Tier 1 Button Text', type: 'text', default: 'Get Started' },
@@ -582,6 +634,14 @@ const UI_COMPONENTS = [
         category: 'Forms',
         icon: 'fas fa-envelope',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Form Title', type: 'text', default: 'Get In Touch' },
             { key: 'text', label: 'Sub-text prompt', type: 'textarea', default: 'Have questions? Drop us a line.' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
@@ -1255,6 +1315,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-users',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Meet our visionary leaders' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
             { key: 'cardBg', label: 'Card Background', type: 'color', default: '#1e293b' },
@@ -1294,6 +1362,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-chart-bar',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Our Performance In Numbers' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
             { key: 'textColor', label: 'Text Color', type: 'color', default: '#cbd5e1' },
@@ -1417,6 +1493,26 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-box-open',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'columns', label: 'Grid Columns', type: 'select', default: '3', options: [
                 { value: '1', label: '1 Column' },
                 { value: '2', label: '2 Columns' },
@@ -1524,6 +1620,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-shield-halved',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'overlineText', label: 'Top Category Overline', type: 'text', default: 'ABOUT ALL PEST' },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Local service. Professional standards. Fiji-wide coverage.' },
             { key: 'paragraph1', label: 'First Paragraph', type: 'textarea', default: 'ALL PEST & HYGIENE SOLUTIONS PTE LTD is a Fiji-based pest management and commercial cleaning company established on 12 August 2022. We provide practical, dependable and site-focused solutions for residential, commercial, industrial and marine environments.' },
@@ -1594,6 +1698,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-briefcase',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'overlineText', label: 'Top Overline Category', type: 'text', default: 'COMMERCIAL & INDUSTRIAL' },
             { key: 'heading', label: 'Main Section Title', type: 'text', default: 'Pest management for demanding work environments' },
             { key: 'descriptionText', label: 'Primary Description', type: 'text', default: 'All Pest supports businesses that need reliable pest management across complex operating environments, including sites where access, safety, hygiene and service coordination are important.' },
@@ -1668,6 +1780,14 @@ const UI_COMPONENTS = [
         category: 'Features',
         icon: 'fas fa-border-all',
         schema: [
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
             { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#ffffff' },
             { key: 'textColor', label: 'Caption Text Color', type: 'color', default: '#475569' },
@@ -1785,6 +1905,26 @@ const UI_COMPONENTS = [
         category: 'Hero',
         icon: 'fas fa-th-large',
         schema: [
+            { key: 'cardBgGradientEnabled', label: 'Enable 3-Color Card Gradient', type: 'checkbox', default: false },
+            { key: 'cardBgGradientDeg', label: 'Card Gradient Angle', type: 'select', default: '180deg', options: [
+                { value: '180deg', label: 'Vertical (180° Top to Bottom)' },
+                { value: '0deg', label: 'Vertical Reverse (0° Bottom to Top)' },
+                { value: '90deg', label: 'Horizontal (90° Left to Right)' },
+                { value: '270deg', label: 'Horizontal Reverse (270° Right to Left)' },
+                { value: '135deg', label: 'Diagonal (135° Top-Left to Bottom-Right)' },
+                { value: '45deg', label: 'Up Diagonal (45° Bottom-Left to Top-Right)' }
+            ] },
+            { key: 'cardBgGradientColor1', label: 'Card Gradient Color 1', type: 'color', default: '#0f172a' },
+            { key: 'cardBgGradientColor2', label: 'Card Gradient Color 2', type: 'color', default: '#1e293b' },
+            { key: 'cardBgGradientColor3', label: 'Card Gradient Color 3', type: 'color', default: '#0f766e' },
+            { key: 'textEffect', label: 'Heading Text Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'drop_shadow', label: 'Soft Backdrop Drop Shadow' },
+                { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
+                { value: 'glow', label: 'Neon Glow Effect' },
+                { value: 'gradient', label: 'Vibrant Gradient Text' },
+                { value: 'outline', label: 'High Contrast Dark Outline' }
+            ] },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Interactive Photo Cards Grid' },
             { key: 'columns', label: 'Desktop Columns', type: 'select', default: '3', options: [
                 { value: '1', label: '1 Column' },

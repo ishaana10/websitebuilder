@@ -523,8 +523,9 @@ $csrf_token = generate_csrf_token();
                     return;
                 }
 
-                // Try to copy existing navbar, social_icons & footer from active page or index if they exist
+                // Try to copy existing top_bar_shelf, navbar, social_icons & footer from active page or index if they exist
                 const currentSects = pages[activePage] || pages["index"] || [];
+                const existingTopBar = currentSects.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
                 const existingNavbar = currentSects.find(s => s.type && s.type.toLowerCase() === 'navbar') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'navbar');
                 const existingSocialIcons = currentSects.find(s => s.type && s.type.toLowerCase() === 'social_icons') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'social_icons');
                 const existingFooter = currentSects.find(s => s.type && s.type.toLowerCase() === 'footer') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'footer');
@@ -545,7 +546,13 @@ $csrf_token = generate_csrf_token();
                 };
                 newFooter.id = 'sec-footer-' + Date.now();
 
-                const initialPageSects = [newNavbar];
+                const initialPageSects = [];
+                if (existingTopBar) {
+                    const newTopBar = JSON.parse(JSON.stringify(existingTopBar));
+                    newTopBar.id = 'sec-top_bar_shelf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                    initialPageSects.push(newTopBar);
+                }
+                initialPageSects.push(newNavbar);
                 if (existingSocialIcons) {
                     const newSocialIcons = JSON.parse(JSON.stringify(existingSocialIcons));
                     newSocialIcons.id = 'sec-social_icons-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
@@ -863,7 +870,8 @@ $csrf_token = generate_csrf_token();
             const updateSectionsWithHistory = (newSections) => {
                 let updatedPages = { ...pages, [activePage]: newSections };
 
-                // Automatically synchronize Navigation Bar, Footer, and Social Icons Shelf across all pages
+                // Automatically synchronize Top Bar Shelf, Navigation Bar, Footer, and Social Icons Shelf across all pages
+                const updatedTopBar = newSections.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
                 const updatedNavbar = newSections.find(s => s.type && s.type.toLowerCase() === 'navbar');
                 const updatedFooter = newSections.find(s => s.type && s.type.toLowerCase() === 'footer');
                 const updatedSocialIcons = newSections.find(s => s.type && s.type.toLowerCase() === 'social_icons');
@@ -884,6 +892,11 @@ $csrf_token = generate_csrf_token();
                                     props: JSON.parse(JSON.stringify(updatedNavbar.props)),
                                     bg_color_override: updatedNavbar.bg_color_override,
                                     bg_image_override: updatedNavbar.bg_image_override,
+                                    bg_gradient_enabled: updatedNavbar.bg_gradient_enabled,
+                                    bg_gradient_deg: updatedNavbar.bg_gradient_deg,
+                                    bg_gradient_color1: updatedNavbar.bg_gradient_color1,
+                                    bg_gradient_color2: updatedNavbar.bg_gradient_color2,
+                                    bg_gradient_color3: updatedNavbar.bg_gradient_color3,
                                     element_overrides: updatedNavbar.element_overrides ? JSON.parse(JSON.stringify(updatedNavbar.element_overrides)) : undefined
                                 };
                             }
@@ -894,6 +907,11 @@ $csrf_token = generate_csrf_token();
                                     props: JSON.parse(JSON.stringify(updatedFooter.props)),
                                     bg_color_override: updatedFooter.bg_color_override,
                                     bg_image_override: updatedFooter.bg_image_override,
+                                    bg_gradient_enabled: updatedFooter.bg_gradient_enabled,
+                                    bg_gradient_deg: updatedFooter.bg_gradient_deg,
+                                    bg_gradient_color1: updatedFooter.bg_gradient_color1,
+                                    bg_gradient_color2: updatedFooter.bg_gradient_color2,
+                                    bg_gradient_color3: updatedFooter.bg_gradient_color3,
                                     element_overrides: updatedFooter.element_overrides ? JSON.parse(JSON.stringify(updatedFooter.element_overrides)) : undefined
                                 };
                             }
@@ -913,6 +931,11 @@ $csrf_token = generate_csrf_token();
                                         props: JSON.parse(JSON.stringify(updatedSocialIcons.props)),
                                         bg_color_override: updatedSocialIcons.bg_color_override,
                                         bg_image_override: updatedSocialIcons.bg_image_override,
+                                        bg_gradient_enabled: updatedSocialIcons.bg_gradient_enabled,
+                                        bg_gradient_deg: updatedSocialIcons.bg_gradient_deg,
+                                        bg_gradient_color1: updatedSocialIcons.bg_gradient_color1,
+                                        bg_gradient_color2: updatedSocialIcons.bg_gradient_color2,
+                                        bg_gradient_color3: updatedSocialIcons.bg_gradient_color3,
                                         element_overrides: updatedSocialIcons.element_overrides ? JSON.parse(JSON.stringify(updatedSocialIcons.element_overrides)) : undefined
                                     };
                                 }
@@ -935,6 +958,43 @@ $csrf_token = generate_csrf_token();
                     } else if (existingSocialInPage && !updatedSocialIcons) {
                         // Deleted on active page, delete from other pages as well
                         pageSects = pageSects.filter(s => !(s.type && s.type.toLowerCase() === 'social_icons'));
+                        pageUpdated = true;
+                    }
+
+                    // Synchronize top_bar_shelf (insert at index 0 if missing, update props if present, or remove if deleted on active page)
+                    const existingTopBarInPage = pageSects.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
+                    if (updatedTopBar) {
+                        if (existingTopBarInPage) {
+                            pageSects = pageSects.map(s => {
+                                if (s.type && s.type.toLowerCase() === 'top_bar_shelf') {
+                                    pageUpdated = true;
+                                    return {
+                                        ...s,
+                                        props: JSON.parse(JSON.stringify(updatedTopBar.props)),
+                                        bg_color_override: updatedTopBar.bg_color_override,
+                                        bg_image_override: updatedTopBar.bg_image_override,
+                                        bg_gradient_enabled: updatedTopBar.bg_gradient_enabled,
+                                        bg_gradient_deg: updatedTopBar.bg_gradient_deg,
+                                        bg_gradient_color1: updatedTopBar.bg_gradient_color1,
+                                        bg_gradient_color2: updatedTopBar.bg_gradient_color2,
+                                        bg_gradient_color3: updatedTopBar.bg_gradient_color3,
+                                        element_overrides: updatedTopBar.element_overrides ? JSON.parse(JSON.stringify(updatedTopBar.element_overrides)) : undefined
+                                    };
+                                }
+                                return s;
+                            });
+                        } else {
+                            // Insert clone of updatedTopBar at index 0 (top of the page)
+                            const topBarClone = {
+                                ...JSON.parse(JSON.stringify(updatedTopBar)),
+                                id: 'sec-top_bar_shelf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)
+                            };
+                            pageSects.unshift(topBarClone);
+                            pageUpdated = true;
+                        }
+                    } else if (existingTopBarInPage && !updatedTopBar) {
+                        // Deleted on active page, delete from other pages as well
+                        pageSects = pageSects.filter(s => !(s.type && s.type.toLowerCase() === 'top_bar_shelf'));
                         pageUpdated = true;
                     }
 
@@ -1273,20 +1333,21 @@ $csrf_token = generate_csrf_token();
                         return '';
                 }
             };
-            const resolveTextEffectClass = (props, prefix = '') => {
+            const resolveTextEffectStyle = (props, prefix = '') => {
+                if (!props) return '';
                 const effectKey = prefix ? prefix + 'TextEffect' : 'textEffect';
                 const effect = props[effectKey] || props.textEffect || 'none';
                 switch (effect) {
                     case 'drop_shadow':
-                        return 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]';
+                        return 'filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85));';
                     case 'heavy_shadow':
-                        return 'drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)]';
+                        return 'filter: drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95));';
                     case 'glow':
-                        return 'drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]';
+                        return 'filter: drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9));';
                     case 'gradient':
-                        return 'bg-gradient-to-r from-teal-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent';
+                        return 'background-image: linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;';
                     case 'outline':
-                        return '[text-shadow:_0_1px_3px_rgb(0_0_0_/_95%),_0_-1px_3px_rgb(0_0_0_/_95%),_1px_0_3px_rgb(0_0_0_/_95%),_-1px_0_3px_rgb(0_0_0_/_95%)]';
+                        return 'text-shadow: 0px 1px 3px rgba(0,0,0,0.95), 0px -1px 3px rgba(0,0,0,0.95), 1px 0px 3px rgba(0,0,0,0.95), -1px 0px 3px rgba(0,0,0,0.95);';
                     default:
                         return '';
                 }
@@ -1306,11 +1367,19 @@ $csrf_token = generate_csrf_token();
                     });
                 }
 
-                // Global Text Effect Class Injection
-                const textEffectClass = resolveTextEffectClass(sec.props);
-                if (textEffectClass) {
-                    compiledHtml = compiledHtml.replace(/<h([1-6])([^>]*)class="([^"]*)"/gi, (match, level, attrs, classes) => {
-                        return `<h${level}${attrs}class="${classes} ${textEffectClass}"`;
+                // Global Text Effect Style Injection
+                const textEffectStyle = resolveTextEffectStyle(sec.props);
+                if (textEffectStyle) {
+                    compiledHtml = compiledHtml.replace(/<h([1-6])([^>]*)/gi, (fullMatch, level, attrs) => {
+                        if (attrs.includes('style="')) {
+                            return fullMatch.replace(/style="([^"]*)"/i, (styleMatch, styleContent) => {
+                                let trimmed = styleContent.trim();
+                                let joined = trimmed ? (trimmed.endsWith(';') ? trimmed + ' ' + textEffectStyle : trimmed + '; ' + textEffectStyle) : textEffectStyle;
+                                return `style="${joined}"`;
+                            });
+                        } else {
+                            return `${fullMatch} style="${textEffectStyle}"`;
+                        }
                     });
                 }
 
@@ -1469,7 +1538,7 @@ $csrf_token = generate_csrf_token();
                         }
                         compiledHtml = compiledHtml.replace(/{{\s*ctaButton\s*}}/g, ctaButtonHtml);
 
-                        const isSticky = sec.props.isSticky === true;
+                        const isSticky = sec.props.isSticky !== false;
                         compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50' : 'relative z-40');
                     }
                 }
@@ -1544,7 +1613,7 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*socialArea\s*}}/g, socialHtml);
                     compiledHtml = compiledHtml.replace(/{{\s*ctaArea\s*}}/g, ctaHtml);
 
-                    const isSticky = sec.props.isSticky === true;
+                    const isSticky = sec.props.isSticky !== false;
                     compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50 shadow-md'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40');
                 }
 
@@ -1604,6 +1673,9 @@ $csrf_token = generate_csrf_token();
                     const columns = sec.props.columns || '3';
                     const cardEffect = sec.props.cardEffect || 'hover-lift';
 
+                    const isCardGrad = sec.props.cardBgGradientEnabled;
+                    const cardGradStyle = isCardGrad ? `background-image: linear-gradient(${sec.props.cardBgGradientDeg || '180deg'}, ${sec.props.cardBgGradientColor1 || '#0f172a'}, ${sec.props.cardBgGradientColor2 || '#1e293b'}, ${sec.props.cardBgGradientColor3 || '#0f766e'});` : `background-color: ${cardBgColor};`;
+
                     let effectClasses = ' hover:border-slate-700 transition duration-300 shadow-xl';
                     if (cardEffect === 'hover-lift') {
                         effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
@@ -1633,7 +1705,7 @@ $csrf_token = generate_csrf_token();
                         const cardBtnHtml = btnText ?
                             `<a href="${btnUrl}" class="inline-block font-bold px-4 py-2 rounded-full text-xs transition duration-300 hover:opacity-90 mt-2 shadow-sm" style="background-color: ${accentColor}; color: #0f172a;">${btnText}</a>` : '';
 
-                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        return `<div class="p-6 rounded-xl border border-slate-800/80 text-center flex flex-col items-center gap-4${effectClasses}" style="${cardGradStyle} color: ${textColor};">
                             ${mediaHtml}
                             <div class="space-y-2">
                                 <h4 class="text-base font-bold" style="color: ${headingColor};">${titleText}</h4>
@@ -1932,6 +2004,9 @@ $csrf_token = generate_csrf_token();
                     const textColor = sec.props.textColor || '#94a3b8';
                     const cardEffect = sec.props.cardEffect || 'none';
 
+                    const isCardGrad = sec.props.cardBgGradientEnabled;
+                    const cardGradStyle = isCardGrad ? `background-image: linear-gradient(${sec.props.cardBgGradientDeg || '180deg'}, ${sec.props.cardBgGradientColor1 || '#0f172a'}, ${sec.props.cardBgGradientColor2 || '#1e293b'}, ${sec.props.cardBgGradientColor3 || '#0f766e'});` : `background-color: ${cardBgColor};`;
+
                     let effectClasses = '';
                     if (cardEffect === 'hover-lift') {
                         effectClasses = ' transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer';
@@ -1946,7 +2021,7 @@ $csrf_token = generate_csrf_token();
                     }
 
                     const cardsHtml = cards.map(card => `
-                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="background-color: ${cardBgColor}; color: ${textColor};">
+                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="${cardGradStyle} color: ${textColor};">
                             ${card.content}
                         </div>
                     `).join('\n');
