@@ -523,8 +523,9 @@ $csrf_token = generate_csrf_token();
                     return;
                 }
 
-                // Try to copy existing navbar, social_icons & footer from active page or index if they exist
+                // Try to copy existing top_bar_shelf, navbar, social_icons & footer from active page or index if they exist
                 const currentSects = pages[activePage] || pages["index"] || [];
+                const existingTopBar = currentSects.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
                 const existingNavbar = currentSects.find(s => s.type && s.type.toLowerCase() === 'navbar') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'navbar');
                 const existingSocialIcons = currentSects.find(s => s.type && s.type.toLowerCase() === 'social_icons') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'social_icons');
                 const existingFooter = currentSects.find(s => s.type && s.type.toLowerCase() === 'footer') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'footer');
@@ -545,7 +546,13 @@ $csrf_token = generate_csrf_token();
                 };
                 newFooter.id = 'sec-footer-' + Date.now();
 
-                const initialPageSects = [newNavbar];
+                const initialPageSects = [];
+                if (existingTopBar) {
+                    const newTopBar = JSON.parse(JSON.stringify(existingTopBar));
+                    newTopBar.id = 'sec-top_bar_shelf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                    initialPageSects.push(newTopBar);
+                }
+                initialPageSects.push(newNavbar);
                 if (existingSocialIcons) {
                     const newSocialIcons = JSON.parse(JSON.stringify(existingSocialIcons));
                     newSocialIcons.id = 'sec-social_icons-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
@@ -863,7 +870,8 @@ $csrf_token = generate_csrf_token();
             const updateSectionsWithHistory = (newSections) => {
                 let updatedPages = { ...pages, [activePage]: newSections };
 
-                // Automatically synchronize Navigation Bar, Footer, and Social Icons Shelf across all pages
+                // Automatically synchronize Top Bar Shelf, Navigation Bar, Footer, and Social Icons Shelf across all pages
+                const updatedTopBar = newSections.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
                 const updatedNavbar = newSections.find(s => s.type && s.type.toLowerCase() === 'navbar');
                 const updatedFooter = newSections.find(s => s.type && s.type.toLowerCase() === 'footer');
                 const updatedSocialIcons = newSections.find(s => s.type && s.type.toLowerCase() === 'social_icons');
@@ -950,6 +958,43 @@ $csrf_token = generate_csrf_token();
                     } else if (existingSocialInPage && !updatedSocialIcons) {
                         // Deleted on active page, delete from other pages as well
                         pageSects = pageSects.filter(s => !(s.type && s.type.toLowerCase() === 'social_icons'));
+                        pageUpdated = true;
+                    }
+
+                    // Synchronize top_bar_shelf (insert at index 0 if missing, update props if present, or remove if deleted on active page)
+                    const existingTopBarInPage = pageSects.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
+                    if (updatedTopBar) {
+                        if (existingTopBarInPage) {
+                            pageSects = pageSects.map(s => {
+                                if (s.type && s.type.toLowerCase() === 'top_bar_shelf') {
+                                    pageUpdated = true;
+                                    return {
+                                        ...s,
+                                        props: JSON.parse(JSON.stringify(updatedTopBar.props)),
+                                        bg_color_override: updatedTopBar.bg_color_override,
+                                        bg_image_override: updatedTopBar.bg_image_override,
+                                        bg_gradient_enabled: updatedTopBar.bg_gradient_enabled,
+                                        bg_gradient_deg: updatedTopBar.bg_gradient_deg,
+                                        bg_gradient_color1: updatedTopBar.bg_gradient_color1,
+                                        bg_gradient_color2: updatedTopBar.bg_gradient_color2,
+                                        bg_gradient_color3: updatedTopBar.bg_gradient_color3,
+                                        element_overrides: updatedTopBar.element_overrides ? JSON.parse(JSON.stringify(updatedTopBar.element_overrides)) : undefined
+                                    };
+                                }
+                                return s;
+                            });
+                        } else {
+                            // Insert clone of updatedTopBar at index 0 (top of the page)
+                            const topBarClone = {
+                                ...JSON.parse(JSON.stringify(updatedTopBar)),
+                                id: 'sec-top_bar_shelf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6)
+                            };
+                            pageSects.unshift(topBarClone);
+                            pageUpdated = true;
+                        }
+                    } else if (existingTopBarInPage && !updatedTopBar) {
+                        // Deleted on active page, delete from other pages as well
+                        pageSects = pageSects.filter(s => !(s.type && s.type.toLowerCase() === 'top_bar_shelf'));
                         pageUpdated = true;
                     }
 
