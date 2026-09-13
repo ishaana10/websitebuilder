@@ -1337,20 +1337,52 @@ $csrf_token = generate_csrf_token();
                 if (!props) return '';
                 const effectKey = prefix ? prefix + 'TextEffect' : 'textEffect';
                 const effect = props[effectKey] || props.textEffect || 'none';
+                let style = '';
+
                 switch (effect) {
                     case 'drop_shadow':
-                        return 'filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85));';
+                        style += 'filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85));';
+                        break;
                     case 'heavy_shadow':
-                        return 'filter: drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95));';
+                        style += 'filter: drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95));';
+                        break;
                     case 'glow':
-                        return 'filter: drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9));';
+                        style += 'filter: drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9));';
+                        break;
                     case 'gradient':
-                        return 'background-image: linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;';
+                        style += 'background-image: linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;';
+                        break;
                     case 'outline':
-                        return 'text-shadow: 0px 1px 3px rgba(0,0,0,0.95), 0px -1px 3px rgba(0,0,0,0.95), 1px 0px 3px rgba(0,0,0,0.95), -1px 0px 3px rgba(0,0,0,0.95);';
-                    default:
-                        return '';
+                        style += 'text-shadow: 0px 1px 3px rgba(0,0,0,0.95), 0px -1px 3px rgba(0,0,0,0.95), 1px 0px 3px rgba(0,0,0,0.95), -1px 0px 3px rgba(0,0,0,0.95);';
+                        break;
+                    case 'bg_gradient_glass':
+                        style += 'background: linear-gradient(135deg, rgba(138, 127, 139, 0.43), rgba(60, 44, 67, 0.65), rgba(132, 176, 245, 0.64)) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.15);';
+                        break;
+                    case 'bg_gradient_subtle':
+                        style += 'background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.85), rgba(15, 118, 110, 0.7)) !important; display: inline-block; padding: 0.35rem 0.85rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1);';
+                        break;
+                    case 'bg_highlight_gradient':
+                        style += 'background: linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.35)) !important; display: inline-block; padding: 0.2rem 0.6rem; border-radius: 0.375rem;';
+                        break;
+                    case 'bg_dark_glass':
+                        style += 'background: linear-gradient(135deg, rgba(0, 0, 0, 0.65), rgba(15, 23, 42, 0.85)) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: inline-block; padding: 0.35rem 0.85rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1);';
+                        break;
+                    case 'bg_gradient_sunset':
+                        style += 'background: linear-gradient(135deg, rgba(244, 63, 94, 0.5), rgba(168, 85, 247, 0.5), rgba(59, 130, 246, 0.5)) !important; backdrop-filter: blur(8px); display: inline-block; padding: 0.3rem 0.8rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2);';
+                        break;
                 }
+
+                if (props.text_bg_gradient_enabled || effect === 'custom_bg_gradient') {
+                    const deg = props.text_bg_gradient_deg || '135deg';
+                    const c1 = props.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)';
+                    const c2 = props.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)';
+                    const c3 = props.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)';
+                    const pad = props.text_bg_padding || '0.35rem 0.85rem';
+                    const radius = props.text_bg_radius || '0.5rem';
+                    style += ` background: linear-gradient(${deg}, ${c1}, ${c2}, ${c3}) !important; display: inline-block; padding: ${pad}; border-radius: ${radius}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15);`;
+                }
+
+                return style.trim();
             };
                 const compDef = ACTIVE_COMPONENTS.find(c => c.id.toLowerCase() === (sec.type || '').toLowerCase().trim());
                 if (!compDef) return '';
@@ -2976,14 +3008,79 @@ $csrf_token = generate_csrf_token();
                                                                     </div>
                                                                 );
                                                             } else if (field.type === 'select') {
+                                                                const isTextEffect = field.key === 'textEffect';
+                                                                const isCustomGradientSelected = val === 'custom_bg_gradient' || !!(selectedSection.props && selectedSection.props.text_bg_gradient_enabled);
                                                                 return (
-                                                                    <div key={field.key}>
-                                                                        <label className="text-[11px] text-slate-400 block mb-1" htmlFor={`prop-${field.key}`}>{field.label}</label>
-                                                                        <select id={`prop-${field.key}`} value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
-                                                                            {field.options.map(opt => (
-                                                                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                                            ))}
-                                                                        </select>
+                                                                    <div key={field.key} className="space-y-2">
+                                                                        <div>
+                                                                            <label className="text-[11px] text-slate-400 block mb-1" htmlFor={`prop-${field.key}`}>{field.label}</label>
+                                                                            <select id={`prop-${field.key}`} value={val} onChange={(e) => handleFieldChange(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500">
+                                                                                {field.options.map(opt => (
+                                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+
+                                                                        {isTextEffect && isCustomGradientSelected && (
+                                                                            <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                                                                <div className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1">
+                                                                                    <i className="fas fa-magic"></i> Custom Text Background Gradient
+                                                                                </div>
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Gradient Direction / Angle</label>
+                                                                                    <select
+                                                                                        value={selectedSection.props.text_bg_gradient_deg || '135deg'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_bg_gradient_deg: e.target.value } } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                                                                    >
+                                                                                        <option value="135deg">Diagonal (135° Top-Left to Bottom-Right)</option>
+                                                                                        <option value="180deg">Vertical (180° Top to Bottom)</option>
+                                                                                        <option value="90deg">Horizontal (90° Left to Right)</option>
+                                                                                        <option value="45deg">Up Diagonal (45°)</option>
+                                                                                        <option value="225deg">Reverse Diagonal (225°)</option>
+                                                                                    </select>
+                                                                                </div>
+
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Gradient Color Stops (RGB / RGBA / Hex)</label>
+                                                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(138, 127, 139, 0.43)"
+                                                                                            value={selectedSection.props.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)'}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_bg_gradient_color1: e.target.value } } : s);
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none"
+                                                                                        />
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(60, 44, 67, 0.65)"
+                                                                                            value={selectedSection.props.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)'}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_bg_gradient_color2: e.target.value } } : s);
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none"
+                                                                                        />
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(132, 176, 245, 0.64)"
+                                                                                            value={selectedSection.props.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)'}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_bg_gradient_color3: e.target.value } } : s);
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 );
                                                             } else if (field.type === 'checkbox') {
