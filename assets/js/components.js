@@ -182,7 +182,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'text', label: 'Subheading Text', type: 'textarea', default: 'The ultimate low-code drag and drop page builder designed to transform complex ideas.' },
             { key: 'btnText', label: 'Primary CTA Text', type: 'text', default: 'Start For Free' },
@@ -278,7 +284,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'colCount', label: 'Desktop Column Count', type: 'select', default: 'grid-cols-3', options: [
                 { value: 'grid-cols-1', label: '1 Column Span (Desktop)' },
@@ -350,7 +362,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Elegance meets pure performance.' },
             { key: 'text', label: 'Rich Content Description', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description.' },
@@ -378,7 +396,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Elegance meets pure performance.' },
             { key: 'text', label: 'Feature Description', type: 'textarea', default: 'Craft a beautifully structured layout where your imagery directly interfaces with your product description. Adjust photo alignments and style typography to match.' },
@@ -419,7 +443,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Main Testimonial Heading', type: 'text', default: 'What our clients say' },
             { key: 'authorName', label: 'Author Name', type: 'text', default: 'Sarah Jenkins' },
@@ -462,7 +492,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'tier1Name', label: 'Tier 1 Name', type: 'text', default: 'Starter' },
             { key: 'tier1Price', label: 'Tier 1 Price', type: 'text', default: '$19' },
@@ -640,7 +676,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Form Title', type: 'text', default: 'Get In Touch' },
             { key: 'text', label: 'Sub-text prompt', type: 'textarea', default: 'Have questions? Drop us a line.' },
@@ -1270,7 +1312,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'btnBg', label: 'Button Background', type: 'color', default: '#0f172a' },
             { key: 'btnColor', label: 'Button Text Color', type: 'color', default: '#ffffff' },
@@ -1321,7 +1369,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Meet our visionary leaders' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#0f172a' },
@@ -1368,7 +1422,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Section Heading', type: 'text', default: 'Our Performance In Numbers' },
             { key: 'bgColor', label: 'Background Color', type: 'color', default: '#020617' },
@@ -1511,7 +1571,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'columns', label: 'Grid Columns', type: 'select', default: '3', options: [
                 { value: '1', label: '1 Column' },
@@ -1626,7 +1692,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'overlineText', label: 'Top Category Overline', type: 'text', default: 'ABOUT ALL PEST' },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Local service. Professional standards. Fiji-wide coverage.' },
@@ -1704,7 +1776,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'overlineText', label: 'Top Overline Category', type: 'text', default: 'COMMERCIAL & INDUSTRIAL' },
             { key: 'heading', label: 'Main Section Title', type: 'text', default: 'Pest management for demanding work environments' },
@@ -1786,7 +1864,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'bgColor', label: 'Section Background', type: 'color', default: '#ffffff' },
             { key: 'cardBgColor', label: 'Card Background', type: 'color', default: '#ffffff' },
@@ -1923,7 +2007,13 @@ const UI_COMPONENTS = [
                 { value: 'heavy_shadow', label: 'Heavy Contrast Shadow' },
                 { value: 'glow', label: 'Neon Glow Effect' },
                 { value: 'gradient', label: 'Vibrant Gradient Text' },
-                { value: 'outline', label: 'High Contrast Dark Outline' }
+                { value: 'outline', label: 'High Contrast Dark Outline' },
+                { value: 'bg_gradient_glass', label: 'Glassmorphism Backdrop Box Gradient' },
+                { value: 'bg_gradient_subtle', label: 'Subtle Dark Box Gradient' },
+                { value: 'bg_highlight_gradient', label: 'Teal/Cyan Highlight Bar Gradient' },
+                { value: 'bg_dark_glass', label: 'Dark Glass Pill Gradient' },
+                { value: 'bg_gradient_sunset', label: 'Sunset Glow Box Gradient' },
+                { value: 'custom_bg_gradient', label: 'Custom 3-Color Text Background Gradient' }
             ] },
             { key: 'heading', label: 'Section Title', type: 'text', default: 'Interactive Photo Cards Grid' },
             { key: 'columns', label: 'Desktop Columns', type: 'select', default: '3', options: [
