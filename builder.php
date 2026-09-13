@@ -4951,6 +4951,258 @@ $csrf_token = generate_csrf_token();
                                                                             />
                                                                         </div>
                                                                     </div>
+
+                                                                    {/* Text Effect / Background Gradient */}
+                                                                    <div className="pt-2 border-t border-slate-800/60 space-y-2">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase">Text Effect / Bg</span>
+                                                                            <select
+                                                                                value={currentOverrides.textEffect || 'none'}
+                                                                                onChange={(e) => {
+                                                                                    const eff = e.target.value;
+                                                                                    const deg = currentOverrides.text_bg_gradient_deg || '135deg';
+                                                                                    const c1 = currentOverrides.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)';
+                                                                                    const c2 = currentOverrides.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)';
+                                                                                    const c3 = currentOverrides.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)';
+
+                                                                                    const updated = sections.map(s => {
+                                                                                        if (s.id !== selectedSection.id) return s;
+                                                                                        const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                        const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                        override.textEffect = eff;
+                                                                                        const styles = { ...(override.styles || {}) };
+
+                                                                                        // Clear previous text effect styles
+                                                                                        delete styles.filter;
+                                                                                        delete styles.textShadow;
+                                                                                        delete styles.backgroundImage;
+                                                                                        delete styles.background;
+                                                                                        delete styles.webkitBackgroundClip;
+                                                                                        delete styles.backgroundClip;
+                                                                                        delete styles.backdropFilter;
+                                                                                        delete styles.webkitBackdropFilter;
+
+                                                                                        if (eff === 'drop_shadow') {
+                                                                                            styles.filter = 'drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85))';
+                                                                                        } else if (eff === 'heavy_shadow') {
+                                                                                            styles.filter = 'drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95))';
+                                                                                        } else if (eff === 'glow') {
+                                                                                            styles.filter = 'drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9))';
+                                                                                        } else if (eff === 'gradient') {
+                                                                                            styles.backgroundImage = 'linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee)';
+                                                                                            styles.webkitBackgroundClip = 'text';
+                                                                                            styles.backgroundClip = 'text';
+                                                                                            styles.color = 'transparent';
+                                                                                        } else if (eff === 'outline') {
+                                                                                            styles.textShadow = '0px 1px 3px rgba(0,0,0,0.95), 0px -1px 3px rgba(0,0,0,0.95), 1px 0px 3px rgba(0,0,0,0.95), -1px 0px 3px rgba(0,0,0,0.95)';
+                                                                                        } else if (eff === 'bg_gradient_glass') {
+                                                                                            styles.background = 'linear-gradient(135deg, rgba(138, 127, 139, 0.43), rgba(60, 44, 67, 0.65), rgba(132, 176, 245, 0.64))';
+                                                                                            styles.backdropFilter = 'blur(8px)';
+                                                                                            styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.25rem 0.75rem';
+                                                                                            styles.borderRadius = '0.5rem';
+                                                                                            styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                        } else if (eff === 'bg_gradient_subtle') {
+                                                                                            styles.background = 'linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.85), rgba(15, 118, 110, 0.7))';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.35rem 0.85rem';
+                                                                                            styles.borderRadius = '0.5rem';
+                                                                                            styles.border = '1px solid rgba(255,255,255,0.1)';
+                                                                                        } else if (eff === 'bg_highlight_gradient') {
+                                                                                            styles.background = 'linear-gradient(90deg, rgba(20, 184, 166, 0.35), rgba(16, 185, 129, 0.25), rgba(6, 182, 212, 0.35))';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.2rem 0.6rem';
+                                                                                            styles.borderRadius = '0.375rem';
+                                                                                        } else if (eff === 'bg_dark_glass') {
+                                                                                            styles.background = 'linear-gradient(135deg, rgba(0, 0, 0, 0.65), rgba(15, 23, 42, 0.85))';
+                                                                                            styles.backdropFilter = 'blur(12px)';
+                                                                                            styles.webkitBackdropFilter = 'blur(12px)';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.35rem 0.85rem';
+                                                                                            styles.borderRadius = '0.5rem';
+                                                                                            styles.border = '1px solid rgba(255,255,255,0.1)';
+                                                                                        } else if (eff === 'bg_gradient_sunset') {
+                                                                                            styles.background = 'linear-gradient(135deg, rgba(244, 63, 94, 0.5), rgba(168, 85, 247, 0.5), rgba(59, 130, 246, 0.5))';
+                                                                                            styles.backdropFilter = 'blur(8px)';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.3rem 0.8rem';
+                                                                                            styles.borderRadius = '0.5rem';
+                                                                                            styles.border = '1px solid rgba(255,255,255,0.2)';
+                                                                                        } else if (eff === 'custom_bg_gradient') {
+                                                                                            styles.background = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                                                                                            styles.backdropFilter = 'blur(8px)';
+                                                                                            styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                            styles.display = 'inline-block';
+                                                                                            styles.padding = '0.35rem 0.85rem';
+                                                                                            styles.borderRadius = '0.5rem';
+                                                                                            styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                        }
+
+                                                                                        override.styles = styles;
+                                                                                        overrides[activeElementId] = override;
+                                                                                        return { ...s, element_overrides: overrides };
+                                                                                    });
+                                                                                    updateSectionsWithHistory(updated);
+                                                                                }}
+                                                                                className="bg-slate-950 border border-slate-800 text-xs rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-teal-500 w-36"
+                                                                            >
+                                                                                <option value="none">Standard (None)</option>
+                                                                                <option value="drop_shadow">Soft Backdrop Drop Shadow</option>
+                                                                                <option value="heavy_shadow">Heavy Contrast Shadow</option>
+                                                                                <option value="glow">Neon Glow Effect</option>
+                                                                                <option value="gradient">Vibrant Text Gradient</option>
+                                                                                <option value="outline">High Contrast Dark Outline</option>
+                                                                                <option value="bg_gradient_glass">Glassmorphism Box Gradient</option>
+                                                                                <option value="bg_gradient_subtle">Subtle Dark Box Gradient</option>
+                                                                                <option value="bg_highlight_gradient">Teal/Cyan Highlight Bar</option>
+                                                                                <option value="bg_dark_glass">Dark Glass Pill Gradient</option>
+                                                                                <option value="bg_gradient_sunset">Sunset Glow Box Gradient</option>
+                                                                                <option value="custom_bg_gradient">Custom 3-Color RGBA Gradient</option>
+                                                                            </select>
+                                                                        </div>
+
+                                                                        {currentOverrides.textEffect === 'custom_bg_gradient' && (
+                                                                            <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2 mt-2">
+                                                                                <div className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1">
+                                                                                    <i className="fas fa-magic"></i> Custom Text Background Gradient
+                                                                                </div>
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Gradient Direction / Angle</label>
+                                                                                    <select
+                                                                                        value={currentOverrides.text_bg_gradient_deg || '135deg'}
+                                                                                        onChange={(e) => {
+                                                                                            const deg = e.target.value;
+                                                                                            const c1 = currentOverrides.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)';
+                                                                                            const c2 = currentOverrides.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)';
+                                                                                            const c3 = currentOverrides.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)';
+                                                                                            const updated = sections.map(s => {
+                                                                                                if (s.id !== selectedSection.id) return s;
+                                                                                                const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                override.text_bg_gradient_deg = deg;
+                                                                                                const styles = { ...(override.styles || {}) };
+                                                                                                styles.background = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                                                                                                styles.backdropFilter = 'blur(8px)';
+                                                                                                styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                                styles.display = 'inline-block';
+                                                                                                styles.padding = '0.35rem 0.85rem';
+                                                                                                styles.borderRadius = '0.5rem';
+                                                                                                styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                                override.styles = styles;
+                                                                                                overrides[activeElementId] = override;
+                                                                                                return { ...s, element_overrides: overrides };
+                                                                                            });
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                                                                    >
+                                                                                        <option value="135deg">Diagonal (135° Top-Left to Bottom-Right)</option>
+                                                                                        <option value="180deg">Vertical (180° Top to Bottom)</option>
+                                                                                        <option value="90deg">Horizontal (90° Left to Right)</option>
+                                                                                        <option value="45deg">Up Diagonal (45°)</option>
+                                                                                        <option value="225deg">Reverse Diagonal (225°)</option>
+                                                                                    </select>
+                                                                                </div>
+
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Gradient Color Stops (RGB / RGBA / Hex)</label>
+                                                                                    <div className="grid grid-cols-3 gap-1.5">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(138, 127, 139, 0.43)"
+                                                                                            value={currentOverrides.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)'}
+                                                                                            onChange={(e) => {
+                                                                                                const c1 = e.target.value;
+                                                                                                const deg = currentOverrides.text_bg_gradient_deg || '135deg';
+                                                                                                const c2 = currentOverrides.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)';
+                                                                                                const c3 = currentOverrides.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)';
+                                                                                                const updated = sections.map(s => {
+                                                                                                    if (s.id !== selectedSection.id) return s;
+                                                                                                    const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                    const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                    override.text_bg_gradient_color1 = c1;
+                                                                                                    const styles = { ...(override.styles || {}) };
+                                                                                                    styles.background = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                                                                                                    styles.backdropFilter = 'blur(8px)';
+                                                                                                    styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                                    styles.display = 'inline-block';
+                                                                                                    styles.padding = '0.35rem 0.85rem';
+                                                                                                    styles.borderRadius = '0.5rem';
+                                                                                                    styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                                    override.styles = styles;
+                                                                                                    overrides[activeElementId] = override;
+                                                                                                    return { ...s, element_overrides: overrides };
+                                                                                                });
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none font-mono"
+                                                                                        />
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(60, 44, 67, 0.65)"
+                                                                                            value={currentOverrides.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)'}
+                                                                                            onChange={(e) => {
+                                                                                                const c2 = e.target.value;
+                                                                                                const deg = currentOverrides.text_bg_gradient_deg || '135deg';
+                                                                                                const c1 = currentOverrides.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)';
+                                                                                                const c3 = currentOverrides.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)';
+                                                                                                const updated = sections.map(s => {
+                                                                                                    if (s.id !== selectedSection.id) return s;
+                                                                                                    const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                    const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                    override.text_bg_gradient_color2 = c2;
+                                                                                                    const styles = { ...(override.styles || {}) };
+                                                                                                    styles.background = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                                                                                                    styles.backdropFilter = 'blur(8px)';
+                                                                                                    styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                                    styles.display = 'inline-block';
+                                                                                                    styles.padding = '0.35rem 0.85rem';
+                                                                                                    styles.borderRadius = '0.5rem';
+                                                                                                    styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                                    override.styles = styles;
+                                                                                                    overrides[activeElementId] = override;
+                                                                                                    return { ...s, element_overrides: overrides };
+                                                                                                });
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none font-mono"
+                                                                                        />
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="rgba(132, 176, 245, 0.64)"
+                                                                                            value={currentOverrides.text_bg_gradient_color3 || 'rgba(132, 176, 245, 0.64)'}
+                                                                                            onChange={(e) => {
+                                                                                                const c3 = e.target.value;
+                                                                                                const deg = currentOverrides.text_bg_gradient_deg || '135deg';
+                                                                                                const c1 = currentOverrides.text_bg_gradient_color1 || 'rgba(138, 127, 139, 0.43)';
+                                                                                                const c2 = currentOverrides.text_bg_gradient_color2 || 'rgba(60, 44, 67, 0.65)';
+                                                                                                const updated = sections.map(s => {
+                                                                                                    if (s.id !== selectedSection.id) return s;
+                                                                                                    const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                    const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                    override.text_bg_gradient_color3 = c3;
+                                                                                                    const styles = { ...(override.styles || {}) };
+                                                                                                    styles.background = `linear-gradient(${deg}, ${c1}, ${c2}, ${c3})`;
+                                                                                                    styles.backdropFilter = 'blur(8px)';
+                                                                                                    styles.webkitBackdropFilter = 'blur(8px)';
+                                                                                                    styles.display = 'inline-block';
+                                                                                                    styles.padding = '0.35rem 0.85rem';
+                                                                                                    styles.borderRadius = '0.5rem';
+                                                                                                    styles.border = '1px solid rgba(255,255,255,0.15)';
+                                                                                                    override.styles = styles;
+                                                                                                    overrides[activeElementId] = override;
+                                                                                                    return { ...s, element_overrides: overrides };
+                                                                                                });
+                                                                                                updateSectionsWithHistory(updated);
+                                                                                            }}
+                                                                                            className="w-full bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-[10px] text-slate-300 focus:outline-none font-mono"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             )}
 
