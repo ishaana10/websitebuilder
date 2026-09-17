@@ -4981,6 +4981,12 @@ $csrf_token = generate_csrf_token();
                                                                                         delete styles.backgroundClip;
                                                                                         delete styles.backdropFilter;
                                                                                         delete styles.webkitBackdropFilter;
+                                                                                        delete styles.border;
+                                                                                        delete styles.borderWidth;
+                                                                                        delete styles.borderColor;
+                                                                                        delete styles.padding;
+                                                                                        delete styles.borderRadius;
+                                                                                        delete styles.display;
 
                                                                                         if (eff === 'drop_shadow') {
                                                                                             styles.filter = 'drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85))';
