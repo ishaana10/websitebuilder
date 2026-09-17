@@ -4738,7 +4738,17 @@ $csrf_token = generate_csrf_token();
                                                         const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
 
                                                         if (isStyle) {
-                                                            override.styles = { ...override.styles, [styleKey]: val };
+                                                            const styles = { ...override.styles };
+                                                            if (val === undefined || val === '') {
+                                                                delete styles[styleKey];
+                                                            } else {
+                                                                styles[styleKey] = val;
+                                                            }
+                                                            // When user customizes border parameters, delete shorthand border style from text effects
+                                                            if (styleKey === 'borderStyle' || styleKey === 'borderWidth' || styleKey === 'borderColor' || styleKey === 'border') {
+                                                                delete styles.border;
+                                                            }
+                                                            override.styles = styles;
                                                         } else {
                                                             override[field] = val;
                                                         }
@@ -5309,22 +5319,52 @@ $csrf_token = generate_csrf_token();
 
                                                             {/* Borders & Radius Section */}
                                                             <div className="bg-slate-950/20 p-3 rounded-lg border border-slate-800/60 space-y-3">
-                                                                <h6 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Borders & Radius</h6>
+                                                                <div className="flex items-center justify-between">
+                                                                    <h6 className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Borders & Radius</h6>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const updated = sections.map(s => {
+                                                                                if (s.id !== selectedSection.id) return s;
+                                                                                const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                const styles = { ...(override.styles || {}) };
+                                                                                delete styles.border;
+                                                                                delete styles.borderWidth;
+                                                                                delete styles.borderStyle;
+                                                                                delete styles.borderColor;
+                                                                                override.styles = styles;
+                                                                                overrides[activeElementId] = override;
+                                                                                return { ...s, element_overrides: overrides };
+                                                                            });
+                                                                            updateSectionsWithHistory(updated);
+                                                                        }}
+                                                                        className="text-[9px] text-rose-400 hover:text-rose-300 font-bold hover:underline cursor-pointer"
+                                                                    >
+                                                                        <i className="fas fa-trash-alt mr-1"></i> Remove Border
+                                                                    </button>
+                                                                </div>
 
-                                                                {/* Border Radius */}
+                                                                {/* Border Style */}
                                                                 <div className="flex items-center justify-between gap-2">
-                                                                    <span className="text-[10px] text-slate-500 font-bold uppercase">Radius</span>
+                                                                    <span className="text-[10px] text-slate-500 font-bold uppercase">Border Style</span>
                                                                     <select
-                                                                        value={currentStyles.borderRadius || ''}
-                                                                        onChange={(e) => handleOverrideChange('borderRadius', e.target.value || undefined, true, 'borderRadius')}
+                                                                        value={currentStyles.borderStyle || (currentStyles.border === 'none' ? 'none' : '')}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            if (val === 'none') {
+                                                                                handleOverrideChange('border', 'none', true, 'border');
+                                                                            } else {
+                                                                                handleOverrideChange('borderStyle', val || undefined, true, 'borderStyle');
+                                                                            }
+                                                                        }}
                                                                         className="bg-slate-950 border border-slate-800 text-xs rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-teal-500 w-36">
                                                                         <option value="">Default</option>
-                                                                        <option value="0px">None (0px)</option>
-                                                                        <option value="4px">Small (4px)</option>
-                                                                        <option value="8px">Medium (8px)</option>
-                                                                        <option value="12px">Large (12px)</option>
-                                                                        <option value="16px">Extra Large (16px)</option>
-                                                                        <option value="9999px">Rounded Pill</option>
+                                                                        <option value="solid">Solid</option>
+                                                                        <option value="dashed">Dashed</option>
+                                                                        <option value="dotted">Dotted</option>
+                                                                        <option value="double">Double</option>
+                                                                        <option value="none">None (No Border)</option>
                                                                     </select>
                                                                 </div>
 
@@ -5339,7 +5379,9 @@ $csrf_token = generate_csrf_token();
                                                                         <option value="0px">None (0px)</option>
                                                                         <option value="1px">1px</option>
                                                                         <option value="2px">2px</option>
+                                                                        <option value="3px">3px</option>
                                                                         <option value="4px">4px</option>
+                                                                        <option value="8px">8px</option>
                                                                     </select>
                                                                 </div>
 
@@ -5361,6 +5403,23 @@ $csrf_token = generate_csrf_token();
                                                                             className="bg-slate-950 border border-slate-800 text-[11px] rounded px-2 py-0.5 text-slate-300 font-mono w-28 focus:outline-none focus:border-teal-500"
                                                                         />
                                                                     </div>
+                                                                </div>
+
+                                                                {/* Border Radius */}
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <span className="text-[10px] text-slate-500 font-bold uppercase">Radius</span>
+                                                                    <select
+                                                                        value={currentStyles.borderRadius || ''}
+                                                                        onChange={(e) => handleOverrideChange('borderRadius', e.target.value || undefined, true, 'borderRadius')}
+                                                                        className="bg-slate-950 border border-slate-800 text-xs rounded px-2 py-1 text-slate-300 focus:outline-none focus:border-teal-500 w-36">
+                                                                        <option value="">Default</option>
+                                                                        <option value="0px">None (0px)</option>
+                                                                        <option value="4px">Small (4px)</option>
+                                                                        <option value="8px">Medium (8px)</option>
+                                                                        <option value="12px">Large (12px)</option>
+                                                                        <option value="16px">Extra Large (16px)</option>
+                                                                        <option value="9999px">Rounded Pill</option>
+                                                                    </select>
                                                                 </div>
                                                             </div>
                                                         </div>
