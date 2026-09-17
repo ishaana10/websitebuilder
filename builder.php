@@ -1346,9 +1346,11 @@ $csrf_token = generate_csrf_token();
                     case 'heavy_shadow':
                         style += 'filter: drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95));';
                         break;
-                    case 'glow':
-                        style += 'filter: drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9));';
+                    case 'glow': {
+                        const glowCol = props.text_glow_color || props.glowColor || '#14b8a6';
+                        style += `filter: drop-shadow(0px 0px 12px ${glowCol});`;
                         break;
+                    }
                     case 'gradient':
                         style += 'background-image: linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;';
                         break;
@@ -3020,6 +3022,23 @@ $csrf_token = generate_csrf_token();
                                                                                 ))}
                                                                             </select>
                                                                         </div>
+
+                                                                        {isTextEffect && val === 'glow' && (
+                                                                            <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800">
+                                                                                <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                                                    <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
+                                                                                </label>
+                                                                                <input
+                                                                                    type="color"
+                                                                                    value={selectedSection.props.text_glow_color || '#14b8a6'}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_glow_color: e.target.value } } : s);
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                />
+                                                                            </div>
+                                                                        )}
 
                                                                         {isTextEffect && isCustomGradientSelected && (
                                                                             <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
@@ -4993,7 +5012,8 @@ $csrf_token = generate_csrf_token();
                                                                                         } else if (eff === 'heavy_shadow') {
                                                                                             styles.filter = 'drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95))';
                                                                                         } else if (eff === 'glow') {
-                                                                                            styles.filter = 'drop-shadow(0px 0px 12px rgba(20, 184, 166, 0.9))';
+                                                                                            const glowCol = currentOverrides.text_glow_color || '#14b8a6';
+                                                                                            styles.filter = `drop-shadow(0px 0px 12px ${glowCol})`;
                                                                                         } else if (eff === 'gradient') {
                                                                                             styles.backgroundImage = 'linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee)';
                                                                                             styles.webkitBackgroundClip = 'text';
@@ -5067,6 +5087,34 @@ $csrf_token = generate_csrf_token();
                                                                                 <option value="custom_bg_gradient">Custom 3-Color RGBA Gradient</option>
                                                                             </select>
                                                                         </div>
+
+                                                                        {currentOverrides.textEffect === 'glow' && (
+                                                                            <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800 mt-2">
+                                                                                <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                                                    <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
+                                                                                </label>
+                                                                                <input
+                                                                                    type="color"
+                                                                                    value={currentOverrides.text_glow_color || '#14b8a6'}
+                                                                                    onChange={(e) => {
+                                                                                        const glowCol = e.target.value;
+                                                                                        const updated = sections.map(s => {
+                                                                                            if (s.id !== selectedSection.id) return s;
+                                                                                            const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                            const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                            override.text_glow_color = glowCol;
+                                                                                            const styles = { ...(override.styles || {}) };
+                                                                                            styles.filter = `drop-shadow(0px 0px 12px ${glowCol})`;
+                                                                                            override.styles = styles;
+                                                                                            overrides[activeElementId] = override;
+                                                                                            return { ...s, element_overrides: overrides };
+                                                                                        });
+                                                                                        updateSectionsWithHistory(updated);
+                                                                                    }}
+                                                                                    className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                />
+                                                                            </div>
+                                                                        )}
 
                                                                         {currentOverrides.textEffect === 'custom_bg_gradient' && (
                                                                             <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2 mt-2">
