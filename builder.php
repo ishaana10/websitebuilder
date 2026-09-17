@@ -1348,7 +1348,8 @@ $csrf_token = generate_csrf_token();
                         break;
                     case 'glow': {
                         const glowCol = props.text_glow_color || props.glowColor || '#14b8a6';
-                        style += `filter: drop-shadow(0px 0px 12px ${glowCol});`;
+                        const glowRad = props.text_glow_radius || '16px';
+                        style += `filter: drop-shadow(0px 0px ${glowRad} ${glowCol});`;
                         break;
                     }
                     case 'gradient':
@@ -3024,19 +3025,39 @@ $csrf_token = generate_csrf_token();
                                                                         </div>
 
                                                                         {isTextEffect && val === 'glow' && (
-                                                                            <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800">
-                                                                                <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
-                                                                                    <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
-                                                                                </label>
-                                                                                <input
-                                                                                    type="color"
-                                                                                    value={selectedSection.props.text_glow_color || '#14b8a6'}
-                                                                                    onChange={(e) => {
-                                                                                        const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_glow_color: e.target.value } } : s);
-                                                                                        updateSectionsWithHistory(updated);
-                                                                                    }}
-                                                                                    className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
-                                                                                />
+                                                                            <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                                                        <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
+                                                                                    </label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={selectedSection.props.text_glow_color || '#14b8a6'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_glow_color: e.target.value } } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Neon Glow Intensity / Radius</label>
+                                                                                    <select
+                                                                                        value={selectedSection.props.text_glow_radius || '16px'}
+                                                                                        onChange={(e) => {
+                                                                                            const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, text_glow_radius: e.target.value } } : s);
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                                                                    >
+                                                                                        <option value="6px">Subtle (6px radius)</option>
+                                                                                        <option value="12px">Soft (12px radius)</option>
+                                                                                        <option value="16px">Medium (16px radius)</option>
+                                                                                        <option value="24px">Strong (24px radius)</option>
+                                                                                        <option value="36px">Ultra Intense (36px radius)</option>
+                                                                                        <option value="50px">Maximum Beam (50px radius)</option>
+                                                                                    </select>
+                                                                                </div>
                                                                             </div>
                                                                         )}
 
@@ -5023,7 +5044,8 @@ $csrf_token = generate_csrf_token();
                                                                                             styles.filter = 'drop-shadow(0px 4px 16px rgba(0, 0, 0, 0.95))';
                                                                                         } else if (eff === 'glow') {
                                                                                             const glowCol = currentOverrides.text_glow_color || '#14b8a6';
-                                                                                            styles.filter = `drop-shadow(0px 0px 12px ${glowCol})`;
+                                                                                            const glowRad = currentOverrides.text_glow_radius || '16px';
+                                                                                            styles.filter = `drop-shadow(0px 0px ${glowRad} ${glowCol})`;
                                                                                         } else if (eff === 'gradient') {
                                                                                             styles.backgroundImage = 'linear-gradient(to right, #2dd4bf, #6ee7b7, #22d3ee)';
                                                                                             styles.webkitBackgroundClip = 'text';
@@ -5099,30 +5121,63 @@ $csrf_token = generate_csrf_token();
                                                                         </div>
 
                                                                         {currentOverrides.textEffect === 'glow' && (
-                                                                            <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800 mt-2">
-                                                                                <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
-                                                                                    <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
-                                                                                </label>
-                                                                                <input
-                                                                                    type="color"
-                                                                                    value={currentOverrides.text_glow_color || '#14b8a6'}
-                                                                                    onChange={(e) => {
-                                                                                        const glowCol = e.target.value;
-                                                                                        const updated = sections.map(s => {
-                                                                                            if (s.id !== selectedSection.id) return s;
-                                                                                            const overrides = s.element_overrides ? { ...s.element_overrides } : {};
-                                                                                            const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
-                                                                                            override.text_glow_color = glowCol;
-                                                                                            const styles = { ...(override.styles || {}) };
-                                                                                            styles.filter = `drop-shadow(0px 0px 12px ${glowCol})`;
-                                                                                            override.styles = styles;
-                                                                                            overrides[activeElementId] = override;
-                                                                                            return { ...s, element_overrides: overrides };
-                                                                                        });
-                                                                                        updateSectionsWithHistory(updated);
-                                                                                    }}
-                                                                                    className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
-                                                                                />
+                                                                            <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 space-y-2 mt-2">
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <label className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                                                        <i className="fas fa-sun text-teal-400"></i> Neon Glow Color
+                                                                                    </label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={currentOverrides.text_glow_color || '#14b8a6'}
+                                                                                        onChange={(e) => {
+                                                                                            const glowCol = e.target.value;
+                                                                                            const glowRad = currentOverrides.text_glow_radius || '16px';
+                                                                                            const updated = sections.map(s => {
+                                                                                                if (s.id !== selectedSection.id) return s;
+                                                                                                const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                override.text_glow_color = glowCol;
+                                                                                                const styles = { ...(override.styles || {}) };
+                                                                                                styles.filter = `drop-shadow(0px 0px ${glowRad} ${glowCol})`;
+                                                                                                override.styles = styles;
+                                                                                                overrides[activeElementId] = override;
+                                                                                                return { ...s, element_overrides: overrides };
+                                                                                            });
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-[10px] text-slate-400 block">Glow Intensity / Blur Radius</label>
+                                                                                    <select
+                                                                                        value={currentOverrides.text_glow_radius || '16px'}
+                                                                                        onChange={(e) => {
+                                                                                            const glowRad = e.target.value;
+                                                                                            const glowCol = currentOverrides.text_glow_color || '#14b8a6';
+                                                                                            const updated = sections.map(s => {
+                                                                                                if (s.id !== selectedSection.id) return s;
+                                                                                                const overrides = s.element_overrides ? { ...s.element_overrides } : {};
+                                                                                                const override = overrides[activeElementId] ? { ...overrides[activeElementId] } : { styles: {} };
+                                                                                                override.text_glow_radius = glowRad;
+                                                                                                const styles = { ...(override.styles || {}) };
+                                                                                                styles.filter = `drop-shadow(0px 0px ${glowRad} ${glowCol})`;
+                                                                                                override.styles = styles;
+                                                                                                overrides[activeElementId] = override;
+                                                                                                return { ...s, element_overrides: overrides };
+                                                                                            });
+                                                                                            updateSectionsWithHistory(updated);
+                                                                                        }}
+                                                                                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none"
+                                                                                    >
+                                                                                        <option value="6px">Subtle (6px radius)</option>
+                                                                                        <option value="12px">Soft (12px radius)</option>
+                                                                                        <option value="16px">Medium (16px radius)</option>
+                                                                                        <option value="24px">Strong (24px radius)</option>
+                                                                                        <option value="36px">Ultra Intense (36px radius)</option>
+                                                                                        <option value="50px">Maximum Beam (50px radius)</option>
+                                                                                    </select>
+                                                                                </div>
                                                                             </div>
                                                                         )}
 
