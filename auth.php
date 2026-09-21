@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['auth_action'])) {
                     // Hash password using secure bcrypt algorithm
                     $hash = password_hash($password, PASSWORD_BCRYPT);
 
-                    $stmt_insert = $db->prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)");
+                    $stmt_insert = $db->prepare("INSERT INTO users (username, email, password_hash, role, status) VALUES (?, ?, ?, ?, 'active')");
                     try {
                         $stmt_insert->execute([$username, $email, $hash, $role]);
                         $auth_success = "Registration successful! You can now log in.";

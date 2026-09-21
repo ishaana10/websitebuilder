@@ -2059,6 +2059,201 @@ const UI_COMPONENTS = [
         </div>
     </div>
 </section>`
+    },
+    {
+        id: 'payment_checkout',
+        name: 'PayPal & Payment Gateway Checkout',
+        category: 'Pricing',
+        icon: 'fab fa-paypal',
+        schema: [
+            { key: 'heading', label: 'Section Title', type: 'text', default: 'PayPal & Secure Payment Checkout' },
+            { key: 'subtext', label: 'Subtitle Description', type: 'textarea', default: 'Choose your preferred payment method below to complete your order securely.' },
+            { key: 'productTitle', label: 'Product / Item Name', type: 'text', default: 'Nuvis Pro Subscription' },
+            { key: 'amount', label: 'Price Amount', type: 'text', default: '49.99' },
+            { key: 'currency', label: 'Currency Code', type: 'select', default: 'USD', options: [
+                { value: 'USD', label: 'USD ($)' },
+                { value: 'EUR', label: 'EUR (€)' },
+                { value: 'GBP', label: 'GBP (£)' },
+                { value: 'AUD', label: 'AUD ($)' },
+                { value: 'CAD', label: 'CAD ($)' },
+                { value: 'FJD', label: 'FJD ($)' }
+            ]},
+            { key: 'allowCustomAmount', label: 'Allow Customer Custom Amount Input', type: 'checkbox', default: false },
+            { key: 'paypalEmail', label: 'PayPal Business / Merchant Email', type: 'text', default: 'merchant@example.com' },
+            { key: 'enablePaypal', label: 'Enable PayPal Gateway', type: 'checkbox', default: true },
+            { key: 'enableCreditCard', label: 'Enable Credit Card Gateway', type: 'checkbox', default: true },
+            { key: 'enableStripe', label: 'Enable Stripe Gateway', type: 'checkbox', default: true },
+            { key: 'enableApplePay', label: 'Enable Apple Pay / Google Pay Gateway', type: 'checkbox', default: true },
+            { key: 'enableBankTransfer', label: 'Enable Direct Bank Transfer Instructions', type: 'checkbox', default: false },
+            { key: 'bankDetails', label: 'Bank Transfer Instructions', type: 'textarea', default: 'Bank Name: Global Commerce Bank\nAccount Name: Nuvis Tech\nAccount Number: 1234-5678-9012\nSWIFT/BIC: GCBUS33' },
+            { key: 'btnText', label: 'Checkout Button Text', type: 'text', default: 'Complete Secure Payment' },
+            { key: 'btnBg', label: 'Primary Button Background Color', type: 'color', default: '#0070ba' },
+            { key: 'btnColor', label: 'Primary Button Text Color', type: 'color', default: '#ffffff' },
+            { key: 'btnShape', label: 'Button Shape', type: 'select', default: 'pill', options: [
+                { value: 'pill', label: 'Pill / Fully Rounded' },
+                { value: 'rounded', label: 'Rounded Corners' },
+                { value: 'square', label: 'Square' }
+            ]},
+            { key: 'btnEffect', label: 'Button Special Effect', type: 'select', default: 'none', options: [
+                { value: 'none', label: 'Standard (None)' },
+                { value: 'glow', label: 'Outer Neon Glow Effect' },
+                { value: 'pulse_alert', label: 'Attention Pulse Alert' },
+                { value: 'scale_lift', label: 'Hover Lift & Scale' },
+                { value: 'gradient_flow', label: 'Vibrant Gradient Shift' }
+            ]},
+            { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#0f172a' },
+            { key: 'cardBg', label: 'Card Container Background', type: 'color', default: '#1e293b' },
+            { key: 'headingColor', label: 'Heading Text Color', type: 'color', default: '#ffffff' },
+            { key: 'textColor', label: 'Body Text Color', type: 'color', default: '#cbd5e1' },
+            { key: 'accentColor', label: 'Active Accent Color', type: 'color', default: '#0070ba' }
+        ],
+        html: `<section class="py-16 px-6 md:px-12 w-full min-w-0 break-words text-slate-100" style="background-color: {{bgColor}};" data-component="payment_checkout" data-paypal-email="{{paypalEmail}}">
+    <div class="max-w-3xl mx-auto bg-slate-900/90 p-8 md:p-12 rounded-3xl border border-slate-800 shadow-2xl" style="background-color: {{cardBg}};">
+        <div class="text-center max-w-xl mx-auto mb-8 space-y-2">
+            <h2 class="text-3xl font-extrabold tracking-tight" style="color: {{headingColor}};">{{heading}}</h2>
+            <p class="text-xs md:text-sm leading-relaxed" style="color: {{textColor}};">{{subtext}}</p>
+        </div>
+
+        <!-- Product Summary Box -->
+        <div class="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl shadow" style="background-color: {{accentColor}};">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-sm text-white">{{productTitle}}</h4>
+                    <span class="text-[11px] text-slate-400">Order Summary Item</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-black" style="color: {{accentColor}};">
+                    <span>{{currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$'}}</span><span class="payment-amount-display">{{amount}}</span> <span class="text-xs font-bold text-slate-400">{{currency}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Gateway Selector Tabs -->
+        <div class="payment-methods-bar flex flex-wrap justify-center gap-2 mb-8 border-b border-slate-800/80 pb-4">
+            <button type="button" onclick="window.switchPaymentGatewayMethod(this, 'paypal')" class="payment-tab-btn active px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 border transition shadow" style="background-color: {{accentColor}}; color: #ffffff; border-color: {{accentColor}};" style-active-bg="{{accentColor}}" data-method="paypal">
+                <i class="fab fa-paypal text-sm"></i> <span>PayPal</span>
+            </button>
+            <button type="button" onclick="window.switchPaymentGatewayMethod(this, 'credit_card')" class="payment-tab-btn px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 border border-slate-800 bg-slate-950 text-slate-400 hover:text-white transition" style-active-bg="{{accentColor}}" data-method="credit_card">
+                <i class="far fa-credit-card text-sm"></i> <span>Credit Card</span>
+            </button>
+            <button type="button" onclick="window.switchPaymentGatewayMethod(this, 'stripe')" class="payment-tab-btn px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 border border-slate-800 bg-slate-950 text-slate-400 hover:text-white transition" style-active-bg="{{accentColor}}" data-method="stripe">
+                <i class="fab fa-stripe text-base"></i> <span>Stripe</span>
+            </button>
+            <button type="button" onclick="window.switchPaymentGatewayMethod(this, 'apple_pay')" class="payment-tab-btn px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 border border-slate-800 bg-slate-950 text-slate-400 hover:text-white transition" style-active-bg="{{accentColor}}" data-method="apple_pay">
+                <i class="fab fa-apple text-base"></i> <span>Apple Pay / GPay</span>
+            </button>
+            <button type="button" onclick="window.switchPaymentGatewayMethod(this, 'bank_transfer')" class="payment-tab-btn px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 border border-slate-800 bg-slate-950 text-slate-400 hover:text-white transition" style-active-bg="{{accentColor}}" data-method="bank_transfer">
+                <i class="fas fa-university text-sm"></i> <span>Bank Wire</span>
+            </button>
+        </div>
+
+        <!-- Checkout Form Container -->
+        <form onsubmit="event.preventDefault(); window.submitNuvisPaymentCheckout(this);" class="payment-checkout-form space-y-5">
+            <div class="payment-status-message hidden p-3.5 rounded-xl text-xs font-bold text-center"></div>
+
+            <input type="hidden" name="payment_method" value="paypal" />
+            <input type="hidden" name="paypal_email" value="{{paypalEmail}}" />
+            <input type="hidden" name="product_title" value="{{productTitle}}" />
+            <input type="hidden" name="currency" value="{{currency}}" />
+
+            <!-- Customer Details Input -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
+                    <input type="text" name="customer_name" placeholder="John Doe" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Billing Email</label>
+                    <input type="email" name="customer_email" placeholder="john@example.com" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                </div>
+            </div>
+
+            <!-- Amount Input (if custom allowed or default value) -->
+            <div class="payment-amount-panel" style="display: {{allowCustomAmount ? 'block' : 'none'}};">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Payment Amount ({{currency}})</label>
+                <input type="number" step="0.01" min="1.00" name="amount" value="{{amount}}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" oninput="const p = this.closest('[data-component]'); if(p){ const d = p.querySelector('.payment-amount-display'); if(d) d.innerText = parseFloat(this.value || 0).toFixed(2); }" />
+            </div>
+
+            <!-- Hidden input for amount if not custom input visible -->
+            <input type="hidden" name="fixed_amount" value="{{amount}}" />
+
+            <!-- Gateway Specific Panels -->
+            <!-- 1. PayPal Panel -->
+            <div class="gateway-panel panel-paypal space-y-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+                    <i class="fab fa-paypal text-sky-400 text-lg"></i>
+                    <span>PayPal Express Checkout</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Clicking the button below will securely connect to PayPal to complete your payment to <span class="text-white font-mono font-bold">{{paypalEmail}}</span>.
+                </p>
+            </div>
+
+            <!-- 2. Credit Card Panel (Hidden by default) -->
+            <div class="gateway-panel panel-credit_card hidden space-y-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-300 mb-1">
+                    <i class="far fa-credit-card text-teal-400 text-lg"></i>
+                    <span>Card Information</span>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Card Number</label>
+                    <input type="text" name="card_number" placeholder="4532 •••• •••• 8892" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Expiry Date</label>
+                        <input type="text" name="card_expiry" placeholder="MM/YY" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">CVC / CVV</label>
+                        <input type="password" maxlength="4" name="card_cvc" placeholder="123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-teal-500 font-mono" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Stripe Panel (Hidden by default) -->
+            <div class="gateway-panel panel-stripe hidden space-y-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+                    <i class="fab fa-stripe text-indigo-400 text-2xl"></i>
+                    <span>Stripe Secured Payment Gateway</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Transactions are processed securely through Stripe PCI-compliant infrastructure with end-to-end encryption.
+                </p>
+            </div>
+
+            <!-- 4. Apple Pay Panel (Hidden by default) -->
+            <div class="gateway-panel panel-apple_pay hidden space-y-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/80 text-center">
+                <div class="flex items-center justify-center gap-2 text-xs font-bold text-slate-300">
+                    <i class="fab fa-apple text-white text-xl"></i>
+                    <span>Apple Pay & Google Pay Instant Checkout</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Use Biometric Touch ID, Face ID, or Google Wallet to complete your order in seconds.
+                </p>
+            </div>
+
+            <!-- 5. Bank Transfer Panel (Hidden by default) -->
+            <div class="gateway-panel panel-bank_transfer hidden space-y-3 p-4 bg-slate-950/40 rounded-2xl border border-slate-800/80">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+                    <i class="fas fa-university text-amber-400 text-base"></i>
+                    <span>Bank Transfer Details</span>
+                </div>
+                <pre class="text-xs text-slate-300 font-mono bg-slate-950 p-3 rounded-xl border border-slate-800 leading-relaxed whitespace-pre-wrap">{{bankDetails}}</pre>
+            </div>
+
+            <!-- Action Button -->
+            <button type="submit" class="w-full font-extrabold py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 shadow-xl flex items-center justify-center gap-2 transform hover:scale-[1.01]" style="background-color: {{btnBg}}; color: {{btnColor}};">
+                <i class="fas fa-lock"></i>
+                <span class="pay-btn-label">{{btnText}}</span>
+            </button>
+        </form>
+    </div>
+</section>`
     }
 ];
 
@@ -2929,7 +3124,119 @@ if (typeof window !== 'undefined') {
         if (window.initInquiryAdminPanels) window.initInquiryAdminPanels();
     }
 
-    window.switchWorkShelfImage = function(btnEl, imgSrc, titleText, descText) {
+
+    // --- PayPal & Payment Gateway Checkout Methods ---
+    window.switchPaymentGatewayMethod = function(btnElement, method) {
+        const root = btnElement.closest('[data-component="payment_checkout"]');
+        if (!root) return;
+
+        const form = root.querySelector('.payment-checkout-form');
+        const hiddenMethod = form ? form.querySelector('input[name="payment_method"]') : null;
+        if (hiddenMethod) hiddenMethod.value = method;
+
+        // Update active tab button visual styling
+        const tabs = root.querySelectorAll('.payment-tab-btn');
+        tabs.forEach(tab => {
+            const activeBg = tab.getAttribute('style-active-bg') || '#0070ba';
+            if (tab.getAttribute('data-method') === method) {
+                tab.style.backgroundColor = activeBg;
+                tab.style.color = '#ffffff';
+                tab.style.borderColor = activeBg;
+                tab.classList.add('active', 'shadow');
+                tab.classList.remove('bg-slate-950', 'text-slate-400', 'border-slate-800');
+            } else {
+                tab.style.backgroundColor = '#020617';
+                tab.style.color = '#94a3b8';
+                tab.style.borderColor = '#1e293b';
+                tab.classList.remove('active', 'shadow');
+            }
+        });
+
+        // Hide all gateway specific panels and show selected one
+        const panels = root.querySelectorAll('.gateway-panel');
+        panels.forEach(p => p.classList.add('hidden'));
+
+        const targetPanel = root.querySelector('.panel-' + method);
+        if (targetPanel) targetPanel.classList.remove('hidden');
+
+        // Update button text label if helpful
+        const btnLabel = root.querySelector('.pay-btn-label');
+        if (btnLabel) {
+            if (method === 'paypal') btnLabel.innerText = 'Pay with PayPal';
+            else if (method === 'credit_card') btnLabel.innerText = 'Pay with Credit Card';
+            else if (method === 'stripe') btnLabel.innerText = 'Pay with Stripe';
+            else if (method === 'apple_pay') btnLabel.innerText = 'Pay with Apple Pay / GPay';
+            else if (method === 'bank_transfer') btnLabel.innerText = 'Confirm Bank Wire Request';
+        }
+    };
+
+    window.submitNuvisPaymentCheckout = function(formElement) {
+        const root = formElement.closest('[data-component="payment_checkout"]');
+        if (!root) return;
+
+        const btn = formElement.querySelector("button[type='submit']");
+        const statusDiv = formElement.querySelector(".payment-status-message");
+
+        if (btn) btn.disabled = true;
+        if (statusDiv) {
+            statusDiv.className = "payment-status-message p-3.5 rounded-xl text-xs font-bold text-center bg-slate-800 text-slate-300 border border-slate-700";
+            statusDiv.innerText = "Processing secure checkout transaction...";
+            statusDiv.classList.remove("hidden");
+        }
+
+        const fd = new FormData(formElement);
+        const method = fd.get('payment_method') || 'paypal';
+        const paypalEmail = fd.get('paypal_email') || root.getAttribute('data-paypal-email') || '';
+        const amtInput = formElement.querySelector('input[name="amount"]');
+        const amount = amtInput ? amtInput.value : (fd.get('fixed_amount') || '49.99');
+        const currency = fd.get('currency') || 'USD';
+        const productTitle = fd.get('product_title') || 'Nuvis Purchase';
+
+        // Handle direct PayPal redirection if PayPal method is active and email provided
+        if (method === 'paypal' && paypalEmail) {
+            if (statusDiv) {
+                statusDiv.className = "payment-status-message p-3.5 rounded-xl text-xs font-bold text-center bg-sky-950 text-sky-400 border border-sky-500/30";
+                statusDiv.innerText = "Redirecting to PayPal Checkout...";
+            }
+            // Also record transaction via API in parallel
+            fd.append('amount', amount);
+            fetch('api.php?action=process_payment_checkout', { method: 'POST', body: fd }).catch(e => {});
+
+            setTimeout(() => {
+                const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(paypalEmail)}&item_name=${encodeURIComponent(productTitle)}&amount=${encodeURIComponent(amount)}&currency_code=${encodeURIComponent(currency)}`;
+                window.open(paypalUrl, '_blank', 'noopener,noreferrer');
+                if (btn) btn.disabled = false;
+            }, 800);
+            return;
+        }
+
+        // Handle API checkout submission for other methods or fallback
+        fd.append('amount', amount);
+        fetch('api.php?action=process_payment_checkout', {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.className = "payment-status-message p-3.5 rounded-xl text-xs font-bold text-center bg-emerald-950 text-emerald-400 border border-emerald-500/30 shadow-lg";
+                statusDiv.innerText = data.message || "Payment processed successfully!";
+                formElement.reset();
+            } else {
+                statusDiv.className = "payment-status-message p-3.5 rounded-xl text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/30";
+                statusDiv.innerText = data.error || "Payment transaction declined.";
+            }
+        })
+        .catch(err => {
+            statusDiv.className = "payment-status-message p-3.5 rounded-xl text-xs font-bold text-center bg-red-950 text-red-400 border border-red-500/30";
+            statusDiv.innerText = "Payment processing connection failed. Please try again.";
+        })
+        .finally(() => {
+            if (btn) btn.disabled = false;
+        });
+    };
+
+        window.switchWorkShelfImage = function(btnEl, imgSrc, titleText, descText) {
         const root = btnEl.closest('[data-component="work_description_shelf"]');
         if (!root) return;
 

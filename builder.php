@@ -2214,6 +2214,20 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*showLine\s*\?\s*'block'\s*:\s*'none'\s*}}/g, displayVal);
                 }
 
+                if (sec.type.toLowerCase() === 'payment_checkout') {
+                    const btnShapeClass = resolveBtnShapeClass(sec.props);
+                    const btnEffectClass = resolveBtnEffectClass(sec.props);
+                    const currency = sec.props.currency || 'USD';
+                    const currSymbol = currency === 'EUR' ? '€' : (currency === 'GBP' ? '£' : '$');
+                    const allowCustom = sec.props.allowCustomAmount !== undefined ? sec.props.allowCustomAmount : false;
+
+                    compiledHtml = compiledHtml.replace(/{{\s*currency\s*===\s*'EUR'\s*\?\s*'€'\s*:\s*currency\s*===\s*'GBP'\s*\?\s*'£'\s*:\s*'\$'\s*}}/g, currSymbol);
+                    compiledHtml = compiledHtml.replace(/{{\s*allowCustomAmount\s*\?\s*'block'\s*:\s*'none'\s*}}/g, allowCustom ? 'block' : 'none');
+
+                    // Apply button shape & effect classes
+                    compiledHtml = compiledHtml.replace(/class="w-full font-extrabold py-3\.5 px-6 rounded-2xl/g, `class="w-full font-extrabold py-3.5 px-6 ${btnShapeClass} ${btnEffectClass}`);
+                }
+
                 // Dynamic compiler for google_chatbot & whatsapp_chatbot position placement
                 if (sec.type.toLowerCase() === 'google_chatbot' || sec.type.toLowerCase() === 'whatsapp_chatbot') {
                     const pos = sec.props.position || 'bottom-right';
