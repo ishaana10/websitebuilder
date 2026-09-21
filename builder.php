@@ -1652,6 +1652,23 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/{{\s*isSticky\s*\?\s*'sticky top-0 z-50 shadow-md'\s*:\s*'relative z-40'\s*}}/g, isSticky ? 'sticky top-0 z-50 shadow-md' : 'relative z-40');
                 }
 
+                if (sec.type.toLowerCase() === 'legal_links_shelf') {
+                    const textColor = sec.props.textColor || '#ffffff';
+                    const hoverColor = sec.props.hoverColor || '#38bdf8';
+
+                    ['topic1', 'topic2', 'topic3'].forEach((topicPrefix, idx) => {
+                        const topicNum = idx + 1;
+                        const labelText = sec.props[`${topicPrefix}Text`] !== undefined ? sec.props[`${topicPrefix}Text`] : (topicNum === 1 ? 'Privacy Policy' : topicNum === 2 ? 'Terms of Use' : 'Support');
+                        let linkHtml = '';
+                        if (labelText) {
+                            const href = resolveBtnUrl(sec.props, topicPrefix);
+                            const targetAttr = resolveBtnTarget(sec.props, topicPrefix);
+                            linkHtml = `<a href="${href}" ${targetAttr} class="transition duration-300 hover:underline" style="color: ${textColor};" onmouseover="this.style.color='${hoverColor}'" onmouseout="this.style.color='${textColor}'" data-el-path="el-${topicPrefix}">${labelText}</a>`;
+                        }
+                        compiledHtml = compiledHtml.replace(new RegExp(`{{\\s*${topicPrefix}LinkHtml\\s*}}`, 'g'), linkHtml);
+                    });
+                }
+
                 if (sec.type.toLowerCase() === 'cta_banner') {
                     const href = resolveBtnUrl(sec.props);
                     const targetAttr = resolveBtnTarget(sec.props);
@@ -2903,11 +2920,14 @@ $csrf_token = generate_csrf_token();
                                                             <i className="fas fa-edit"></i> Edit Properties
                                                         </h4>
                                                         {compDef.schema.map(field => {
-                                                            // Determine link type prefix (e.g. 'btn' or 'secBtn' or 'tier1')
+                                                            // Determine link type prefix (e.g. 'btn' or 'secBtn' or 'tier1' or 'topic1')
                                                             let linkTypeKey = 'btnLinkType';
                                                             if (field.key.startsWith('secBtn')) linkTypeKey = 'secBtnLinkType';
                                                             if (field.key.startsWith('tier1')) linkTypeKey = 'tier1BtnLinkType';
                                                             if (field.key.startsWith('tier2')) linkTypeKey = 'tier2BtnLinkType';
+                                                            if (field.key.startsWith('topic1')) linkTypeKey = 'topic1LinkType';
+                                                            if (field.key.startsWith('topic2')) linkTypeKey = 'topic2LinkType';
+                                                            if (field.key.startsWith('topic3')) linkTypeKey = 'topic3LinkType';
 
                                                             const currentLinkType = selectedSection.props[linkTypeKey] || 'url';
 
