@@ -166,6 +166,56 @@ const UI_COMPONENTS = [
     </div>
 </footer>`
     },
+    {
+        id: 'legal_links_shelf',
+        name: 'Legal & Policy Links Shelf',
+        category: 'Footers',
+        icon: 'fas fa-scale-balanced',
+        schema: [
+            { key: 'topic1Text', label: 'Topic 1 Label Text', type: 'text', default: 'Privacy Policy' },
+            { key: 'topic1LinkType', label: 'Topic 1 Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
+            { key: 'topic1Url', label: 'Topic 1 Link URL', type: 'text', default: '#' },
+            { key: 'topic1Page', label: 'Topic 1 Select Page', type: 'text', default: 'index' },
+            { key: 'topic1Section', label: 'Topic 1 Select Section', type: 'text', default: '' },
+            { key: 'topic1WaPhone', label: 'Topic 1 WhatsApp Phone', type: 'text', default: '15551234567' },
+            { key: 'topic1WaMsg', label: 'Topic 1 WhatsApp Message', type: 'text', default: 'Hello! I am reaching out regarding Privacy Policy.' },
+            { key: 'topic1NewTab', label: 'Topic 1 Open in New Tab', type: 'checkbox', default: false },
+
+            { key: 'topic2Text', label: 'Topic 2 Label Text', type: 'text', default: 'Terms of Use' },
+            { key: 'topic2LinkType', label: 'Topic 2 Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
+            { key: 'topic2Url', label: 'Topic 2 Link URL', type: 'text', default: '#' },
+            { key: 'topic2Page', label: 'Topic 2 Select Page', type: 'text', default: 'index' },
+            { key: 'topic2Section', label: 'Topic 2 Select Section', type: 'text', default: '' },
+            { key: 'topic2WaPhone', label: 'Topic 2 WhatsApp Phone', type: 'text', default: '15551234567' },
+            { key: 'topic2WaMsg', label: 'Topic 2 WhatsApp Message', type: 'text', default: 'Hello! I am reaching out regarding Terms of Use.' },
+            { key: 'topic2NewTab', label: 'Topic 2 Open in New Tab', type: 'checkbox', default: false },
+
+            { key: 'topic3Text', label: 'Topic 3 Label Text', type: 'text', default: 'Support' },
+            { key: 'topic3LinkType', label: 'Topic 3 Destination Type', type: 'select', default: 'url', options: [{value: 'url', label: 'Custom URL'}, {value: 'page', label: 'Internal Page'}, {value: 'section', label: 'Section Anchor'}, {value: 'whatsapp', label: 'WhatsApp Business Chat'}] },
+            { key: 'topic3Url', label: 'Topic 3 Link URL', type: 'text', default: '#' },
+            { key: 'topic3Page', label: 'Topic 3 Select Page', type: 'text', default: 'index' },
+            { key: 'topic3Section', label: 'Topic 3 Select Section', type: 'text', default: '' },
+            { key: 'topic3WaPhone', label: 'Topic 3 WhatsApp Phone', type: 'text', default: '15551234567' },
+            { key: 'topic3WaMsg', label: 'Topic 3 WhatsApp Message', type: 'text', default: 'Hello! I am reaching out regarding Support.' },
+            { key: 'topic3NewTab', label: 'Topic 3 Open in New Tab', type: 'checkbox', default: false },
+
+            { key: 'bgColor', label: 'Background Color', type: 'color', default: '#334155' },
+            { key: 'textColor', label: 'Text / Link Color', type: 'color', default: '#ffffff' },
+            { key: 'hoverColor', label: 'Hover Accent Color', type: 'color', default: '#38bdf8' },
+            { key: 'alignment', label: 'Link Alignment', type: 'select', default: 'center', options: [{ value: 'center', label: 'Center' }, { value: 'start', label: 'Left' }, { value: 'end', label: 'Right' }] },
+            { key: 'gap', label: 'Gap Between Topics', type: 'select', default: 'gap-8', options: [{ value: 'gap-4', label: 'Compact (16px)' }, { value: 'gap-8', label: 'Medium (32px)' }, { value: 'gap-12', label: 'Spacious (48px)' }, { value: 'gap-16', label: 'Extra Large (64px)' }] },
+            { key: 'fontWeight', label: 'Font Weight', type: 'select', default: 'font-bold', options: [{ value: 'font-normal', label: 'Normal' }, { value: 'font-medium', label: 'Medium' }, { value: 'font-semibold', label: 'Semi-Bold' }, { value: 'font-bold', label: 'Bold' }, { value: 'font-extrabold', label: 'Extra Bold' }] },
+            { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [{ value: 'mt-0', label: 'None (0px)' }, { value: 'mt-2', label: 'Small (8px)' }, { value: 'mt-4', label: 'Medium (16px)' }, { value: 'mt-6', label: 'Large (24px)' }, { value: 'mt-8', label: 'Extra Large (32px)' }] }
+        ],
+        html: `
+<section class="py-6 px-8 transition-all duration-300 w-full min-w-0 break-words" style="background-color: {{bgColor}}; {{topMarginStyle}}" data-component="legal_links_shelf">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-{{alignment}} {{gap}} text-sm {{fontWeight}}">
+        {{topic1LinkHtml}}
+        {{topic2LinkHtml}}
+        {{topic3LinkHtml}}
+    </div>
+</section>`
+    },
 
     // === CORE / LAYOUT BUILDING BLOCKS ===
     {
