@@ -266,6 +266,7 @@ function run_installation_process($pdo, $output_callback = null) {
                     ['componentId' => 'pricing', 'headingText' => 'Explore Available Gadgets', 'paragraphText' => 'Select your gadget package below', 'classes' => [], 'raw_html' => ''],
                     ['componentId' => 'contact', 'headingText' => 'Inquire About Custom Bulk Orders', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
                     ['componentId' => 'chatbot', 'headingText' => '', 'paragraphText' => '', 'classes' => [], 'raw_html' => ''],
+                    ['componentId' => 'legal_links_shelf', 'headingText' => '', 'paragraphText' => '', 'classes' => [], 'props' => ['topic1Text' => 'Privacy Policy', 'topic1LinkType' => 'page', 'topic1Page' => 'privacy', 'topic2Text' => 'Terms of Use', 'topic2LinkType' => 'page', 'topic2Page' => 'terms', 'topic3Text' => 'Support', 'topic3LinkType' => 'page', 'topic3Page' => 'support']],
                     ['componentId' => 'footer', 'headingText' => '', 'paragraphText' => '', 'classes' => [], 'raw_html' => '']
                 ],
                 'custom_css' => 'body { background-color: #030712 !important; }',
