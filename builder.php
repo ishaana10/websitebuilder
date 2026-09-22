@@ -571,6 +571,162 @@ $csrf_token = generate_csrf_token();
                 showToast("Page Created", `Created and switched to page "${safeName}".`);
             };
 
+            const generateSampleLegalPages = () => {
+                const currentSects = pages[activePage] || pages["index"] || [];
+                const existingTopBar = currentSects.find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'top_bar_shelf');
+                const existingNavbar = currentSects.find(s => s.type && s.type.toLowerCase() === 'navbar') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'navbar');
+                const existingSocialIcons = currentSects.find(s => s.type && s.type.toLowerCase() === 'social_icons') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'social_icons');
+                const existingFooter = currentSects.find(s => s.type && s.type.toLowerCase() === 'footer') || (pages["index"] || []).find(s => s.type && s.type.toLowerCase() === 'footer');
+
+                const legalShelfSection = {
+                    id: 'sec-legal_links_shelf-' + Date.now() + '-shelf',
+                    type: 'legal_links_shelf',
+                    props: {
+                        topic1Text: 'Privacy Policy',
+                        topic1LinkType: 'page',
+                        topic1Page: 'privacy',
+                        topic2Text: 'Terms of Use',
+                        topic2LinkType: 'page',
+                        topic2Page: 'terms',
+                        topic3Text: 'Support',
+                        topic3LinkType: 'page',
+                        topic3Page: 'support',
+                        bgColor: '#334155',
+                        textColor: '#ffffff',
+                        hoverColor: '#38bdf8',
+                        alignment: 'center',
+                        gap: 'gap-8',
+                        fontWeight: 'font-bold'
+                    },
+                    style: { classes: [] }
+                };
+
+                const buildPageSections = (heading, htmlContent) => {
+                    const sects = [];
+                    if (existingTopBar) {
+                        const tb = JSON.parse(JSON.stringify(existingTopBar));
+                        tb.id = 'sec-top_bar_shelf-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                        sects.push(tb);
+                    }
+                    if (existingNavbar) {
+                        const nb = JSON.parse(JSON.stringify(existingNavbar));
+                        nb.id = 'sec-navbar-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                        sects.push(nb);
+                    }
+                    if (existingSocialIcons) {
+                        const si = JSON.parse(JSON.stringify(existingSocialIcons));
+                        si.id = 'sec-social_icons-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                        sects.push(si);
+                    }
+
+                    sects.push({
+                        id: 'sec-rich_text-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+                        type: 'heading_rich_text',
+                        props: {
+                            heading: heading,
+                            subheading: 'Official Documentation & Policy Shelf Guidelines',
+                            bodyContent: htmlContent,
+                            align: 'center',
+                            bgColor: '#0f172a',
+                            textColor: '#e2e8f0',
+                            accentColor: '#14b8a6'
+                        },
+                        style: { classes: [] }
+                    });
+
+                    sects.push(JSON.parse(JSON.stringify(legalShelfSection)));
+
+                    if (existingFooter) {
+                        const ft = JSON.parse(JSON.stringify(existingFooter));
+                        ft.id = 'sec-footer-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+                        sects.push(ft);
+                    }
+                    return sects;
+                };
+
+                const privacyHtml = `<div class="max-w-4xl mx-auto text-left space-y-4 text-sm leading-relaxed text-slate-300">
+                    <p class="text-base font-semibold text-white">Your privacy is important to us. It is our policy to respect your privacy regarding any information we may collect from you across our website.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">1. Information We Collect</h3>
+                    <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">2. How We Use Information</h3>
+                    <p>We retain collected information for as long as necessary to provide you with your requested service. What data we store, we will protect within commercially acceptable means to prevent loss and theft.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">3. Third-Party Sharing</h3>
+                    <p>We do not share any personally identifying information publicly or with third-parties, except when required to by law.</p>
+                </div>`;
+
+                const termsHtml = `<div class="max-w-4xl mx-auto text-left space-y-4 text-sm leading-relaxed text-slate-300">
+                    <p class="text-base font-semibold text-white">By accessing our website, you agree to be bound by these terms of service, all applicable laws, and regulations.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">1. Use License</h3>
+                    <p>Permission is granted to temporarily download one copy of the materials on our website for personal, non-commercial transitory viewing only.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">2. Disclaimer</h3>
+                    <p>The materials on our website are provided on an 'as is' basis. We make no warranties, expressed or implied, and hereby disclaim and negate all other warranties.</p>
+                    <h3 class="text-lg font-bold text-teal-400 mt-6 mb-2">3. Governing Law</h3>
+                    <p>These terms and conditions are governed by and construed in accordance with standard regulations and jurisdiction.</p>
+                </div>`;
+
+                const supportHtml = `<div class="max-w-4xl mx-auto text-left space-y-4 text-sm leading-relaxed text-slate-300">
+                    <p class="text-base font-semibold text-white">Need help or have questions? Our customer support team is available 24/7 to assist you.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="p-6 bg-slate-900 border border-slate-800 rounded-xl">
+                            <h4 class="font-bold text-white mb-2"><i class="fas fa-envelope text-teal-400 mr-2"></i> Email Support</h4>
+                            <p class="text-xs text-slate-400">Reach out directly via email for technical or billing inquiries.</p>
+                            <a href="mailto:support@nuvistechnologies.com" class="inline-block mt-3 text-xs font-bold text-teal-400 hover:underline">support@nuvistechnologies.com</a>
+                        </div>
+                        <div class="p-6 bg-slate-900 border border-slate-800 rounded-xl">
+                            <h4 class="font-bold text-white mb-2"><i class="fas fa-headset text-teal-400 mr-2"></i> Help Center</h4>
+                            <p class="text-xs text-slate-400">Browse tutorials, user guides, and common FAQs in our knowledge base.</p>
+                            <a href="#" class="inline-block mt-3 text-xs font-bold text-teal-400 hover:underline">Visit Knowledgebase &rarr;</a>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Update legal_links_shelf in existing pages if present
+                const updatedPages = { ...pages };
+                Object.keys(updatedPages).forEach(pKey => {
+                    let pSects = updatedPages[pKey] || [];
+                    let hasShelf = false;
+                    pSects = pSects.map(s => {
+                        if (s.type && s.type.toLowerCase() === 'legal_links_shelf') {
+                            hasShelf = true;
+                            return {
+                                ...s,
+                                props: {
+                                    ...s.props,
+                                    topic1LinkType: 'page',
+                                    topic1Page: 'privacy',
+                                    topic2LinkType: 'page',
+                                    topic2Page: 'terms',
+                                    topic3LinkType: 'page',
+                                    topic3Page: 'support'
+                                }
+                            };
+                        }
+                        return s;
+                    });
+                    if (!hasShelf) {
+                        // Append legal_links_shelf before footer or at end
+                        const footerIdx = pSects.findIndex(s => s.type && s.type.toLowerCase() === 'footer');
+                        if (footerIdx !== -1) {
+                            pSects.splice(footerIdx, 0, JSON.parse(JSON.stringify(legalShelfSection)));
+                        } else {
+                            pSects.push(JSON.parse(JSON.stringify(legalShelfSection)));
+                        }
+                    }
+                    updatedPages[pKey] = pSects;
+                });
+
+                updatedPages['privacy'] = buildPageSections('Privacy Policy', privacyHtml);
+                updatedPages['terms'] = buildPageSections('Terms of Use', termsHtml);
+                updatedPages['support'] = buildPageSections('Customer Support', supportHtml);
+
+                setPages(updatedPages);
+                setActivePage('privacy');
+                setActiveSectionId(null);
+                setActiveElementId(null);
+                commitToHistory(updatedPages);
+                showToast("Sample Legal Pages Created", "Created 'privacy', 'terms', and 'support' pages linked to shelf!");
+            };
+
             const deletePage = (pageName) => {
                 if (pageName === 'index') {
                     showToast("Error", "The main 'index' page cannot be deleted.");
@@ -2563,6 +2719,13 @@ $csrf_token = generate_csrf_token();
                                 title="Create New Page"
                             >
                                 <i className="fas fa-plus"></i>
+                            </button>
+                            <button
+                                onClick={generateSampleLegalPages}
+                                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold rounded text-xs transition border border-slate-750 flex items-center gap-1"
+                                title="Add Sample Legal & Support Pages (Privacy, Terms, Support)"
+                            >
+                                <i className="fas fa-scale-balanced"></i> + Legal Pages
                             </button>
                             {activePage !== 'index' && (
                                 <React.Fragment>
