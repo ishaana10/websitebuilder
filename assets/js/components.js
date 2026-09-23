@@ -2304,6 +2304,59 @@ const UI_COMPONENTS = [
         </form>
     </div>
 </section>`
+    },
+    {
+        id: 'customizable_shelf',
+        name: 'Customizable Drag & Flex Shelf',
+        category: 'Features',
+        icon: 'fas fa-layer-group',
+        schema: [
+            { key: 'heading', label: 'Section Title (Optional)', type: 'text', default: 'Fully Customizable Dynamic Shelf' },
+            { key: 'layoutDirection', label: 'Layout Flow Direction', type: 'select', default: 'flex-row', options: [
+                { value: 'flex-row', label: 'Horizontal Row (Flex Row)' },
+                { value: 'flex-col', label: 'Vertical Stack (Flex Column)' },
+                { value: 'grid-cols-2', label: '2 Equal Columns Grid' },
+                { value: 'grid-cols-3', label: '3 Equal Columns Grid' }
+            ]},
+            { key: 'contentAlignment', label: 'Content Alignment', type: 'select', default: 'items-center', options: [
+                { value: 'items-start', label: 'Start / Top-Left' },
+                { value: 'items-center', label: 'Center' },
+                { value: 'items-end', label: 'End / Bottom-Right' },
+                { value: 'justify-between', label: 'Spread / Space-Between' }
+            ]},
+            { key: 'gap', label: 'Element Spacing Gap', type: 'select', default: 'gap-6', options: [
+                { value: 'gap-2', label: 'Compact (8px)' },
+                { value: 'gap-4', label: 'Small (16px)' },
+                { value: 'gap-6', label: 'Medium (24px)' },
+                { value: 'gap-8', label: 'Large (32px)' },
+                { value: 'gap-12', label: 'Extra Large (48px)' }
+            ]},
+            { key: 'topMargin', label: 'Top Margin Offset', type: 'select', default: 'mt-0', options: [
+                { value: 'mt-0', label: 'None (0px)' },
+                { value: 'mt-2', label: 'Small (8px)' },
+                { value: 'mt-4', label: 'Medium (16px)' },
+                { value: 'mt-6', label: 'Large (24px)' },
+                { value: 'mt-8', label: 'Extra Large (32px)' }
+            ]},
+            { key: 'cornerRadius', label: 'Shelf Corner Shape', type: 'select', default: 'rounded-2xl', options: [
+                { value: 'rounded-none', label: 'Sharp Corners (0px)' },
+                { value: 'rounded-lg', label: 'Medium Rounded (8px)' },
+                { value: 'rounded-xl', label: 'Large Rounded (12px)' },
+                { value: 'rounded-2xl', label: 'Extra Rounded (16px)' },
+                { value: 'rounded-3xl', label: 'Capsule / Pill (24px)' }
+            ]},
+            { key: 'bgColor', label: 'Section Background Color', type: 'color', default: '#0f172a' },
+            { key: 'headingColor', label: 'Header Title Color', type: 'color', default: '#ffffff' },
+            { key: 'accentColor', label: 'Accent Highlight Color', type: 'color', default: '#14b8a6' }
+        ],
+        html: `<section class="py-12 px-6 md:px-12 w-full min-w-0 break-words {{cornerRadius}} shadow-xl transition-all duration-300" style="background-color: {{bgColor}}; {{topMarginStyle}}" data-component="customizable_shelf">
+    <div class="max-w-6xl mx-auto space-y-8">
+        {{headingHtml}}
+        <div class="{{layoutContainerClass}} {{gap}} flex-wrap w-full">
+            {{objectsHtml}}
+        </div>
+    </div>
+</section>`
     }
 ];
 
