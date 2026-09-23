@@ -2401,6 +2401,141 @@ $csrf_token = generate_csrf_token();
                     compiledHtml = compiledHtml.replace(/class="w-full font-extrabold py-3\.5 px-6 rounded-2xl/g, `class="w-full font-extrabold py-3.5 px-6 ${btnShapeClass} ${btnEffectClass}`);
                 }
 
+                // Dynamic compiler for customizable_shelf component
+                if (sec.type.toLowerCase() === 'customizable_shelf') {
+                    const defaultItems = [
+                        {
+                            id: 'obj-1',
+                            type: 'text',
+                            text: 'Fully Customizable Dynamic Shelf',
+                            size: 'text-2xl',
+                            fontStyle: 'font-extrabold',
+                            color: sec.props.headingColor || '#ffffff',
+                            align: 'text-left',
+                            width: 'w-full'
+                        },
+                        {
+                            id: 'obj-2',
+                            type: 'picture',
+                            imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60',
+                            altText: 'Custom Layout Showcase',
+                            width: 'w-full',
+                            height: 'h-64',
+                            objectFit: 'cover',
+                            cornerRadius: 'rounded-xl'
+                        },
+                        {
+                            id: 'obj-3',
+                            type: 'button',
+                            text: 'Get Started Now',
+                            btnBg: sec.props.accentColor || '#14b8a6',
+                            btnColor: '#0f172a',
+                            btnShape: 'pill',
+                            btnEffect: 'glow',
+                            btnLinkType: 'url',
+                            btnUrl: '#',
+                            width: 'w-auto'
+                        }
+                    ];
+
+                    const items = (Array.isArray(sec.props.items) && sec.props.items.length > 0) ? sec.props.items : defaultItems;
+                    const layoutDir = sec.props.layoutDirection || 'flex-row';
+                    const contentAlign = sec.props.contentAlignment || 'items-center';
+                    const gap = sec.props.gap || 'gap-6';
+
+                    let layoutContainerClass = 'flex flex-col md:flex-row items-center';
+                    if (layoutDir === 'flex-col') {
+                        layoutContainerClass = `flex flex-col ${contentAlign}`;
+                    } else if (layoutDir === 'grid-cols-2') {
+                        layoutContainerClass = `grid grid-cols-1 md:grid-cols-2 ${contentAlign}`;
+                    } else if (layoutDir === 'grid-cols-3') {
+                        layoutContainerClass = `grid grid-cols-1 md:grid-cols-3 ${contentAlign}`;
+                    } else {
+                        layoutContainerClass = `flex flex-col md:flex-row ${contentAlign}`;
+                    }
+
+                    const objectsHtml = items.map((obj, index) => {
+                        const objType = obj.type || 'button';
+                        const elPath = `data-el-path="el-obj-${index}"`;
+                        const widthClass = obj.width || 'w-auto';
+                        const heightClass = obj.height || 'h-auto';
+                        const alignClass = obj.align || '';
+
+                        if (objType === 'button') {
+                            const btnText = obj.text || obj.label || 'Action Button';
+                            const btnBg = obj.btnBg || obj.bgColor || sec.props.accentColor || '#14b8a6';
+                            const btnColor = obj.btnColor || obj.textColor || '#0f172a';
+                            const shape = obj.btnShape || obj.shape || 'pill';
+                            const effect = obj.btnEffect || obj.effect || 'none';
+
+                            const shapeClass = shape === 'pill' ? 'rounded-full' : (shape === 'square' ? 'rounded-none' : 'rounded-lg');
+
+                            let effectClass = '';
+                            if (effect === 'glow') effectClass = 'shadow-[0_0_25px_rgba(20,184,166,0.7)] hover:shadow-[0_0_35px_rgba(20,184,166,1)] transition-shadow duration-300';
+                            else if (effect === 'pulse_alert') effectClass = 'animate-pulse ring-4 ring-rose-500/60 shadow-lg';
+                            else if (effect === 'bounce_alert') effectClass = 'animate-bounce shadow-lg';
+                            else if (effect === 'scale_lift') effectClass = 'transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 shadow-xl';
+                            else if (effect === 'gradient_flow') effectClass = 'bg-gradient-to-r from-teal-500 via-emerald-400 to-cyan-500 hover:brightness-110 shadow-lg';
+
+                            const linkType = obj.btnLinkType || obj.linkType || 'url';
+                            let href = '#';
+                            if (linkType === 'page') href = `?page=${obj.btnPage || obj.page || 'index'}`;
+                            else if (linkType === 'section') href = obj.btnSection || obj.section ? `#${obj.btnSection || obj.section}` : '#';
+                            else if (linkType === 'whatsapp') {
+                                const phone = (obj.btnWaPhone || obj.waPhone || '15551234567').replace(/[^\d+]/g, '');
+                                href = `https://wa.me/${phone}?text=${encodeURIComponent(obj.btnWaMsg || obj.waMsg || '')}`;
+                            } else href = obj.btnUrl || obj.url || '#';
+
+                            const targetAttr = (obj.btnNewTab || obj.newTab) ? 'target="_blank" rel="noopener noreferrer"' : '';
+
+                            return `<div class="${widthClass} ${alignClass} shrink-0">
+                                <a href="${href}" ${targetAttr} ${elPath} class="inline-block text-center font-bold px-6 py-3 ${shapeClass} transition duration-300 text-sm ${effectClass}" style="background-color: ${btnBg}; color: ${btnColor};">${btnText}</a>
+                            </div>`;
+                        } else if (objType === 'picture' || objType === 'image') {
+                            const imgUrl = obj.imageUrl || obj.url || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60';
+                            const altText = (obj.altText || obj.label || 'Shelf Image').replace(/"/g, '&quot;');
+                            const objectFit = obj.objectFit || 'cover';
+                            const radiusClass = obj.cornerRadius || obj.shape || 'rounded-xl';
+
+                            return `<div class="${widthClass} ${heightClass} ${radiusClass} overflow-hidden shadow-lg border border-slate-700/50 ${alignClass} relative group" ${elPath}>
+                                <img src="${imgUrl}" alt="${altText}" class="w-full h-full object-${objectFit} transition duration-300 group-hover:scale-105" />
+                            </div>`;
+                        } else if (objType === 'icon' || objType === 'badge') {
+                            const iconClass = obj.iconClass || 'fas fa-star';
+                            const badgeText = obj.text || obj.label || '';
+                            const bgColor = obj.bgColor || 'rgba(20, 184, 166, 0.15)';
+                            const textColor = obj.textColor || sec.props.accentColor || '#14b8a6';
+                            const radiusClass = obj.cornerRadius || 'rounded-full';
+                            const sizeClass = obj.size || 'text-sm';
+
+                            return `<div class="inline-flex items-center gap-2 px-4 py-2 ${radiusClass} font-bold ${sizeClass} ${widthClass} ${alignClass} border border-slate-700/50 shadow-sm" style="background-color: ${bgColor}; color: ${textColor};" ${elPath}>
+                                <i class="${iconClass}"></i>
+                                ${badgeText ? `<span>${badgeText}</span>` : ''}
+                            </div>`;
+                        } else {
+                            // Text block
+                            const textContent = obj.text || obj.label || 'Sample Text Block';
+                            const sizeClass = obj.size || 'text-base';
+                            const fontStyle = obj.fontStyle || 'font-normal';
+                            const textAlign = obj.align || 'text-left';
+                            const textColor = obj.color || obj.textColor || sec.props.textColor || '#cbd5e1';
+
+                            return `<div class="${sizeClass} ${fontStyle} ${textAlign} ${widthClass} leading-relaxed" style="color: ${textColor};" ${elPath}>
+                                ${textContent}
+                            </div>`;
+                        }
+                    }).join('\n');
+
+                    const headingText = sec.props.heading || '';
+                    const headingColor = sec.props.headingColor || '#ffffff';
+                    const headingHtml = headingText ? `<h2 class="text-3xl font-extrabold text-center tracking-tight" style="color: ${headingColor};">${headingText}</h2>` : '';
+
+                    compiledHtml = compiledHtml.replace(/{{\s*headingHtml\s*}}/g, headingHtml);
+                    compiledHtml = compiledHtml.replace(/{{\s*layoutContainerClass\s*}}/g, layoutContainerClass);
+                    compiledHtml = compiledHtml.replace(/{{\s*gap\s*}}/g, gap);
+                    compiledHtml = compiledHtml.replace(/{{\s*objectsHtml\s*}}/g, objectsHtml);
+                }
+
                 // Dynamic compiler for google_chatbot & whatsapp_chatbot position placement
                 if (sec.type.toLowerCase() === 'google_chatbot' || sec.type.toLowerCase() === 'whatsapp_chatbot') {
                     const pos = sec.props.position || 'bottom-right';
@@ -4621,6 +4756,599 @@ $csrf_token = generate_csrf_token();
                                                         <button onClick={addFaq} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
                                                             <i className="fas fa-plus mr-1"></i> Add New FAQ
                                                         </button>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* CUSTOMIZABLE DYNAMIC FLEX SHELF OBJECTS MANAGER */}
+                                            {selectedSection && selectedSection.type.toLowerCase() === 'customizable_shelf' && (() => {
+                                                const defaultObjects = [
+                                                    {
+                                                        id: 'obj-1',
+                                                        type: 'text',
+                                                        text: 'Fully Customizable Dynamic Shelf',
+                                                        size: 'text-2xl',
+                                                        fontStyle: 'font-extrabold',
+                                                        color: selectedSection.props.headingColor || '#ffffff',
+                                                        align: 'text-left',
+                                                        width: 'w-full'
+                                                    },
+                                                    {
+                                                        id: 'obj-2',
+                                                        type: 'picture',
+                                                        imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60',
+                                                        altText: 'Custom Layout Showcase',
+                                                        width: 'w-full',
+                                                        height: 'h-64',
+                                                        objectFit: 'cover',
+                                                        cornerRadius: 'rounded-xl'
+                                                    },
+                                                    {
+                                                        id: 'obj-3',
+                                                        type: 'button',
+                                                        text: 'Get Started Now',
+                                                        btnBg: selectedSection.props.accentColor || '#14b8a6',
+                                                        btnColor: '#0f172a',
+                                                        btnShape: 'pill',
+                                                        btnEffect: 'glow',
+                                                        btnLinkType: 'url',
+                                                        btnUrl: '#',
+                                                        width: 'w-auto'
+                                                    }
+                                                ];
+
+                                                const currentObjects = (Array.isArray(selectedSection.props.items) && selectedSection.props.items.length > 0) ? selectedSection.props.items : defaultObjects;
+
+                                                const handleObjectsChange = (newObjects) => {
+                                                    const updated = sections.map(s => s.id === selectedSection.id ? { ...s, props: { ...s.props, items: newObjects } } : s);
+                                                    updateSectionsWithHistory(updated);
+                                                };
+
+                                                const addObject = (type) => {
+                                                    const newId = 'obj-' + Date.now();
+                                                    let newObj = { id: newId, type, width: 'w-auto' };
+
+                                                    if (type === 'button') {
+                                                        newObj = {
+                                                            ...newObj,
+                                                            text: 'New Button',
+                                                            btnBg: selectedSection.props.accentColor || '#14b8a6',
+                                                            btnColor: '#0f172a',
+                                                            btnShape: 'pill',
+                                                            btnEffect: 'none',
+                                                            btnLinkType: 'url',
+                                                            btnUrl: '#',
+                                                            width: 'w-auto'
+                                                        };
+                                                    } else if (type === 'picture') {
+                                                        newObj = {
+                                                            ...newObj,
+                                                            imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=60',
+                                                            altText: 'Image Element',
+                                                            width: 'w-full',
+                                                            height: 'h-64',
+                                                            objectFit: 'cover',
+                                                            cornerRadius: 'rounded-xl'
+                                                        };
+                                                    } else if (type === 'icon') {
+                                                        newObj = {
+                                                            ...newObj,
+                                                            iconClass: 'fas fa-star',
+                                                            text: 'Badge Label',
+                                                            bgColor: 'rgba(20, 184, 166, 0.15)',
+                                                            textColor: selectedSection.props.accentColor || '#14b8a6',
+                                                            cornerRadius: 'rounded-full',
+                                                            size: 'text-sm',
+                                                            width: 'w-auto'
+                                                        };
+                                                    } else {
+                                                        newObj = {
+                                                            ...newObj,
+                                                            text: 'Custom Text Content',
+                                                            size: 'text-base',
+                                                            fontStyle: 'font-normal',
+                                                            color: selectedSection.props.textColor || '#cbd5e1',
+                                                            align: 'text-left',
+                                                            width: 'w-full'
+                                                        };
+                                                    }
+
+                                                    handleObjectsChange([...currentObjects, newObj]);
+                                                };
+
+                                                const removeObject = (objIdx) => {
+                                                    handleObjectsChange(currentObjects.filter((_, idx) => idx !== objIdx));
+                                                };
+
+                                                const moveObjectUp = (objIdx) => {
+                                                    if (objIdx <= 0) return;
+                                                    const updated = [...currentObjects];
+                                                    const temp = updated[objIdx];
+                                                    updated[objIdx] = updated[objIdx - 1];
+                                                    updated[objIdx - 1] = temp;
+                                                    handleObjectsChange(updated);
+                                                };
+
+                                                const moveObjectDown = (objIdx) => {
+                                                    if (objIdx >= currentObjects.length - 1) return;
+                                                    const updated = [...currentObjects];
+                                                    const temp = updated[objIdx];
+                                                    updated[objIdx] = updated[objIdx + 1];
+                                                    updated[objIdx + 1] = temp;
+                                                    handleObjectsChange(updated);
+                                                };
+
+                                                const updateObjectField = (objIdx, field, val) => {
+                                                    const updated = currentObjects.map((obj, idx) => idx === objIdx ? { ...obj, [field]: val } : obj);
+                                                    handleObjectsChange(updated);
+                                                };
+
+                                                const handleFileUpload = (objIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            updateObjectField(objIdx, 'imageUrl', data.url);
+                                                            showToast("Success", "Picture asset uploaded successfully!");
+                                                        } else {
+                                                            showToast("Upload Error", data.error || "Failed to upload image.");
+                                                        }
+                                                    })
+                                                    .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
+                                                };
+
+                                                return (
+                                                    <div className="space-y-4 pt-4 border-t border-slate-800">
+                                                        <div className="flex justify-between items-center">
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-layer-group"></i> Shelf Layout & Objects Manager
+                                                            </h4>
+                                                            <span className="text-[10px] text-slate-400 font-mono">{currentObjects.length} Object(s)</span>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <button
+                                                                onClick={() => addObject('button')}
+                                                                className="py-2 px-2 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-teal-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+                                                            >
+                                                                <i className="fas fa-plus-circle text-xs"></i> + Button
+                                                            </button>
+                                                            <button
+                                                                onClick={() => addObject('picture')}
+                                                                className="py-2 px-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+                                                            >
+                                                                <i className="fas fa-image text-xs"></i> + Picture
+                                                            </button>
+                                                            <button
+                                                                onClick={() => addObject('text')}
+                                                                className="py-2 px-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+                                                            >
+                                                                <i className="fas fa-font text-xs"></i> + Text Block
+                                                            </button>
+                                                            <button
+                                                                onClick={() => addObject('icon')}
+                                                                className="py-2 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1"
+                                                            >
+                                                                <i className="fas fa-icons text-xs"></i> + Icon / Badge
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
+                                                            {currentObjects.map((obj, idx) => {
+                                                                const objType = obj.type || 'button';
+                                                                return (
+                                                                    <div key={obj.id || idx} className="p-3 bg-slate-900/90 border border-slate-800 rounded-xl space-y-3 relative group">
+                                                                        <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider ${
+                                                                                    objType === 'button' ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' :
+                                                                                    objType === 'picture' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' :
+                                                                                    objType === 'icon' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                                                                    'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                                                                                }`}>
+                                                                                    {objType} #{idx + 1}
+                                                                                </span>
+                                                                                <span className="text-xs text-slate-300 font-bold line-clamp-1 max-w-[110px]">
+                                                                                    {obj.text || obj.label || obj.altText || 'Element'}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            <div className="flex items-center gap-1">
+                                                                                <button
+                                                                                    onClick={() => moveObjectUp(idx)}
+                                                                                    disabled={idx === 0}
+                                                                                    className="p-1 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-xs transition"
+                                                                                    title="Move Up"
+                                                                                >
+                                                                                    ↑
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => moveObjectDown(idx)}
+                                                                                    disabled={idx === currentObjects.length - 1}
+                                                                                    className="p-1 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-xs transition"
+                                                                                    title="Move Down"
+                                                                                >
+                                                                                    ↓
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => removeObject(idx)}
+                                                                                    className="p-1 px-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800/50 text-rose-400 rounded text-xs transition"
+                                                                                    title="Delete Object"
+                                                                                >
+                                                                                    <i className="fas fa-trash-alt"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                            <div>
+                                                                                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Element Width</label>
+                                                                                <select
+                                                                                    value={obj.width || 'w-auto'}
+                                                                                    onChange={(e) => updateObjectField(idx, 'width', e.target.value)}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                >
+                                                                                    <option value="w-full">Full Width (100%)</option>
+                                                                                    <option value="w-3/4">Three Quarters (75%)</option>
+                                                                                    <option value="w-2/3">Two Thirds (66%)</option>
+                                                                                    <option value="w-1/2">Half Width (50%)</option>
+                                                                                    <option value="w-1/3">One Third (33%)</option>
+                                                                                    <option value="w-1/4">One Quarter (25%)</option>
+                                                                                    <option value="w-auto">Auto / Compact</option>
+                                                                                </select>
+                                                                            </div>
+
+                                                                            <div>
+                                                                                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Alignment</label>
+                                                                                <select
+                                                                                    value={obj.align || ''}
+                                                                                    onChange={(e) => updateObjectField(idx, 'align', e.target.value)}
+                                                                                    className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                >
+                                                                                    <option value="">Default (Flex)</option>
+                                                                                    <option value="self-start">Start / Left</option>
+                                                                                    <option value="self-center">Center</option>
+                                                                                    <option value="self-end">End / Right</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {objType === 'button' && (
+                                                                            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Button Text</label>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={obj.text || ''}
+                                                                                        onChange={(e) => updateObjectField(idx, 'text', e.target.value)}
+                                                                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                        placeholder="Button Label"
+                                                                                    />
+                                                                                </div>
+
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Link Destination Type</label>
+                                                                                    <select
+                                                                                        value={obj.btnLinkType || 'url'}
+                                                                                        onChange={(e) => updateObjectField(idx, 'btnLinkType', e.target.value)}
+                                                                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                    >
+                                                                                        <option value="url">Custom URL</option>
+                                                                                        <option value="page">Internal Page</option>
+                                                                                        <option value="section">Section Anchor</option>
+                                                                                        <option value="whatsapp">WhatsApp Business Chat</option>
+                                                                                    </select>
+                                                                                </div>
+
+                                                                                {(obj.btnLinkType || 'url') === 'url' && (
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Target URL</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={obj.btnUrl || ''}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnUrl', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                                            placeholder="#"
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {(obj.btnLinkType || 'url') === 'page' && (
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Select Page</label>
+                                                                                        <select
+                                                                                            value={obj.btnPage || 'index'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnPage', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500 font-mono"
+                                                                                        >
+                                                                                            {Object.keys(pages).map(pKey => (
+                                                                                                <option key={pKey} value={pKey}>{pKey}</option>
+                                                                                            ))}
+                                                                                        </select>
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {(obj.btnLinkType || 'url') === 'section' && (
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Section ID Anchor</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={obj.btnSection || ''}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnSection', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                                            placeholder="section-id"
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {(obj.btnLinkType || 'url') === 'whatsapp' && (
+                                                                                    <div className="space-y-1.5">
+                                                                                        <div>
+                                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">WhatsApp Phone Number</label>
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={obj.btnWaPhone || '15551234567'}
+                                                                                                onChange={(e) => updateObjectField(idx, 'btnWaPhone', e.target.value)}
+                                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div>
+                                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pre-filled Message</label>
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={obj.btnWaMsg || ''}
+                                                                                                onChange={(e) => updateObjectField(idx, 'btnWaMsg', e.target.value)}
+                                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                                placeholder="Hello..."
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Shape</label>
+                                                                                        <select
+                                                                                            value={obj.btnShape || 'pill'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnShape', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="pill">Pill / Oval</option>
+                                                                                            <option value="rounded">Rounded Corners</option>
+                                                                                            <option value="square">Square</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Visual Effect</label>
+                                                                                        <select
+                                                                                            value={obj.btnEffect || 'none'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnEffect', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="none">None</option>
+                                                                                            <option value="glow">Neon Glow</option>
+                                                                                            <option value="pulse_alert">Pulse Alert</option>
+                                                                                            <option value="bounce_alert">Bounce Alert</option>
+                                                                                            <option value="scale_lift">Scale Lift</option>
+                                                                                            <option value="gradient_flow">Gradient Shift</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Background</label>
+                                                                                        <input
+                                                                                            type="color"
+                                                                                            value={obj.btnBg || '#14b8a6'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnBg', e.target.value)}
+                                                                                            className="w-full h-7 bg-slate-950 border border-slate-800 rounded cursor-pointer p-0.5"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Text Color</label>
+                                                                                        <input
+                                                                                            type="color"
+                                                                                            value={obj.btnColor || '#0f172a'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'btnColor', e.target.value)}
+                                                                                            className="w-full h-7 bg-slate-950 border border-slate-800 rounded cursor-pointer p-0.5"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {objType === 'picture' && (
+                                                                            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Image URL / Upload</label>
+                                                                                    <div className="flex gap-1.5">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={obj.imageUrl || ''}
+                                                                                            onChange={(e) => updateObjectField(idx, 'imageUrl', e.target.value)}
+                                                                                            className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                                            placeholder="https://..."
+                                                                                        />
+                                                                                        <label className="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-slate-950 text-xs font-bold rounded cursor-pointer flex items-center gap-1 transition shrink-0" title="Upload Direct File">
+                                                                                            <i className="fas fa-upload"></i>
+                                                                                            <span>Upload</span>
+                                                                                            <input
+                                                                                                type="file"
+                                                                                                accept="image/*"
+                                                                                                className="hidden"
+                                                                                                onChange={(e) => handleFileUpload(idx, e)}
+                                                                                            />
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Height Size</label>
+                                                                                        <select
+                                                                                            value={obj.height || 'h-64'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'height', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="h-32">Compact (128px)</option>
+                                                                                            <option value="h-48">Medium (192px)</option>
+                                                                                            <option value="h-64">Standard (256px)</option>
+                                                                                            <option value="h-80">Tall (320px)</option>
+                                                                                            <option value="h-96">Extra Tall (384px)</option>
+                                                                                            <option value="h-auto">Auto Height</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Object Fit</label>
+                                                                                        <select
+                                                                                            value={obj.objectFit || 'cover'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'objectFit', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="cover">Cover (Crop)</option>
+                                                                                            <option value="contain">Contain (Preserve)</option>
+                                                                                            <option value="fill">Fill (Stretch)</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Corner Radius</label>
+                                                                                    <select
+                                                                                        value={obj.cornerRadius || 'rounded-xl'}
+                                                                                        onChange={(e) => updateObjectField(idx, 'cornerRadius', e.target.value)}
+                                                                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                    >
+                                                                                        <option value="rounded-none">Sharp Corners</option>
+                                                                                        <option value="rounded-lg">Medium (8px)</option>
+                                                                                        <option value="rounded-xl">Large (12px)</option>
+                                                                                        <option value="rounded-2xl">Extra Rounded (16px)</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {objType === 'text' && (
+                                                                            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Text Content</label>
+                                                                                    <textarea
+                                                                                        rows={2}
+                                                                                        value={obj.text || ''}
+                                                                                        onChange={(e) => updateObjectField(idx, 'text', e.target.value)}
+                                                                                        className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                        placeholder="Enter text..."
+                                                                                    />
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Font Size</label>
+                                                                                        <select
+                                                                                            value={obj.size || 'text-base'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'size', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="text-xs">Extra Small (xs)</option>
+                                                                                            <option value="text-sm">Small (sm)</option>
+                                                                                            <option value="text-base">Medium (base)</option>
+                                                                                            <option value="text-lg">Large (lg)</option>
+                                                                                            <option value="text-xl">Extra Large (xl)</option>
+                                                                                            <option value="text-2xl">Heading 2XL</option>
+                                                                                            <option value="text-3xl">Heading 3XL</option>
+                                                                                            <option value="text-4xl">Heading 4XL</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Font Style</label>
+                                                                                        <select
+                                                                                            value={obj.fontStyle || 'font-normal'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'fontStyle', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-teal-500"
+                                                                                        >
+                                                                                            <option value="font-normal">Normal</option>
+                                                                                            <option value="font-medium">Medium</option>
+                                                                                            <option value="font-semibold">Semi Bold</option>
+                                                                                            <option value="font-bold">Bold</option>
+                                                                                            <option value="font-extrabold">Extra Bold</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div>
+                                                                                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Text Color</label>
+                                                                                    <input
+                                                                                        type="color"
+                                                                                        value={obj.color || obj.textColor || '#cbd5e1'}
+                                                                                        onChange={(e) => updateObjectField(idx, 'color', e.target.value)}
+                                                                                        className="w-full h-7 bg-slate-950 border border-slate-800 rounded cursor-pointer p-0.5"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {objType === 'icon' && (
+                                                                            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">FontAwesome Icon</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={obj.iconClass || 'fas fa-star'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'iconClass', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                                            placeholder="fas fa-star"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Badge Text</label>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={obj.text || ''}
+                                                                                            onChange={(e) => updateObjectField(idx, 'text', e.target.value)}
+                                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                                            placeholder="Badge Text"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Badge Background</label>
+                                                                                        <input
+                                                                                            type="color"
+                                                                                            value={obj.bgColor && obj.bgColor.startsWith('#') ? obj.bgColor : '#14b8a6'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'bgColor', e.target.value)}
+                                                                                            className="w-full h-7 bg-slate-950 border border-slate-800 rounded cursor-pointer p-0.5"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Icon / Text Color</label>
+                                                                                        <input
+                                                                                            type="color"
+                                                                                            value={obj.textColor && obj.textColor.startsWith('#') ? obj.textColor : '#14b8a6'}
+                                                                                            onChange={(e) => updateObjectField(idx, 'textColor', e.target.value)}
+                                                                                            className="w-full h-7 bg-slate-950 border border-slate-800 rounded cursor-pointer p-0.5"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 );
                                             })()}
