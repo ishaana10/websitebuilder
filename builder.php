@@ -2228,11 +2228,35 @@ $csrf_token = generate_csrf_token();
                         effectClasses = ' animate-fadeIn hover:-translate-y-1 transition-all duration-300';
                     }
 
-                    const cardsHtml = cards.map(card => `
-                        <div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses}" style="${cardGradStyle} color: ${textColor};">
-                            ${card.content}
-                        </div>
-                    `).join('\n');
+                    const cardsHtml = cards.map((card, cIdx) => {
+                        const imgUrl = card.imageUrl || '';
+                        const titleText = card.title || card.heading || '';
+                        const contentText = card.content || card.description || '';
+                        const btnText = card.btnText || '';
+
+                        const linkType = card.btnLinkType || 'url';
+                        let href = '#';
+                        if (linkType === 'page') href = `?page=${card.btnPage || 'index'}`;
+                        else if (linkType === 'section') href = card.btnSection ? `#${card.btnSection}` : '#';
+                        else if (linkType === 'whatsapp') {
+                            const phone = (card.btnWaPhone || '15551234567').replace(/[^\d+]/g, '');
+                            href = `https://wa.me/${phone}?text=${encodeURIComponent(card.btnWaMsg || '')}`;
+                        } else href = card.btnUrl || '#';
+
+                        const imgHtml = imgUrl ? `<div class="mb-4 aspect-video rounded-lg overflow-hidden"><img src="${imgUrl}" class="w-full h-full object-cover" /></div>` : '';
+                        const titleHtml = titleText ? `<h3 class="text-lg font-bold mb-2 text-white" data-el-path="el-gridcard-${cIdx}-title">${titleText}</h3>` : '';
+                        const bodyHtml = contentText ? `<div class="text-xs leading-relaxed opacity-85" data-el-path="el-gridcard-${cIdx}-body">${contentText}</div>` : '';
+                        const btnHtml = btnText ? `<div class="mt-4"><a href="${href}" data-el-path="el-gridcard-${cIdx}-btn" class="inline-block px-4 py-2 text-xs font-bold rounded-lg transition duration-200" style="background-color: ${sec.props.accentColor || '#14b8a6'}; color: #0f172a;">${btnText}</a></div>` : '';
+
+                        return `<div class="p-6 rounded-lg shadow-lg border border-white/5 break-words min-w-0 max-w-full overflow-hidden${effectClasses} flex flex-col justify-between" style="${cardGradStyle} color: ${textColor};" data-el-path="el-gridcard-${cIdx}">
+                            <div>
+                                ${imgHtml}
+                                ${titleHtml}
+                                ${bodyHtml}
+                            </div>
+                            ${btnHtml}
+                        </div>`;
+                    }).join('\n');
 
                     compiledHtml = compiledHtml.replace(/{{\s*gridCards\s*}}/g, cardsHtml);
 
@@ -3893,6 +3917,24 @@ $csrf_token = generate_csrf_token();
                                                     handleCardsChange(currentCards.filter((_, idx) => idx !== cardIdx));
                                                 };
 
+                                                const moveCardUp = (cardIdx) => {
+                                                    if (cardIdx <= 0) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cardIdx];
+                                                    updated[cardIdx] = updated[cardIdx - 1];
+                                                    updated[cardIdx - 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
+                                                const moveCardDown = (cardIdx) => {
+                                                    if (cardIdx >= currentCards.length - 1) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cardIdx];
+                                                    updated[cardIdx] = updated[cardIdx + 1];
+                                                    updated[cardIdx + 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
                                                 const updateCardField = (cardIdx, field, val) => {
                                                     const updatedCards = currentCards.map((card, idx) => idx === cardIdx ? { ...card, [field]: val } : card);
                                                     handleCardsChange(updatedCards);
@@ -3938,13 +3980,31 @@ $csrf_token = generate_csrf_token();
                                                                         <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
                                                                             Card #{cardIdx + 1}
                                                                         </span>
-                                                                        <button
-                                                                            onClick={() => removeCard(cardIdx)}
-                                                                            className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
-                                                                            title="Remove Card"
-                                                                        >
-                                                                            <i className="fas fa-trash-alt"></i>
-                                                                        </button>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                onClick={() => moveCardUp(cardIdx)}
+                                                                                disabled={cardIdx === 0}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Up"
+                                                                            >
+                                                                                ↑
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => moveCardDown(cardIdx)}
+                                                                                disabled={cardIdx === currentCards.length - 1}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Down"
+                                                                            >
+                                                                                ↓
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => removeCard(cardIdx)}
+                                                                                className="text-slate-500 hover:text-rose-400 text-xs transition duration-200 p-1"
+                                                                                title="Remove Card"
+                                                                            >
+                                                                                <i className="fas fa-trash-alt"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
 
                                                                     <div className="space-y-1">
@@ -4115,6 +4175,24 @@ $csrf_token = generate_csrf_token();
                                                     handleCardsChange(currentCards.filter((_, idx) => idx !== cardIdx));
                                                 };
 
+                                                const moveCardUp = (cardIdx) => {
+                                                    if (cardIdx <= 0) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cardIdx];
+                                                    updated[cardIdx] = updated[cardIdx - 1];
+                                                    updated[cardIdx - 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
+                                                const moveCardDown = (cardIdx) => {
+                                                    if (cardIdx >= currentCards.length - 1) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cardIdx];
+                                                    updated[cardIdx] = updated[cardIdx + 1];
+                                                    updated[cardIdx + 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
                                                 const updateCardField = (cardIdx, field, val) => {
                                                     const updatedCards = currentCards.map((card, idx) => idx === cardIdx ? { ...card, [field]: val } : card);
                                                     handleCardsChange(updatedCards);
@@ -4162,13 +4240,31 @@ $csrf_token = generate_csrf_token();
                                                                 <div key={card.id || cardIdx} className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
                                                                     <div className="flex justify-between items-center pb-2 border-b border-slate-900">
                                                                         <span className="text-xs font-bold text-slate-300">Card #{cardIdx + 1}</span>
-                                                                        <button
-                                                                            onClick={() => removeCard(cardIdx)}
-                                                                            className="text-red-400 hover:text-red-300 text-xs p-1 transition"
-                                                                            title="Delete Card"
-                                                                        >
-                                                                            <i className="fas fa-trash"></i>
-                                                                        </button>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                onClick={() => moveCardUp(cardIdx)}
+                                                                                disabled={cardIdx === 0}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Up"
+                                                                            >
+                                                                                ↑
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => moveCardDown(cardIdx)}
+                                                                                disabled={cardIdx === currentCards.length - 1}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Down"
+                                                                            >
+                                                                                ↓
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => removeCard(cardIdx)}
+                                                                                className="text-red-400 hover:text-red-300 text-xs p-1 transition"
+                                                                                title="Delete Card"
+                                                                            >
+                                                                                <i className="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
 
                                                                     <div className="space-y-1">
@@ -5615,6 +5711,7 @@ $csrf_token = generate_csrf_token();
                                             })()}
 
                                             {/* CUSTOM DYNAMIC CARDS EDITOR */}
+                                            {/* CUSTOM DYNAMIC LAYOUT GRID MANAGER */}
                                             {selectedSection && selectedSection.type.toLowerCase() === 'layout_grid' && (() => {
                                                 const currentCards = selectedSection.props.cards || [
                                                     { content: 'High density column structure details.' },
@@ -5628,40 +5725,169 @@ $csrf_token = generate_csrf_token();
                                                 };
 
                                                 const addCard = () => {
-                                                    handleCardsChange([...currentCards, { content: 'New grid card content goes here...' }]);
+                                                    handleCardsChange([...currentCards, {
+                                                        id: 'card-' + Date.now(),
+                                                        title: 'New Grid Card',
+                                                        content: 'New grid card content details go here...'
+                                                    }]);
                                                 };
 
                                                 const removeCard = (cIdx) => {
                                                     handleCardsChange(currentCards.filter((_, idx) => idx !== cIdx));
                                                 };
 
-                                                const updateCard = (cIdx, val) => {
-                                                    const updatedCards = currentCards.map((card, idx) => idx === cIdx ? { ...card, content: val } : card);
+                                                const moveCardUp = (cIdx) => {
+                                                    if (cIdx <= 0) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cIdx];
+                                                    updated[cIdx] = updated[cIdx - 1];
+                                                    updated[cIdx - 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
+                                                const moveCardDown = (cIdx) => {
+                                                    if (cIdx >= currentCards.length - 1) return;
+                                                    const updated = [...currentCards];
+                                                    const temp = updated[cIdx];
+                                                    updated[cIdx] = updated[cIdx + 1];
+                                                    updated[cIdx + 1] = temp;
+                                                    handleCardsChange(updated);
+                                                };
+
+                                                const updateCardField = (cIdx, field, val) => {
+                                                    const updatedCards = currentCards.map((card, idx) => idx === cIdx ? { ...card, [field]: val } : card);
                                                     handleCardsChange(updatedCards);
+                                                };
+
+                                                const handleFileUpload = (cIdx, e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const formData = new FormData();
+                                                    formData.append('image', file);
+                                                    formData.append('csrf_token', CSRF_TOKEN);
+                                                    showToast("Uploading...", "Transmitting image resource to server.");
+                                                    fetch('api.php?action=upload_image', {
+                                                        method: 'POST',
+                                                        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN },
+                                                        body: formData
+                                                    })
+                                                    .then(res => res.json())
+                                                    .then(data => {
+                                                        if (data.success && data.url) {
+                                                            updateCardField(cIdx, 'imageUrl', data.url);
+                                                            showToast("Success", "Card image uploaded successfully!");
+                                                        } else {
+                                                            showToast("Upload Error", data.error || "Failed to upload image.");
+                                                        }
+                                                    })
+                                                    .catch(err => showToast("Upload Error", err.message || "Failed to upload image."));
                                                 };
 
                                                 return (
                                                     <div className="space-y-4 pt-4 border-t border-slate-800">
-                                                        <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                            <i className="fas fa-th-large"></i> Manage Grid Cards
-                                                        </h4>
+                                                        <div className="flex justify-between items-center">
+                                                            <h4 className="text-[10px] font-bold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i className="fas fa-th-large"></i> Manage Grid Cards
+                                                            </h4>
+                                                            <span className="text-[10px] text-slate-400 font-mono">{currentCards.length} Card(s)</span>
+                                                        </div>
+
                                                         <div className="space-y-3">
                                                             {currentCards.map((card, cIdx) => (
-                                                                <div key={cIdx} className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 space-y-2">
-                                                                    <div className="flex justify-between items-center gap-2">
-                                                                        <span className="text-[10px] font-semibold text-slate-400">Card #{cIdx + 1}</span>
-                                                                        <button onClick={() => removeCard(cIdx)} className="text-red-400 hover:text-red-300 text-xs p-1" title="Remove Card">
-                                                                            <i className="fas fa-trash"></i>
-                                                                        </button>
+                                                                <div key={card.id || cIdx} className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2.5 relative group">
+                                                                    <div className="flex justify-between items-center pb-1 border-b border-slate-800">
+                                                                        <span className="text-[10px] font-bold text-teal-400 uppercase">Card #{cIdx + 1}</span>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                onClick={() => moveCardUp(cIdx)}
+                                                                                disabled={cIdx === 0}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Up"
+                                                                            >
+                                                                                ↑
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => moveCardDown(cIdx)}
+                                                                                disabled={cIdx === currentCards.length - 1}
+                                                                                className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 rounded text-[10px] transition"
+                                                                                title="Move Down"
+                                                                            >
+                                                                                ↓
+                                                                            </button>
+                                                                            <button onClick={() => removeCard(cIdx)} className="text-slate-500 hover:text-rose-400 text-xs p-1 transition" title="Remove Card">
+                                                                                <i className="fas fa-trash-alt"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
+
                                                                     <div>
-                                                                        <textarea rows={3} value={card.content} onChange={(e) => updateCard(cIdx, e.target.value)} placeholder="Card Content" className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white" />
+                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Card Title</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={card.title || card.heading || ''}
+                                                                            onChange={(e) => updateCardField(cIdx, 'title', e.target.value)}
+                                                                            placeholder="Card Title (Optional)"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Body Content</label>
+                                                                        <textarea
+                                                                            rows={2}
+                                                                            value={card.content || card.description || ''}
+                                                                            onChange={(e) => updateCardField(cIdx, 'content', e.target.value)}
+                                                                            placeholder="Card Content"
+                                                                            className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Image URL / Upload</label>
+                                                                        <div className="flex gap-1.5">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.imageUrl || ''}
+                                                                                onChange={(e) => updateCardField(cIdx, 'imageUrl', e.target.value)}
+                                                                                placeholder="https://... or upload"
+                                                                                className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                            />
+                                                                            <label className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold rounded cursor-pointer border border-slate-700 flex items-center gap-1 shrink-0">
+                                                                                <i className="fas fa-upload"></i>
+                                                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(cIdx, e)} />
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-2 gap-2 pt-1">
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">CTA Button Text</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.btnText || ''}
+                                                                                onChange={(e) => updateCardField(cIdx, 'btnText', e.target.value)}
+                                                                                placeholder="Button Label"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500"
+                                                                            />
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase mb-0.5">Button URL</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={card.btnUrl || ''}
+                                                                                onChange={(e) => updateCardField(cIdx, 'btnUrl', e.target.value)}
+                                                                                placeholder="#"
+                                                                                className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-teal-500 font-mono"
+                                                                            />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <button onClick={addCard} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded text-xs transition border border-slate-750">
-                                                            <i className="fas fa-plus mr-1"></i> Add New Card
+
+                                                        <button onClick={addCard} className="w-full bg-slate-800 hover:bg-slate-700 text-teal-400 font-bold py-2 rounded-lg text-xs transition border border-slate-700 flex items-center justify-center gap-1.5">
+                                                            <i className="fas fa-plus"></i> Add New Grid Card
                                                         </button>
                                                     </div>
                                                 );
