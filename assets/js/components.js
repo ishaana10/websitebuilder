@@ -2855,7 +2855,6 @@ if (typeof window !== 'undefined') {
             if (!workspace || workspace.getAttribute('data-loaded') === 'true') return;
             workspace.setAttribute('data-loaded', 'true');
 
-            const passcode = panel.getAttribute('data-passcode') || 'admin123';
             const badge = panel.querySelector('span[style*="color"]');
             const accentColor = badge ? (badge.style.color || '#14b8a6') : '#14b8a6';
 
@@ -2893,11 +2892,24 @@ if (typeof window !== 'undefined') {
                 const input = workspace.querySelector('input');
 
                 const handleLogin = () => {
-                    if (input.value === passcode) {
-                        renderDashboard(input.value);
-                    } else {
-                        renderLoginForm('Invalid administration passcode. Please try again.');
-                    }
+                    const inputVal = input.value ? input.value.trim() : '';
+                    if (!inputVal) return;
+                    btn.disabled = true;
+                    btn.innerText = 'Verifying...';
+
+                    const projId = typeof window.PROJECT_ID !== 'undefined' ? window.PROJECT_ID : 1;
+                    fetch(`api.php?action=get_site_submissions&project_id=${projId}&passcode=${encodeURIComponent(inputVal)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            renderDashboard(inputVal);
+                        } else {
+                            renderLoginForm(data.error || 'Invalid administration passcode. Please try again.');
+                        }
+                    })
+                    .catch(() => {
+                        renderLoginForm('Connection error. Please try again.');
+                    });
                 };
 
                 btn.onclick = handleLogin;
