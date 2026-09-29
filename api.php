@@ -49,6 +49,38 @@ function check_project_ownership($db, $project_id, $user_id) {
     return $stmt->fetch();
 }
 
+// Helper to resolve inquiry admin panel passcode from project content JSON
+function get_inquiry_admin_passcode($content_json) {
+    $expected_passcode = 'admin123';
+    $content = json_decode($content_json ?? '', true);
+    if (is_array($content)) {
+        // Check blocks list
+        if (isset($content['blocks']) && is_array($content['blocks'])) {
+            foreach ($content['blocks'] as $b) {
+                if (($b['componentId'] ?? '') === 'inquiry_admin_panel') {
+                    if (!empty($b['props']['adminPasscode'])) return $b['props']['adminPasscode'];
+                    if (!empty($b['props']['passcode'])) return $b['props']['passcode'];
+                    if (!empty($b['passcode'])) return $b['passcode'];
+                }
+            }
+        }
+        // Check pages structure
+        if (isset($content['pages']) && is_array($content['pages'])) {
+            foreach ($content['pages'] as $pageSects) {
+                if (is_array($pageSects)) {
+                    foreach ($pageSects as $sec) {
+                        if (($sec['type'] ?? '') === 'inquiry_admin_panel') {
+                            if (!empty($sec['props']['adminPasscode'])) return $sec['props']['adminPasscode'];
+                            if (!empty($sec['props']['passcode'])) return $sec['props']['passcode'];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $expected_passcode;
+}
+
 // Handle endpoints based on 'action' parameter or request methods
 $action = $_GET['action'] ?? '';
 
@@ -1037,16 +1069,8 @@ switch ($action) {
             exit;
         }
 
-        $expected_passcode = 'admin123';
+        $expected_passcode = get_inquiry_admin_passcode($proj['content_json'] ?? '');
         $content = json_decode($proj['content_json'] ?? '', true);
-        if ($content && isset($content['blocks']) && is_array($content['blocks'])) {
-            foreach ($content['blocks'] as $b) {
-                if ($b['componentId'] === 'inquiry_admin_panel' && isset($b['passcode'])) {
-                    $expected_passcode = $b['passcode'];
-                    break;
-                }
-            }
-        }
 
         if (empty($passcode) || $passcode !== $expected_passcode) {
             echo json_encode(['success' => false, 'error' => 'Unauthorized. Invalid administration passcode.']);
@@ -1086,16 +1110,8 @@ switch ($action) {
             exit;
         }
 
-        $expected_passcode = 'admin123';
+        $expected_passcode = get_inquiry_admin_passcode($proj['content_json'] ?? '');
         $content = json_decode($proj['content_json'] ?? '', true);
-        if ($content && isset($content['blocks']) && is_array($content['blocks'])) {
-            foreach ($content['blocks'] as $b) {
-                if ($b['componentId'] === 'inquiry_admin_panel' && isset($b['passcode'])) {
-                    $expected_passcode = $b['passcode'];
-                    break;
-                }
-            }
-        }
 
         if (empty($passcode) || $passcode !== $expected_passcode) {
             echo json_encode(['success' => false, 'error' => 'Unauthorized. Invalid administration passcode.']);
