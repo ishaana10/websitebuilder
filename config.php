@@ -41,15 +41,19 @@ define('DB_NAME', getenv('DB_NAME') ?: 'site_builder');
 define('DB_USER', getenv('DB_USER') ?: 'builder_user');
 define('DB_PASS', getenv('DB_PASS') ?: 'builder_pass');
 
-// Start PHP Session safely if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    // Enable session security configurations
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-        ini_set('session.cookie_secure', 1);
+// Start PHP Session safely if not already started using SessionBootstrap
+if (file_exists(__DIR__ . '/core/SessionBootstrap.php')) {
+    require_once __DIR__ . '/core/SessionBootstrap.php';
+} else {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_name('nuviswebdesignxssid');
+        ini_set('session.cookie_httponly', 1);
+        ini_set('session.use_only_cookies', 1);
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', 1);
+        }
+        session_start();
     }
-    session_start();
 }
 
 /**
